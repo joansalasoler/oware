@@ -1,0 +1,27 @@
+Source: aalina
+Section: contrib/games
+Priority: optional
+Maintainer: Joan Sala Soler <contact@joansala.com>
+Homepage: http://www.joansala.com/auale/
+Standards-Version: 3.9.2
+Build-Depends: debhelper (>= 9), javahelper (>=0.25)
+Build-Depends-Indep: default-jdk, ant
+
+Package: aalina
+Section: contrib/games
+Priority: optional
+Architecture: all
+Depends: ${java:Depends}, ${misc:Depends}
+Recommends: auale, ${java:Recommends}
+Description: Oware Abapa game engine
+ Aalina is a strong oware abapa playing program. It communicates with a
+ Graphical User Interface through an adapted version of the Universal Chess
+ Interface protocol. This mancala engine is thus usually invoked by a GUI such
+ as Aualé, which is the official interface for this engine.
+ .
+ Its features include:
+ .
+  * Plays mancala following the popular Abapa ruleset.
+  * Includes an extensive opening book.
+  * May use endgame databases to improve its strength.
+  * Completely configurable through the UCI protocol.
