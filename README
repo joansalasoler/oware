@@ -1,0 +1,44 @@
+README of Aalina
+
+  Copyright (C) 2014 Joan Sala Soler
+
+  Copying and distribution of this file, with or without modification,
+  are permitted in any medium without royalty provided the copyright
+  notice and this notice are preserved.
+
+======================================================================
+
+  What is it?
+  -----------
+
+  Aalina - Oware Abapa game engine
+
+  Aalina is a strong oware abapa playing program. It communicates with
+  a Graphical User Interface through an adapted version of the
+  Universal Chess Interface protocol. This mancala engine is thus
+  usually invoked by a GUI such as Aualé, which is the official
+  interface for this engine.
+
+  Its features include:
+
+   * Plays mancala following the popular Abapa ruleset.
+   * Includes an extensive opening book.
+   * May use endgame databases to improve its strength.
+   * Completely configurable through the UCI protocol.
+
+  The Latest Version
+  ------------------
+
+  Information on the latest version of this software and its current
+  development can be found on http://www.joansala.com/auale/
+
+  Installation
+  ------------
+
+  Please see the INSTALL file.
+
+  Licensing
+  ---------
+
+  Please see the COPYING file.
+

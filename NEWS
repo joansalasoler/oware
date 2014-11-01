@@ -1,0 +1,12 @@
+News of Aalina
+
+  Copyright (C) 2014 Joan Sala Soler
+
+  Copying and distribution of this file, with or without modification,
+  are permitted in any medium without royalty provided the copyright
+  notice and this notice are preserved.
+
+Version 1.0.0 (01 Aug 2014) (Joan Sala Soler)
+  Initial release of the game engine. Aalina is a strong oware abapa playing
+  program. It communicates with a Graphical User Interface through an adapted
+  version of the Universal Chess Interface protocol.
