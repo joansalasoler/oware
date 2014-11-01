@@ -68,14 +68,6 @@
                 <attribute name="Implementation-Version" value="${version}"/>
                 <attribute name="Implementation-Vendor" value="${vendor}"/>
             </section>
-            <section name="com/joansala/xo/">
-                <attribute name="Specification-Title" value="Tic-tac-toe Game"/>
-                <attribute name="Specification-Version" value="${version}"/>
-                <attribute name="Specification-Vendor" value="${vendor}"/>
-                <attribute name="Implementation-Title" value="Tic-tac-toe"/>
-                <attribute name="Implementation-Version" value="${version}"/>
-                <attribute name="Implementation-Vendor" value="${vendor}"/>
-            </section>
             <section name="com/joansala/tools/">
                 <attribute name="Specification-Title" value="Aalina's toolset"/>
                 <attribute name="Specification-Version" value="${version}"/>
