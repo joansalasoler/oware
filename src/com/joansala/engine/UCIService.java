@@ -7,12 +7,12 @@ package com.joansala.engine;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -20,6 +20,7 @@ package com.joansala.engine;
 import java.io.IOException;
 import java.util.Scanner;
 import java.util.regex.Pattern;
+import java.util.function.Consumer;
 
 
 /**
@@ -33,65 +34,65 @@ import java.util.regex.Pattern;
  * @version   1.0.0
  */
 public class UCIService {
-    
+
     /** The default time per move for a search */
     public static final long DEFAULT_TIME = 2000;
-    
+
     /** Thread where the computations are performed */
     private Brain brain = null;
-    
+
     /** Performs move computations for a game */
     private Engine engine = null;
-    
+
     /** Opening book */
     private Roots roots = null;
-    
+
     /** Transposition table */
     private Cache cache = null;
-    
-    /** Stores the game for which the computations will be performed */
+
+    /** Game where the computations are performed */
     private Game game = null;
-    
+
     /** Contains the current start position and turn */
     private Board board = null;
-    
+
     /** Contains the initial board of the game */
     private Board start = null;
-    
+
     /** Contains the performed moves for the next computation */
     private int[] moves = null;
-    
+
     /** Minimum capacity in MB for the hash table */
     private int minHashSize = 1;
-    
+
     /** Maximum capacity in MB for the hash table */
     private int maxHashSize = 1;
-    
+
     /** Current capacity in MB for the hash table */
     private int currentHashSize = minHashSize;
-    
+
     /** Requested hash table capacity for subsequent computations */
     private int requestedHashSize = minHashSize;
-    
+
     /** Defaukt contempt factor for the engine */
     private int contempt = Game.DRAW_SCORE;
-    
+
     /** If debug mode is enabled the engine sends additional infos */
     private boolean debug = false;
-    
+
     /** If set to true the engine will have a high preference for draws */
     private volatile boolean drawSearch = false;
-    
+
     /** If set to true the engine will use its own book */
     private volatile boolean ownBook = true;
-    
+
     /** If set to true the time for next computation will be infinite */
     private volatile boolean infinite = false;
-    
+
     /** If set to true the next computation will be in pondering mode */
     private volatile boolean ponder = false;
-    
-    
+
+
     /**
      * Instantiates a new UCI service for the given game. The provided
      * engine will be used to perform move computations. The provided
@@ -107,8 +108,8 @@ public class UCIService {
         this.game = game;
         this.engine = engine;
     }
-    
-    
+
+
     /**
      * Sets the contempt factor. That is, the score to which end game
      * positions that are draw will be evaluated.
@@ -119,8 +120,8 @@ public class UCIService {
     public synchronized void setContempt(int score) {
         this.contempt = score;
     }
-    
-    
+
+
     /**
      * Sets the transposition table to use by the service.
      *
@@ -135,8 +136,8 @@ public class UCIService {
     public synchronized void setCache(Cache cache) {
         this.cache = cache;
     }
-    
-    
+
+
     /**
      * Sets the openings book database to use.
      *
@@ -146,8 +147,8 @@ public class UCIService {
     public synchronized void setRoots(Roots roots) {
         this.roots = roots;
     }
-    
-    
+
+
     /**
      * Asks this service to start receiving commands. Commands are parsed
      * from the standard input until a quit command is received. Replies
@@ -155,40 +156,40 @@ public class UCIService {
      */
     public synchronized void start() {
         Scanner scanner = new Scanner(System.in);
-        
+
         // Brain initialization
-        
+
         this.brain = new Brain();
         this.brain.start();
-        
+
         // Remember current hash size and available memory
-        
+
         if (cache != null) {
             long freeMemory = Runtime.getRuntime().freeMemory();
             long currentMemory = cache.size();
-            
+
             this.maxHashSize = (int) ((currentMemory + freeMemory) >> 20);
             this.currentHashSize = (int) (currentMemory >> 20);
             this.requestedHashSize = currentHashSize;
         }
-        
+
         // Start parsing received commands
-        
+
         while (scanner.hasNext()) {
             String command = scanner.next();
             String params = scanner.nextLine();
-            
+
             // Show the received command in debug mode
-            
+
             if (debug == true) {
                 printString("Command: " + command);
-                
+
                 if (!params.equals(""))
                     printString("Options:" + params);
             }
-            
+
             // Perform the requested command
-            
+
             if ("debug".equals(command)) {
                 switchDebugMode(params);
             } else if ("go".equals(command)) {
@@ -214,24 +215,27 @@ public class UCIService {
                 showError("Unknown command");
             }
         }
-        
+
         this.brain.interrupt();
         scanner.close();
     }
-    
-    
+
+
     /**
      * The search thread where the computations are performed.
      */
     private class Brain extends Thread {
-        
+
         private volatile boolean thinking = false;
-        
-        
+
+
         /**
          * The main bucle for the brain.
          */
         public void run() {
+            final Consumer<Integer> consumer = createSearchConsumer();
+            engine.attachConsumer(consumer);
+
             while (true) {
                 synchronized (this) {
                     try {
@@ -243,9 +247,11 @@ public class UCIService {
                     }
                 }
             }
+
+            engine.detachConsumer(consumer);
         }
-        
-        
+
+
         /**
          * Returns if the brain is currently computing a move.
          *
@@ -254,8 +260,8 @@ public class UCIService {
         public boolean isThinking() {
             return thinking;
         }
-        
-        
+
+
         /**
          * Instructs the brain to start a new move calculation
          */
@@ -265,8 +271,8 @@ public class UCIService {
                 this.notify();
             }
         }
-        
-        
+
+
         /**
          * Instructs the brain to abort any move calculations
          */
@@ -276,107 +282,116 @@ public class UCIService {
                 synchBrain();
             }
         }
-        
-        
+
+
         /**
          * Performs all the necessary computations to find a best move
          * for the current game.
          */
         private void findBestMove() {
             int bestMove = Game.NULL_MOVE;
-            int ponderMove = Game.NULL_MOVE;
-            
+
             // If the game has ended return a null move
-            
+
             if (game.hasEnded()) {
                 output("bestmove 0000");
                 return;
             }
-            
+
             // Use the book to find a move
-            
+
             if (ownBook && !infinite)
                 bestMove = getBookMove(game);
-            
+
             // Use the engine to compute a move
-            
+
             if (bestMove == Game.NULL_MOVE) {
                 bestMove = engine.computeBestMove(game);
             } else {
                 output("info string A book move was chosen");
             }
-            
+
             // Add the move to the game
-            
+
             performMove(game, bestMove);
-            
-            // Find a move to ponder and show stats
-            
-            ponderMove = getPonderMove(game);
-            showSearchInfo(game, bestMove);
-            
+
+            // Show a report of the performed search
+
+            final String report = collectSearchInfo(game, bestMove);
+
+            if (report instanceof String) {
+                output(report);
+            }
+
             // Show the computed best and ponder moves
-            
+
             StringBuilder response = new StringBuilder();
-            
+
             response.append("bestmove ");
             response.append(start.toAlgebraic(bestMove));
-            
+
+            final int ponderMove = getPonderMove(game);
+
             if (ponderMove != Game.NULL_MOVE) {
                 response.append(" ponder ");
                 response.append(start.toAlgebraic(ponderMove));
             }
-            
+
             output(response.toString());
         }
-        
-        
+
+
         /**
          * Prints statistics for a game object. The data is collected
          * from the transposition table and includes the game score,
          * reached depth and principal variation.
          *
          * @param game  Game object for which to print information
+         * @return      Information string or null
          */
-        private void showSearchInfo(Game game, int bestMove) {
-            if (cache == null || !cache.find(game))
-                return;
-            
+        private String collectSearchInfo(Game game, int bestMove) {
+            if (cache == null || !cache.find(game)) {
+                return null;
+            }
+
             // Collect game stats from the transposition table
-            
+
             int winner = Game.DRAW;
             int depth = cache.getDepth() + 1;
             int score = cache.getScore();
             byte flag = cache.getFlag();
-            
+
             int[] variation = null;
             int length = 0;
-            
+
             // If we have an endgame score assume the score is exact
-            
+
             if (Math.abs(score) == engine.getInfinity())
                 flag = Cache.EXACT;
-            
+
             // Collect principal variation
-            
+
             if (cache.getMove() != Game.NULL_MOVE) {
                 if (depth > 0 && flag == Cache.EXACT) {
+                    int moveCount = 0;
+
                     variation = new int[depth + 2];
                     variation[0] = bestMove;
                     variation[1] = cache.getMove();
                     length = 2;
-                    
+
                     for (int i = 0; i < depth; i++) {
                         performMove(game, cache.getMove());
-                        
+                        moveCount++;
+
                         if (game.hasEnded()) {
                             winner = game.winner();
                             break;
                         }
-                        
+
                         if (!cache.find(game))
                             break;
-                        
+
                         if (cache.getMove() == Game.NULL_MOVE)
                             break;
 
@@ -384,46 +399,77 @@ public class UCIService {
                             if (Math.abs(score) != engine.getInfinity())
                                 break;
                         }
-                        
+
                         variation[length++] = cache.getMove();
+                    }
+
+                    for (int i = 0; i < moveCount; i++) {
+                        game.unmakeMove();
                     }
                 }
             }
-            
+
             // Print all the collected information
-            
+
             StringBuilder response = new StringBuilder();
-            
+
             response.append("info");
             response.append(" depth ");
             response.append(depth);
             response.append(" score cp ");
             response.append(-score);
-            
+
             if (winner != Game.DRAW) {
                 int numMoves = (int) (length / 2.0D + .5D);
                 int value = (score > 0) ? -numMoves : numMoves;
                 response.append(" mate ");
                 response.append(value);
             }
-            
+
             if (flag == Cache.LOWER)
                 response.append(" lowerbound");
-            
+
             if (flag == Cache.UPPER)
                 response.append(" upperbound");
-            
+
             if (variation != null) {
                 int[] moves = new int[length];
                 System.arraycopy(variation, 0, moves, 0, length);
                 response.append(" pv ");
                 response.append(start.toAlgebraic(moves));
             }
-            
-            output(response.toString());
+
+            return response.toString();
         }
-        
-        
+
+
+        /**
+         * A consumer that prints search information for the current state
+         * of the game if a principal variation is found on the cache.
+         *
+         * @return      New search consumer instance
+         */
+        private Consumer<Integer> createSearchConsumer() {
+            return (move) -> {
+                final String report;
+
+                game.makeMove(move);
+
+                if (cache != null && cache.find(game)) {
+                    if (Cache.EXACT == cache.getFlag()) {
+                        report = collectSearchInfo(game, move);
+
+                        if (report instanceof String) {
+                            output(report);
+                        }
+                    }
+                }
+
+                game.unmakeMove();
+            };
+        }
+
+
         /**
          * Returns a move from the openings book.
          *
@@ -437,11 +483,11 @@ public class UCIService {
             } catch (IOException e) {
                 showError("Cannot select book move");
             }
-            
+
             return Game.NULL_MOVE;
         }
-        
-        
+
+
         /**
          * Returns a move for pondering.
          *
@@ -450,25 +496,24 @@ public class UCIService {
          */
         private int getPonderMove(Game game) {
             int move = Game.NULL_MOVE;
-            
+
             // Find a move to ponder on the transposition table
-            
+
             if (cache != null && cache.find(game)) {
                 if (cache.getFlag() == Cache.EXACT)
                     move = cache.getMove();
             }
-            
+
             // Find a move to ponder on the book
-            
+
             if (move == Game.NULL_MOVE && ownBook)
                 move = getBookMove(game);
-            
+
             return move;
         }
-        
     }
-    
-    
+
+
     /**
      * Performs a move on the internal board. This method asserts that
      * the move is legal and ensures the game has enough capacity to
@@ -488,8 +533,8 @@ public class UCIService {
                 "The provided move is not legal");
         }
     }
-    
-    
+
+
     /**
      * Waits for the brain to be ready for at most one second. The
      * brain is ready when it's thinking state is false.
@@ -503,8 +548,8 @@ public class UCIService {
             }
         }
     }
-    
-    
+
+
     /**
      * Prints the engine name and author on the standard output
      */
@@ -513,89 +558,89 @@ public class UCIService {
         String title = pack.getImplementationTitle();
         String version = pack.getImplementationVersion();
         String author = pack.getImplementationVendor();
-        
+
         // Show version information and author
-        
+
         output("id name " + (title == null ? "Unknown Engine" : title) +
             " " + (version == null ? "" : version));
         output("id author " + (author == null ? "Unknown Author" : author));
-        
+
         // Hash table size is set based on the available memory
-        
+
         if (cache != null) {
             output("option name Hash type spin default " + currentHashSize +
                 " min " + minHashSize + " max " + maxHashSize);
         }
-        
+
         // Show own book option only when the book is present
-        
+
         if (roots != null) {
             output("option name OwnBook type check default true");
         }
-        
+
         // Ponder mode is enabled by default
-        
+
         output("option name Ponder type check default true");
-        
+
         // Sets the engine to prefer draw scores
-        
+
         output("option name DrawSearch type check default false");
-        
+
         // The engine is ready
-        
+
         output("uciok");
     }
-    
-    
+
+
     /**
      * Prints 'readyok' on the standard output
      */
     private void answerPing() {
         output("readyok");
     }
-    
-    
+
+
     /**
      * Switch the debug mode on and off
      */
     private void switchDebugMode(String params) {
         Scanner scanner = new Scanner(params);
-        
+
         if (!scanner.hasNext())
             debug = !debug;
-        
+
         while (scanner.hasNext()) {
             String token = scanner.next();
-            
+
             if (token.equals("on")) {
                 debug = true;
             } else if (token.equals("off")) {
                 debug = false;
             }
         }
-        
+
         scanner.close();
     }
-    
-    
+
+
     /**
      * Tells the engine to start a new game
      */
     private void startNewGame() {
         synchBrain();
-        
+
         if (brain.isThinking()) {
             showError("A calculation is in progress");
             return;
         }
-        
+
         if (roots != null)
             roots.newMatch();
-        
+
         engine.newMatch();
     }
-    
-    
+
+
     /**
      * Stops the search thread
      */
@@ -603,8 +648,8 @@ public class UCIService {
         brain.stopThinking();
         brain.interrupt();
     }
-    
-    
+
+
     /**
      * Parses the 'go' command parameters setting the relevant engine
      * propieties and starts a new move computation.
@@ -613,28 +658,28 @@ public class UCIService {
      */
     private void startThinking(String params) {
         synchBrain();
-        
+
         if (brain.isThinking()) {
             showError("Already calculating a move");
             return;
         }
-        
+
         // Set default parameters
-        
+
         int contempt = this.contempt;
         int depth = Integer.MAX_VALUE;
         long movetime = DEFAULT_TIME;
-        
+
         infinite = false;
         ponder = false;
-        
+
         // Obtain search params
-        
+
         Scanner scanner = new Scanner(params);
-        
+
         while (scanner.hasNext()) {
             String token = scanner.next();
-            
+
             if (token.equals("depth")) {
                 if (scanner.hasNextByte())
                     depth = scanner.nextByte();
@@ -648,18 +693,18 @@ public class UCIService {
                 infinite = true;
             }
         }
-        
+
         scanner.close();
-        
+
         // Ensure parameters for infinite search
-        
+
         if (infinite) {
             depth = Integer.MAX_VALUE;
             movetime = 60 * 60 * 1000;
         }
-        
+
         // Set the board position
-        
+
         if (board == null) {
             game.setStart(
                 start.position(),
@@ -671,9 +716,9 @@ public class UCIService {
                 board.turn()
             );
         }
-        
+
         // Perform the moves on the board
-        
+
         try {
             if (moves != null) {
                 for (int move : moves)
@@ -683,33 +728,33 @@ public class UCIService {
             showError(e.getMessage());
             return;
         }
-        
+
         // Set the comptempt factor
-        
+
         if (drawSearch == true)
             contempt = engine.getInfinity();
-        
+
         // Set engine parameters
-        
+
         engine.setDepth(depth - 1);
         engine.setMoveTime(movetime);
         engine.setContempt(contempt);
-        
+
         // Resize the hash table if requested
-        
+
         if (cache != null) {
             if (currentHashSize != requestedHashSize) {
                 cache.resize(requestedHashSize << 20);
                 currentHashSize = requestedHashSize;
             }
         }
-        
+
         // Start calculating a move
-        
+
         brain.startThinking();
     }
-    
-    
+
+
     /**
      * Parses the 'stop' command parameters setting the relevant engine
      * propieties.
@@ -717,8 +762,8 @@ public class UCIService {
     private void stopThinking() {
         brain.stopThinking();
     }
-    
-    
+
+
     /**
      * Parses the 'ponderhit' command parameters setting the relevant
      * engine propieties.
@@ -726,8 +771,8 @@ public class UCIService {
     private void stopPondering() {
         ponder = false;
     }
-    
-    
+
+
     /**
      * Parses the 'setoption' command parameters setting the relevant engine
      * propieties.
@@ -737,12 +782,12 @@ public class UCIService {
     private void setOption(String params) {
         String name = null;
         String value = null;
-        
+
         // Obtain option name and value
-        
+
         Scanner scanner = new Scanner(params);
         Pattern stop = Pattern.compile("name|value");
-        
+
         while (scanner.hasNext()) {
             String token = scanner.next();
             if (token.equals("name")) {
@@ -751,18 +796,18 @@ public class UCIService {
                 value = consumeString(scanner, stop);
             }
         }
-        
+
         scanner.close();
-        
+
         // No option name specified
-        
+
         if (name == null) {
             showError("No option name specified");
             return;
         }
-        
+
         // Set use own openings book parameter
-        
+
         if (name.equals("OwnBook")) {
             if (value.equals("true")) {
                 ownBook = true;
@@ -771,12 +816,12 @@ public class UCIService {
             } else {
                 showError("Invalid value for option OwnBook");
             }
-            
+
             return;
         }
-        
+
         // Set draw search parameter
-        
+
         if (name.equals("DrawSearch")) {
             if (value.equals("true")) {
                 drawSearch = true;
@@ -785,16 +830,16 @@ public class UCIService {
             } else {
                 showError("Invalid value for option DrawSearch");
             }
-            
+
             return;
         }
-        
+
         // Set hash size parameter
-        
+
         if (name.equals("Hash") && cache != null) {
             try {
                 int size = Integer.parseInt(value);
-                
+
                 if (size >= minHashSize && size <= maxHashSize) {
                     requestedHashSize = size;
                 } else {
@@ -803,16 +848,16 @@ public class UCIService {
             } catch (NumberFormatException e) {
                 showError("Hash size is not a number");
             }
-            
+
             return;
         }
-        
+
         // No valid option requested
-        
+
         showError("Cannot set requested option");
     }
-    
-    
+
+
     /**
      * Parses the 'position' command parameters setting the relevant engine
      * propieties.
@@ -822,15 +867,15 @@ public class UCIService {
     private void setPosition(String params) {
         String boardNotation = null;
         String movesNotation = null;
-        
+
         // Obtain the position command parameters
-        
+
         Scanner scanner = new Scanner(params);
         Pattern stop = Pattern.compile("startpos|fen|moves");
-        
+
         while (scanner.hasNext()) {
             String token = scanner.next();
-            
+
             if (token.equals("fen")) {
                 if (scanner.hasNext())
                     boardNotation = scanner.next();
@@ -838,16 +883,16 @@ public class UCIService {
                 movesNotation = consumeString(scanner, stop);
             }
         }
-        
+
         scanner.close();
-        
+
         // Set default values
-        
+
         board = null;
         moves = null;
-        
+
         // Set the new board if we received a notation for it
-        
+
         if (boardNotation != null) {
             try {
                 board = start.toBoard(boardNotation);
@@ -856,9 +901,9 @@ public class UCIService {
                 return;
             }
         }
-        
+
         // Set the performed moves if we received a notation for them
-        
+
         if (movesNotation != null) {
             try {
                 moves = start.toMoves(movesNotation);
@@ -868,8 +913,8 @@ public class UCIService {
             }
         }
     }
-    
-    
+
+
     /**
      * Prints an error string if debug mode is enabled.
      *
@@ -879,8 +924,8 @@ public class UCIService {
         if (debug == true)
             printString("Error: " + s);
     }
-    
-    
+
+
     /**
      * Prints an information string
      *
@@ -889,8 +934,8 @@ public class UCIService {
     private static void printString(String s) {
         output("info string " + s);
     }
-    
-    
+
+
     /**
      * Prints an engine message to the standart output.
      *
@@ -901,8 +946,8 @@ public class UCIService {
             System.out.println(message);
         }
     }
-    
-    
+
+
     /**
      * Builds a {@code String} from the {@code Scanner} concatenating
      * each token until it founds a token that matches the stop pattern
@@ -913,15 +958,14 @@ public class UCIService {
      */
     private static String consumeString(Scanner scanner, Pattern stop) {
         StringBuilder sb = new StringBuilder();
-        
+
         while (scanner.hasNext() && !scanner.hasNext(stop)) {
             if (sb.length() > 0) sb.append(' ');
             sb.append(scanner.next());
         }
-        
+
         return sb.toString();
     }
-    
-    
-}
 
+
+}

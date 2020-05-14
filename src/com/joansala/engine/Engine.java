@@ -7,15 +7,18 @@ package com.joansala.engine;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+import java.util.function.Consumer;
+
 
 /**
  * An engine searches a game and returns a best move for its current state.
@@ -40,28 +43,28 @@ public interface Engine {
      * @return   The new search time in milliseconds
      */
     long getMoveTime();
-    
-    
+
+
     /**
      * Returns the current the contempt factor of the engine.
      */
     int getContempt();
-    
-    
+
+
     /**
      * Returns the current infinity score of the engine.
      */
     int getInfinity();
-    
-    
+
+
     /**
      * Sets the maximum search depth for subsequent computations
      *
      * @param depth  The new depth value
      */
     void setDepth(int depth);
-    
-    
+
+
     /**
      * Sets the maximum search time allowed for subsequent computations
      *
@@ -69,8 +72,8 @@ public interface Engine {
      *                 positive number greater than zero
      */
     void setMoveTime(long delay);
-    
-    
+
+
     /**
      * Sets the contempt factor. That is, the score to which end game
      * positions that are draw will be evaluated. The contempt score
@@ -81,8 +84,8 @@ public interface Engine {
      * @param score     Score for draw positions
      */
     void setContempt(int score);
-    
-    
+
+
     /**
      * Sets the infinity score. Setting this value to the maximum score
      * a game object can possibly be evaluated to is likely to improve
@@ -91,16 +94,37 @@ public interface Engine {
      * @param score     Infinite value as apositive integer
      */
     void setInfinity(int score);
-    
-    
+
+
+    /**
+     * Attaches a move consumer to the engine.
+     *
+     * Consumers may be invoked by the engine whenever some search information
+     * changes. They are granteed to run till completion before the engine
+     * continues with normal operations. Each consumer receives as a parameter
+     * the best move found so far by the engine.
+     *
+     * @param consumer  Best move consumer
+     */
+    void attachConsumer(Consumer<Integer> consumer);
+
+
+    /**
+     * Detaches a move consumer from the engine.
+     *
+     * @param consumer  Best move consumer
+     */
+    void detachConsumer(Consumer<Integer> consumer);
+
+
     /**
      * Tells the engine that the next positions are going to be from
      * a different match. This method must be called before a new game
      * is started to ask the engine to set up its parameters acordingly.
      */
     void newMatch();
-    
-    
+
+
     /**
      * Computes a best move for the current position of a game.
      *
@@ -109,8 +133,8 @@ public interface Engine {
      *              or {@code Game.NULL_MOVE} if the game already ended
      */
     int computeBestMove(Game game);
-    
-    
+
+
     /**
      * Aborts the current search. After calling this method any move
      * computations must return a result immediately.
@@ -118,7 +142,4 @@ public interface Engine {
      * @see Engine#computeBestMove(Game)
      */
     void abortComputation();
-    
-    
 }
-
