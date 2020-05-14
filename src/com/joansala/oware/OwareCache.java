@@ -96,6 +96,14 @@ public class OwareCache implements Cache {
 
 
     /**
+     * {@inheritDoc}
+     */
+    public int getOutcome() {
+        return (int) (2.5 * this.score);
+    }
+
+
+    /**
      * Returns the stored score value for the last position found.
      *
      * @return  Stored score value or zero

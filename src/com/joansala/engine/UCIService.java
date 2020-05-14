@@ -359,6 +359,7 @@ public class UCIService {
             int winner = Game.DRAW;
             int depth = cache.getDepth() + 1;
             int score = cache.getScore();
+            int outcome = cache.getOutcome();
             byte flag = cache.getFlag();
 
             int[] variation = null;
@@ -417,7 +418,7 @@ public class UCIService {
             response.append(" depth ");
             response.append(depth);
             response.append(" score cp ");
-            response.append(-score);
+            response.append(-outcome);
 
             if (winner != Game.DRAW) {
                 int numMoves = (int) (length / 2.0D + .5D);

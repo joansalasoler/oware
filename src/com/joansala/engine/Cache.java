@@ -7,12 +7,12 @@ package com.joansala.engine;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -23,7 +23,7 @@ package com.joansala.engine;
  * <p>A cache object may be used by an engine as a temporary memory space
  * to store and retrieve information about searched game states. This is
  * usually known as transposition tables.</p>
- * 
+ *
  * <p>The method {@code store} is used to ask the cache to remember the
  * relevant information for a position. Then this information may be
  * retrieved calling the method {@code find}. After this is called the
@@ -42,52 +42,60 @@ package com.joansala.engine;
  * @version   1.0.0
  */
 public interface Cache {
-    
+
     /** Flag of an unknown score */
     byte EMPTY = 0;
-    
+
     /** Flag of a lower bound score */
     byte LOWER = 1;
-    
+
     /** Flag of an upper bound score */
     byte UPPER = 2;
-    
+
     /** Flag of an exact score */
     byte EXACT = 3;
-    
-    
+
+
+    /**
+     * Returns the score for the last position found in centipawns.
+     *
+     * @return  Stored score value in centipawns
+     */
+    int getOutcome();
+
+
     /**
      * Returns the stored score value for the last position found.
      *
      * @return  Stored score value or zero
      */
     int getScore();
-    
-    
+
+
     /**
      * Returns the stored move value for the last position found.
      *
      * @return  Stored move value
      */
     int getMove();
-    
-    
+
+
     /**
      * Returns the stored depth value for the last position found.
      *
      * @return  Stored depth value or zero
      */
     int getDepth();
-    
-    
+
+
     /**
      * Returns the stored flag value for the last position found.
      *
      * @return  Stored flag value
      */
     byte getFlag();
-    
-    
+
+
     /**
      * Search the current game state provided by a {@code Game} object.
      *
@@ -98,8 +106,8 @@ public interface Cache {
      *          could be found; {@code false} otherwise.
      */
     boolean find(Game game);
-    
-    
+
+
     /**
      * Stores information about a game state on the cache.
      *
@@ -111,37 +119,36 @@ public interface Cache {
      * @param move   The best move found for the game state
      */
     void store(Game game, int score, int move, int depth, byte flag);
-    
-    
+
+
     /**
      * Asks the cache to make room for new entries. This method requests
      * that old cache entries be discarded so new entries may be stored
      * on the cache.
      */
     void discharge();
-    
-    
+
+
     /**
      * Resizes the cache and clears all the stored data.
      *
      * @param memory  Memory request in bytes
      */
     void resize(long memory);
-    
-    
+
+
     /**
      * Removes all the data stored on the cache.
      */
     void clear();
-    
-    
+
+
     /**
      * Returns the current capacity of this cache in bytes.
      *
      * @return  Allocated bytes for the cache
      */
     long size();
-    
-    
-}
 
+
+}
