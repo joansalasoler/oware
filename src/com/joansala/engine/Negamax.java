@@ -39,7 +39,7 @@ public class Negamax implements Engine {
     public static final int MAX_DEPTH = 126;
 
     /** The minimum depth allowed for a search */
-    public static final int MIN_DEPTH = 4;
+    public static final int MIN_DEPTH = 2;
 
     /** Search timer */
     private final Timer timer;

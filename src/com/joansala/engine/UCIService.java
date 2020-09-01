@@ -74,7 +74,7 @@ public class UCIService {
     /** Requested hash table capacity for subsequent computations */
     private int requestedHashSize = minHashSize;
 
-    /** Defaukt contempt factor for the engine */
+    /** Default contempt factor for the engine */
     private int contempt = Game.DRAW_SCORE;
 
     /** If debug mode is enabled the engine sends additional infos */
