@@ -53,7 +53,7 @@
         <manifest file="${build.dir}/META-INF/MANIFEST.MF">
             <attribute name="Main-Class" value="com.joansala.oware.OwareService"/>
             <attribute name="Class-Path" value="."/>
-            <section name="com/joansala/engine">
+            <section name="com/joansala/engine/">
                 <attribute name="Specification-Title" value="Game Engine"/>
                 <attribute name="Specification-Version" value="${version}"/>
                 <attribute name="Specification-Vendor" value="${vendor}"/>
