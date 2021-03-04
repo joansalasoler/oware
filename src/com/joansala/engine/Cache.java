@@ -1,7 +1,7 @@
 package com.joansala.engine;
 
 /*
- * Copyright (C) 2014 Joan Sala Soler <contact@joansala.com>
+ * Copyright (c) 2014-2021 Joan Sala Soler <contact@joansala.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -44,16 +44,16 @@ package com.joansala.engine;
 public interface Cache {
 
     /** Flag of an unknown score */
-    byte EMPTY = 0;
+    int EMPTY = 0;
 
     /** Flag of a lower bound score */
-    byte LOWER = 1;
+    int LOWER = 1;
 
     /** Flag of an upper bound score */
-    byte UPPER = 2;
+    int UPPER = 2;
 
     /** Flag of an exact score */
-    byte EXACT = 3;
+    int EXACT = 3;
 
 
     /**
@@ -93,7 +93,7 @@ public interface Cache {
      *
      * @return  Stored flag value
      */
-    byte getFlag();
+    int getFlag();
 
 
     /**
@@ -118,7 +118,7 @@ public interface Cache {
      * @param flag   Flag for the game state
      * @param move   The best move found for the game state
      */
-    void store(Game game, int score, int move, int depth, byte flag);
+    void store(Game game, int score, int move, int depth, int flag);
 
 
     /**
@@ -149,6 +149,5 @@ public interface Cache {
      * @return  Allocated bytes for the cache
      */
     long size();
-
 
 }

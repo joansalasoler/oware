@@ -1,7 +1,7 @@
 package com.joansala.engine;
 
 /*
- * Copyright (C) 2014 Joan Sala Soler <contact@joansala.com>
+ * Copyright (c) 2014-2021 Joan Sala Soler <contact@joansala.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -442,7 +442,7 @@ public class Negamax implements Engine {
         // Initialize score and flags
 
         int score = minScore;
-        byte flag = Cache.LOWER;
+        int flag = Cache.LOWER;
 
         // Try the hash move first
 
@@ -512,20 +512,6 @@ public class Negamax implements Engine {
 
 
     /**
-     * Destructor for this {@code Negamax} instance. Aborts the current
-     * computation, if any, and gracefully finalizes this object.
-     */
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            timer.cancel();
-        } finally {
-            super.finalize();
-        }
-    }
-
-
-    /**
      * Implements a dummy cache that does not store or return any entries.
      * This is implemented for efficiency to allow games without a cache
      * to use this engine.
@@ -536,9 +522,9 @@ public class Negamax implements Engine {
         public int getScore() { return 0; }
         public int getMove() { return Game.NULL_MOVE; }
         public int getDepth() { return 0; }
-        public byte getFlag() { return Cache.EMPTY; }
+        public int getFlag() { return Cache.EMPTY; }
         public boolean find(Game g) { return false; }
-        public void store(Game g, int s, int m, int d, byte f) { }
+        public void store(Game g, int s, int m, int d, int f) { }
         public void discharge() { }
         public void resize(long m) { }
         public void clear() { }
@@ -552,5 +538,4 @@ public class Negamax implements Engine {
         public int getScore() { return 0; }
         public boolean find(Game g) { return false; }
     };
-
 }
