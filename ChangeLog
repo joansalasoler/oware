@@ -1,3 +1,9 @@
+2020-09-01  Joan Sala Soler  <contact@joansala.com>
+
+    * Report scores as 1/100 of a seed
+    * Show search information while searching
+    * Decrease the minimum search depth
+
 2014-08-01  Joan Sala Soler  <contact@joansala.com>
 
     Initial release.

@@ -16,15 +16,28 @@ README of Aalina
   Aalina is a strong oware abapa playing program. It communicates with
   a Graphical User Interface through an adapted version of the
   Universal Chess Interface protocol. This mancala engine is thus
-  usually invoked by a GUI such as Aualé, which is the official
-  interface for this engine.
+  usually invoked by a GUI such as Aualé [1], which is the official
+  interface for this engine but can also be played on the terminal.
 
   Its features include:
 
+   * Command line interface.
    * Plays mancala following the popular Abapa ruleset.
-   * Includes an extensive opening book.
-   * May use endgame databases to improve its strength.
    * Completely configurable through the UCI protocol.
+   * Includes a set of engine optimization tools.
+
+  Implementation details:
+
+   * Negamax search.
+   * Iterative deepening.
+   * Principal variation search.
+   * Optimized evaluation heuristics.
+   * Minimal perfect hashing of positions.
+   * Endgame tablebases (12 seeds or less).
+   * Openings book (about 200.000 positions).
+   * Two-tier transposition table with aging.
+
+  [1] https://github.com/joansalasoler/auale
 
   The Latest Version
   ------------------
@@ -41,4 +54,3 @@ README of Aalina
   ---------
 
   Please see the COPYING file.
-
