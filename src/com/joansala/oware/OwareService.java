@@ -22,7 +22,7 @@ import java.io.File;
 import java.io.IOException;
 
 import com.joansala.engine.Negamax;
-import com.joansala.engine.UCIService;
+import com.joansala.uci.UCIService;
 
 
 /**

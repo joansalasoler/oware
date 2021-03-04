@@ -1,4 +1,4 @@
-package com.joansala.engine;
+package com.joansala.uci;
 
 /*
  * Copyright (c) 2014-2021 Joan Sala Soler <contact@joansala.com>
@@ -21,6 +21,8 @@ import java.io.Console;
 import java.io.PrintWriter;
 import java.util.TimerTask;
 import java.util.Timer;
+
+import com.joansala.engine.*;
 
 
 /**
