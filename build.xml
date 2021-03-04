@@ -2,7 +2,7 @@
 
 <!--
  * Aalina oware engine.
- * Copyright (C) 2014 Joan Sala Soler <contact@joansala.com>
+ * Copyright (c) 2014-2021 Joan Sala Soler <contact@joansala.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -119,7 +119,7 @@
     </target>
 
     <target name="compile" depends="init">
-        <javac srcdir="${src.dir}" destdir="${build.dir}" classpathref="compile.libs" includeantruntime="false"/>
+        <javac debug="true" srcdir="${src.dir}" destdir="${build.dir}" classpathref="compile.libs" includeantruntime="false"/>
     </target>
 
     <target name="dist" depends="compile,manifest">
