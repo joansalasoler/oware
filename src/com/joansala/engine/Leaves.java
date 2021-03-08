@@ -1,18 +1,18 @@
 package com.joansala.engine;
 
 /*
- * Copyright (C) 2014 Joan Sala Soler <contact@joansala.com>
+ * Copyright (c) 2014-2021 Joan Sala Soler <contact@joansala.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -25,11 +25,25 @@ package com.joansala.engine;
  * for a faster access by the engines.
  *
  * @author    Joan Sala Soler
- * @version   1.0.0
+ * @version   1.1.0
  */
 public interface Leaves {
-    
-    
+
+    /** Unknown score flag */
+    int EMPTY = 0;
+
+    /** Exact score flag */
+    int EXACT = 3;
+
+
+    /**
+     * Flag of the last found position.
+     *
+     * @return      Flag value
+     */
+    int getFlag();
+
+
     /**
      * Returns the exact score value for the last position found.
      * The score must be returned from the player to move perspective.
@@ -37,8 +51,8 @@ public interface Leaves {
      * @return  the stored score value or zero
      */
     int getScore();
-    
-    
+
+
     /**
      * Search a position provided by a {@code Game} object and sets it
      * as the current position on the endgames book.
@@ -48,7 +62,5 @@ public interface Leaves {
      *              could be found; {@code false} otherwise
      */
     public boolean find(Game game);
-    
-    
-}
 
+}

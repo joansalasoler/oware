@@ -179,8 +179,8 @@ public class OwareGame implements Game {
      */
     private void setStart(int[] position, int turn) {
         index = -1;
+        capture = -1;
         move = NULL_MOVE;
-        capture = NULL_MOVE;
 
         setTurn(turn);
         resetCursor();
@@ -307,26 +307,6 @@ public class OwareGame implements Game {
 
 
     /**
-     * Number of seed captured by the south player.
-     *
-     * @return  Current number of captured seeds
-     */
-    public int southStore() {
-        return state[SOUTH_STORE];
-    }
-
-
-    /**
-     * Number of seed captured by the north player.
-     *
-     * @return  Current number of captured seeds
-     */
-    public int northStore() {
-        return state[NORTH_STORE];
-    }
-
-
-    /**
      * Returns an array representation of the current position.
      *
      * @return      A new position array
@@ -428,17 +408,17 @@ public class OwareGame implements Game {
         // legal moves could be performed. Each player captures all
         // seeds on their side of the board
 
-        int score = state[SOUTH_STORE];
+        int seeds = state[SOUTH_STORE];
 
         for (int house = SOUTH_LEFT; house <= SOUTH_RIGHT; house++) {
-            score += state[house];
+            seeds += state[house];
         }
 
-        if (score > SEED_GOAL) {
+        if (seeds > SEED_GOAL) {
             return MAX_SCORE;
         }
 
-        if (score < SEED_GOAL) {
+        if (seeds < SEED_GOAL) {
             return -MAX_SCORE;
         }
 
@@ -657,7 +637,8 @@ public class OwareGame implements Game {
 
 
     /**
-     * Check if the last move was a capture.
+     * Check if the last move was a capture. This returns true also
+     * if the last move is unknown (it's a root position).
      *
      * @return      {@code true} if the move captured seeds
      */

@@ -586,6 +586,7 @@ public class Negamax implements Engine {
      */
     private final Leaves dummyLeaves = new Leaves() {
         public int getScore() { return 0; }
+        public int getFlag() { return Leaves.EMPTY; }
         public boolean find(Game g) { return false; }
     };
 }
