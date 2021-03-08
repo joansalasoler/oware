@@ -28,7 +28,7 @@ import java.util.TimerTask;
  * Implements a game engine using a negamax framework.
  *
  * @author    Joan Sala Soler
- * @version   1.0.0
+ * @version   1.1.0
  */
 public class Negamax implements Engine {
 
@@ -36,10 +36,16 @@ public class Negamax implements Engine {
     public static final long DEFAULT_TIME = 2000;
 
     /** The maximum depth allowed for a search */
-    public static final int MAX_DEPTH = 126;
+    public static final int MAX_DEPTH = 254;
 
     /** The minimum depth allowed for a search */
     public static final int MIN_DEPTH = 2;
+
+    /** An exact score was returned */
+    public static final int EXACT = 0;
+
+    /** An heuristic score may have been returned */
+    public static final int FUZZY = 1;
 
     /** Search timer */
     private final Timer timer;
@@ -73,6 +79,12 @@ public class Negamax implements Engine {
 
     /** Holds the best score found so far */
     private int bestScore = Integer.MAX_VALUE;
+
+    /** Score type of the current search */
+    private int scoreType = EXACT;
+
+    /** Depth of the last completed search */
+    private int scoreDepth = 0;
 
     /** This flag is set to true to abort a computation */
     private volatile boolean aborted = false;
@@ -122,6 +134,22 @@ public class Negamax implements Engine {
      */
     public int getInfinity() {
         return maxScore;
+    }
+
+
+    /**
+     * Type of score obtained on the last search.
+     */
+    public int getScoreType() {
+        return scoreType;
+    }
+
+
+    /**
+     * Depth of the last completed search iteration.
+     */
+    public int getScoreDepth() {
+        return scoreDepth;
     }
 
 
@@ -326,10 +354,13 @@ public class Negamax implements Engine {
         int lastScore = maxScore;
         int lastMove = Game.NULL_MOVE;
         int bestMove = rootMoves[0];
+
         bestScore = Game.DRAW_SCORE;
+        scoreType = FUZZY;
+        scoreDepth = 0;
 
         while (!aborted) {
-            // Search for a best move on current iteration
+            scoreType = EXACT;
 
             for (int move : rootMoves) {
                 game.makeMove(move);
@@ -351,11 +382,27 @@ public class Negamax implements Engine {
                 }
             }
 
-            if (Math.abs(bestScore) == maxScore)
-                break;
+            if (aborted == false) {
+                scoreDepth = depth;
+            }
 
-            if (aborted || depth >= maxDepth)
+            // Stop if an exact score was found
+
+            if (Math.abs(bestScore) == maxScore) {
+                scoreType = EXACT;
                 break;
+            }
+
+            if (!aborted && scoreType == EXACT) {
+                break;
+            }
+
+            // Stop on timeout elaspe or maximum recursion
+
+            if (aborted || depth >= maxDepth) {
+                scoreType = aborted ? FUZZY : scoreType;
+                break;
+            }
 
             if (bestMove != lastMove || bestScore != lastScore) {
                 invokeConsumers(bestMove);
@@ -409,8 +456,10 @@ public class Negamax implements Engine {
 
         // Return the heuristic score of the node
 
-        if (depth == 0)
+        if (depth == 0) {
+            this.scoreType = FUZZY;
             return game.score() * game.turn();
+        }
 
         // Hash table lookup
 
@@ -490,8 +539,9 @@ public class Negamax implements Engine {
 
         // Store the transposition ignoring pre-frontier subtrees
 
-        if (depth > 2 && aborted == false)
+        if (depth > 2 && aborted == false) {
             cache.store(game, alpha, hashMove, depth, flag);
+        }
 
         // Return the best score found
 
