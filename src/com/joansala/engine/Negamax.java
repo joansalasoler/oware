@@ -359,7 +359,7 @@ public class Negamax implements Engine {
         scoreType = FUZZY;
         scoreDepth = 0;
 
-        while (!aborted) {
+        while (!aborted || depth == MIN_DEPTH) {
             scoreType = EXACT;
 
             for (int move : rootMoves) {
@@ -382,18 +382,18 @@ public class Negamax implements Engine {
                 }
             }
 
-            if (aborted == false) {
+            // Stop if an exact score was found
+
+            if (!aborted || depth == MIN_DEPTH) {
                 scoreDepth = depth;
             }
 
-            // Stop if an exact score was found
-
-            if (Math.abs(bestScore) == maxScore) {
-                scoreType = EXACT;
+            if (!aborted && scoreType == EXACT) {
                 break;
             }
 
-            if (!aborted && scoreType == EXACT) {
+            if (Math.abs(bestScore) == maxScore) {
+                scoreType = EXACT;
                 break;
             }
 
@@ -434,7 +434,9 @@ public class Negamax implements Engine {
      *               of recursive calls that could be made for the node
      */
     private int search(int alpha, int beta, int depth) {
-        if (aborted) return minScore;
+        if (aborted && depth > MIN_DEPTH) {
+            return minScore;
+        }
 
         // Return the utility score of the node
 
