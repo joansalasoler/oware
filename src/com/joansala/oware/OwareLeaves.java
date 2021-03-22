@@ -66,7 +66,7 @@ public class OwareLeaves extends Book implements Leaves {
     private int[] mirror = new int[2 + BOARD_SIZE];
 
     /** Entries of the database */
-    public final byte[] data;
+    private final byte[] data;
 
 
     /**
@@ -89,18 +89,6 @@ public class OwareLeaves extends Book implements Leaves {
         RandomAccessFile database = getDatabase();
         database.readFully(data);
         database.close();
-    }
-
-
-    /**
-     * Maximum number of captures the player to move can make. This is
-     * the number of captured seeds from the playing houses, regardless of
-     * the seeds the player already has in their store.
-     *
-     * @return      Number of captured seeds
-     */
-    public int getCaptures() {
-        return captures;
     }
 
 
@@ -167,7 +155,7 @@ public class OwareLeaves extends Book implements Leaves {
 
         this.flag = flag;
         this.captures = (entry >> 2);
-        this.score = game.turn() * score(state, game);
+        this.score = game.turn() * score(state);
 
         return true;
     }
@@ -230,8 +218,8 @@ public class OwareLeaves extends Book implements Leaves {
      * @param state         Game position
      * @return              A score value
      */
-    private int score(int[] state, OwareGame game) {
-        return (flag == EXACT) ? outcome(state) : heuristic(state, game);
+    private int score(int[] state) {
+        return (flag == EXACT) ? outcome(state) : heuristic(state);
     }
 
 
@@ -263,18 +251,17 @@ public class OwareLeaves extends Book implements Leaves {
      * @param state         Game position
      * @return              Heuristic score value
      */
-    private int heuristic(int[] state, OwareGame game) {
-        final int store = state[SOUTH_STORE];
-        final int score = store + captures;
+    private int heuristic(int[] state) {
+        final int south = state[SOUTH_STORE];
+        final int north = state[NORTH_STORE];
+        final int score = south + captures;
 
         if (score > SEED_GOAL) {
-            final int north = state[NORTH_STORE];
-            return +((store + north) << 4);
+            return +((south + north) << 4);
         }
 
         if (score < SEED_GOAL) {
-            final int north = state[NORTH_STORE];
-            return -((store + north) << 4);
+            return -((south + north) << 4);
         }
 
         return DRAW_SCORE;
