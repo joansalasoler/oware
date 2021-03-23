@@ -21,8 +21,8 @@ import java.io.Console;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-import com.joansala.engine.UCIClient;
-import com.joansala.engine.UCIShell;
+import com.joansala.uci.UCIClient;
+import com.joansala.uci.UCIShell;
 
 
 /**

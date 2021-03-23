@@ -1,7 +1,7 @@
 package com.joansala.engine;
 
 /*
- * Copyright (C) 2014 Joan Sala Soler <contact@joansala.com>
+ * Copyright (c) 2014-2021 Joan Sala Soler <contact@joansala.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ import java.util.TimerTask;
  * Implements a game engine using a negamax framework.
  *
  * @author    Joan Sala Soler
- * @version   1.0.0
+ * @version   1.1.0
  */
 public class Negamax implements Engine {
 
@@ -36,10 +36,16 @@ public class Negamax implements Engine {
     public static final long DEFAULT_TIME = 2000;
 
     /** The maximum depth allowed for a search */
-    public static final int MAX_DEPTH = 126;
+    public static final int MAX_DEPTH = 254;
 
     /** The minimum depth allowed for a search */
     public static final int MIN_DEPTH = 2;
+
+    /** An exact score was returned */
+    public static final int EXACT = 0;
+
+    /** An heuristic score may have been returned */
+    public static final int FUZZY = 1;
 
     /** Search timer */
     private final Timer timer;
@@ -73,6 +79,9 @@ public class Negamax implements Engine {
 
     /** Holds the best score found so far */
     private int bestScore = Integer.MAX_VALUE;
+
+    /** Depth of the last completed search */
+    private int scoreDepth = 0;
 
     /** This flag is set to true to abort a computation */
     private volatile boolean aborted = false;
@@ -122,6 +131,14 @@ public class Negamax implements Engine {
      */
     public int getInfinity() {
         return maxScore;
+    }
+
+
+    /**
+     * Depth of the last completed search iteration.
+     */
+    public int getScoreDepth() {
+        return scoreDepth;
     }
 
 
@@ -326,11 +343,11 @@ public class Negamax implements Engine {
         int lastScore = maxScore;
         int lastMove = Game.NULL_MOVE;
         int bestMove = rootMoves[0];
+
         bestScore = Game.DRAW_SCORE;
+        scoreDepth = 0;
 
-        while (!aborted) {
-            // Search for a best move on current iteration
-
+        while (!aborted || depth == MIN_DEPTH) {
             for (int move : rootMoves) {
                 game.makeMove(move);
                 score = search(minScore, beta, depth);
@@ -351,11 +368,21 @@ public class Negamax implements Engine {
                 }
             }
 
-            if (Math.abs(bestScore) == maxScore)
-                break;
+            // Stop if an exact score was found
 
-            if (aborted || depth >= maxDepth)
+            if (!aborted || depth == MIN_DEPTH) {
+                scoreDepth = depth;
+            }
+
+            if (Math.abs(bestScore) == maxScore) {
                 break;
+            }
+
+            // Stop on timeout elaspe or maximum recursion
+
+            if (aborted || depth >= maxDepth) {
+                break;
+            }
 
             if (bestMove != lastMove || bestScore != lastScore) {
                 invokeConsumers(bestMove);
@@ -387,7 +414,9 @@ public class Negamax implements Engine {
      *               of recursive calls that could be made for the node
      */
     private int search(int alpha, int beta, int depth) {
-        if (aborted) return minScore;
+        if (aborted && depth > MIN_DEPTH) {
+            return minScore;
+        }
 
         // Return the utility score of the node
 
@@ -409,8 +438,9 @@ public class Negamax implements Engine {
 
         // Return the heuristic score of the node
 
-        if (depth == 0)
+        if (depth == 0) {
             return game.score() * game.turn();
+        }
 
         // Hash table lookup
 
@@ -442,7 +472,7 @@ public class Negamax implements Engine {
         // Initialize score and flags
 
         int score = minScore;
-        byte flag = Cache.LOWER;
+        int flag = Cache.LOWER;
 
         // Try the hash move first
 
@@ -490,8 +520,9 @@ public class Negamax implements Engine {
 
         // Store the transposition ignoring pre-frontier subtrees
 
-        if (depth > 2 && aborted == false)
+        if (depth > 2 && aborted == false) {
             cache.store(game, alpha, hashMove, depth, flag);
+        }
 
         // Return the best score found
 
@@ -512,20 +543,6 @@ public class Negamax implements Engine {
 
 
     /**
-     * Destructor for this {@code Negamax} instance. Aborts the current
-     * computation, if any, and gracefully finalizes this object.
-     */
-    @Override
-    protected void finalize() throws Throwable {
-        try {
-            timer.cancel();
-        } finally {
-            super.finalize();
-        }
-    }
-
-
-    /**
      * Implements a dummy cache that does not store or return any entries.
      * This is implemented for efficiency to allow games without a cache
      * to use this engine.
@@ -536,9 +553,9 @@ public class Negamax implements Engine {
         public int getScore() { return 0; }
         public int getMove() { return Game.NULL_MOVE; }
         public int getDepth() { return 0; }
-        public byte getFlag() { return Cache.EMPTY; }
+        public int getFlag() { return Cache.EMPTY; }
         public boolean find(Game g) { return false; }
-        public void store(Game g, int s, int m, int d, byte f) { }
+        public void store(Game g, int s, int m, int d, int f) { }
         public void discharge() { }
         public void resize(long m) { }
         public void clear() { }
@@ -550,7 +567,7 @@ public class Negamax implements Engine {
      */
     private final Leaves dummyLeaves = new Leaves() {
         public int getScore() { return 0; }
+        public int getFlag() { return Leaves.EMPTY; }
         public boolean find(Game g) { return false; }
     };
-
 }

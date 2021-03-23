@@ -2,18 +2,18 @@ package com.joansala.oware;
 
 /*
  * Aalina oware engine.
- * Copyright (C) 2014 Joan Sala Soler <contact@joansala.com>
+ * Copyright (c) 2014-2021 Joan Sala Soler <contact@joansala.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -25,6 +25,8 @@ import java.io.RandomAccessFile;
 import com.joansala.engine.Book;
 import com.joansala.engine.Game;
 import com.joansala.engine.Leaves;
+import static com.joansala.oware.Oware.*;
+import static com.joansala.oware.OwareGame.*;
 
 
 /**
@@ -38,32 +40,35 @@ import com.joansala.engine.Leaves;
  * @version   1.0.0
  */
 public class OwareLeaves extends Book implements Leaves {
-    
+
     /** Header signature for the book format */
     public static final String SIGNATURE = "Oware Endgames ";
-    
+
     /** Maximum number of seeds that a position can contain */
     public static final int MAX_SEEDS = 15;
-    
+
     /** Used to calculate the remaining seeds for a hash */
-    private static final int SEEDS_DIFF = MAX_SEEDS - 48;
-    
-    /** Exact score flag */
-    private static final int EXACT_SCORE = 3;
-    
-    /** Exact cycle score flag */
-    private static final int CYCLE_SCORE = 1;
-    
-    /** Number of captured seeds per position */
-    private final int NUM_CAPTURES;
-    
-    /** Keeps in memory all the database leaves */
-    private final byte[] data;
-    
-    /** Last found position score */
+    private static final int HASH_OFFSET = MAX_SEEDS - SEED_COUNT;
+
+    /** Minimum number of seeds on the stores */
+    private final int minStoreSeeds;
+
+    /** Flag of the last found entry */
+    private int flag = EMPTY;
+
+    /** Score of the last found entry */
     private int score = Game.DRAW_SCORE;
-    
-    
+
+    /** Captures of the last found entry */
+    private int captures = 0;
+
+    /** Placeholder for mirrored game states */
+    private int[] mirror = new int[2 + BOARD_SIZE];
+
+    /** Entries of the database */
+    private final byte[] data;
+
+
     /**
      * Instantiates a new endgames book object.
      *
@@ -72,197 +77,205 @@ public class OwareLeaves extends Book implements Leaves {
      */
     public OwareLeaves(File file, int seeds) throws IOException {
         super(file, SIGNATURE);
-        
-        if (seeds < 1 || seeds > MAX_SEEDS)
+
+        if (seeds < 1 || seeds > MAX_SEEDS) {
             throw new IllegalArgumentException(
                 "Incorrect number of seeds");
-        
-        NUM_CAPTURES = 48 - seeds;
-        
-        data = new byte[1 + OFFSETS[1 + seeds]];
-        
+        }
+
+        data = new byte[1 + OFFSETS[seeds]];
+        minStoreSeeds = SEED_COUNT - seeds;
+
         RandomAccessFile database = getDatabase();
         database.readFully(data);
         database.close();
     }
-    
-    
+
+
     /**
-     * Returns the exact score value for the last position found
-     * from south's perspective.
-     *
-     * @return  the stored score value or zero
+     * {@inheritDoc}
+     */
+    public int getFlag() {
+        return flag;
+    }
+
+
+    /**
+     * {@inheritDoc}
      */
     public int getScore() {
-        return this.score;
+        return score;
     }
-    
-    
+
+
     /**
-     * Search a position provided by a {@code OwareGame} object and sets
-     * it as the current position on the endgames book.
-     *
-     * @param game  A game object
-     * @return      {@code true} if an exact score for the position
-     *              could be found; {@code false} otherwise
+     * {@inheritDoc}
      */
     public boolean find(Game game) {
-        final OwareGame oware = (OwareGame) game;
-        final int captures = oware.southStore()
-                           + oware.northStore();
-        
-        // Check if this database may contain the position
-        
-        if (captures < NUM_CAPTURES)
-            return false;
-        
-        // Check the game state from the player perspective
-        
-        return (game.turn() == Game.SOUTH) ?
-            findSouth(oware, captures) :
-            findNorth(oware, captures);
+        return find((OwareGame) game);
     }
-    
-    
+
+
     /**
-     * Search a position from the south player perspective.
+     * Searches the given game state on this database.
      *
-     * @see OwareLeaves#find(Game)
-     * @param game      An oware game object
-     * @param captures  Number of captured seeds
-     * @return          {@code true} if an exact score for the position
-     *                  could be found; {@code false} otherwise
+     * If the game state is found updates the values of this class,
+     * otherwise, no update is performed. For a game state to be found
+     * the following conditions must be met:
+     *
+     * <ul>
+     *  <li>Exist on the database.</li>
+     *  <li>Contain a maximum of {@code MAX_SEEDS}.</li>
+     *  <li>Its flag must be {@code EXACT} or, if the best outcome happens
+     *      as a result of a position repetition, its flag be {@code LOWER}
+     *      and the last performed move a capture.</li>
+     * </ul>
+     *
+     * @param game      A game object
+     * @return          If a score can be computed
      */
-    private boolean findSouth(OwareGame game, int captures) {
-        // Obtain precomputed data for the position
-        
-        final int index = southIndex(game, captures);
-        final int cdata = data[index];
-        final int flag = (cdata & 0x03);
-        
-        // Return false if the score cannot be known
-        
-        if (flag == CYCLE_SCORE && !game.wasCapture())
+    public boolean find(OwareGame game) {
+        int[] state = game.state();
+
+        if (contains(state) == false) {
             return false;
-        
-        // Compute the total number of captured seeds
-        
-        final int seeds = (cdata >> 2) + game.southStore();
-        
-        // Return the final score of the position
-        
-        if (seeds == 24) {
-            score = Game.DRAW_SCORE;
-        } else if (seeds > 24) {
-            score = (flag == CYCLE_SCORE) ?
-                +(captures << 4) :
-                +OwareGame.MAX_SCORE;
-        } else {
-            score = (flag == CYCLE_SCORE) ?
-                -(captures << 4) :
-                -OwareGame.MAX_SCORE;
         }
-        
+
+        if (game.turn() == NORTH) {
+            state = rotatePosition(state);
+        }
+
+        final int hash = computeHash(state);
+        final int entry = data[hash];
+        final int flag = (entry & 0x03);
+
+        if (flag != EXACT && !game.wasCapture()) {
+            return false;
+        }
+
+        this.flag = flag;
+        this.captures = (entry >> 2);
+        this.score = game.turn() * score(state);
+
         return true;
     }
-    
-    
+
+
     /**
-     * Search a position from the south player perspective.
+     * Check if this collection contains an entry for the given game
+     * position. It does not check if the entry is valid.
      *
-     * @see OwareLeaves#find(Game)
-     * @param game      An oware game object
-     * @param captures  Number of captured seeds
-     * @return          {@code true} if an exact score for the position
-     *                  could be found; {@code false} otherwise
+     * @param state         Game position
      */
-    private boolean findNorth(OwareGame game, int captures) {
-        // Obtain precomputed data for the position
-        
-        final int index = northIndex(game, captures);
-        final int cdata = data[index];
-        final int flag = (cdata & 0x03);
-        
-        // Return false if the score cannot be known
-        
-        if (flag == CYCLE_SCORE && !game.wasCapture())
-            return false;
-        
-        // Compute the total number of captured seeds
-        
-        final int seeds = (cdata >> 2) + game.northStore();
-        
-        // Return the final score of the position
-        
-        if (seeds == 24) {
-            score = Game.DRAW_SCORE;
-        } else if (seeds > 24) {
-            score = (flag == CYCLE_SCORE) ?
-                -(captures << 4) :
-                -OwareGame.MAX_SCORE;
-        } else {
-            score = (flag == CYCLE_SCORE) ?
-                +(captures << 4) :
-                +OwareGame.MAX_SCORE;
-        }
-        
-        return true;
+    private boolean contains(int[] state) {
+        final int south = state[SOUTH_STORE];
+        final int north = state[NORTH_STORE];
+
+        return (south + north >= minStoreSeeds);
     }
-    
-    
+
+
     /**
-     * Computes the hash code for the current game position from
-     * south's player perspective.
+     * Computes a unique hash code for a game state.
      *
-     * @param game      Game object
-     * @param captures  Number of captured seeds
-     * @return          Unique hash code
+     * @param state         Game position
      */
-    private int southIndex(OwareGame game, int captures) {
-        final byte[] position = game.gameState();
-        
-        int n = SEEDS_DIFF + captures;
-        int rank = 0;
-        
-        for (int i = 11; n < MAX_SEEDS && i >= 0; i--) {
-            rank += COEFFICIENTS[n][i];
-            n += (int) position[i];
+    private int computeHash(int[] state) {
+        int hash = 0x00;
+        int n = HASH_OFFSET;
+
+        n += state[SOUTH_STORE];
+        n += state[NORTH_STORE];
+
+        for (int i = NORTH_RIGHT; n < MAX_SEEDS && i >= 0; i--) {
+            hash += COEFFICIENTS[n][i];
+            n += state[i];
         }
-        
-        return rank;
+
+        return hash;
     }
-    
-    
+
+
     /**
-     * Computes the hash code for the current game position from
-     * north's player perspective.
+     * Rotates the given position and returns the new representation.
      *
-     * @param game      Game object
-     * @param captures  Number of captured seeds
-     * @return          Unique hash code
+     * @param state         Game position
+     * @return              A mirrored state array
      */
-    private int northIndex(OwareGame game, int captures) {
-        final byte[] position = game.gameState();
-        
-        int n = SEEDS_DIFF + captures;
-        int rank = 0;
-        
-        for (int i = 5; n < MAX_SEEDS && i >= 0; i--) {
-            rank += COEFFICIENTS[n][i + 6];
-            n += (int) position[i];
-        }
-        
-        for (int i = 11; n < MAX_SEEDS && i >= 6; i--) {
-            rank += COEFFICIENTS[n][i - 6];
-            n += (int) position[i];
-        }
-        
-        return rank;
+    private int[] rotatePosition(int[] state) {
+        System.arraycopy(state, NORTH_LEFT, mirror, SOUTH_LEFT, NORTH_LEFT);
+        System.arraycopy(state, SOUTH_LEFT, mirror, NORTH_LEFT, NORTH_LEFT);
+        mirror[SOUTH_STORE] = state[NORTH_STORE];
+        mirror[NORTH_STORE] = state[SOUTH_STORE];
+
+        return mirror;
     }
-    
-    
-    /* The following arrays are used to make computations faster */
-    
+
+
+    /**
+     *
+     *
+     * @param state         Game position
+     * @return              A score value
+     */
+    private int score(int[] state) {
+        return (flag == EXACT) ? outcome(state) : heuristic(state);
+    }
+
+
+    /**
+     * Obtain the exact score for a found position.
+     *
+     * @param state         Game position
+     * @return              Exact score value
+     */
+    private int outcome(int[] state) {
+        final int store = state[SOUTH_STORE];
+        final int score = store + captures;
+
+        if (score > SEED_GOAL) {
+            return MAX_SCORE;
+        }
+
+        if (score < SEED_GOAL) {
+            return -MAX_SCORE;
+        }
+
+        return DRAW_SCORE;
+    }
+
+
+    /**
+     * Heuristic score for a position repetition.
+     *
+     * @param state         Game position
+     * @return              Heuristic score value
+     */
+    private int heuristic(int[] state) {
+        final int south = state[SOUTH_STORE];
+        final int north = state[NORTH_STORE];
+        final int score = south + captures;
+
+        if (score > SEED_GOAL) {
+            return +((south + north) << 4);
+        }
+
+        if (score < SEED_GOAL) {
+            return -((south + north) << 4);
+        }
+
+        return DRAW_SCORE;
+    }
+
+
+    /** Number of positions with N or less seeds */
+    private static final int[] OFFSETS = {
+                1,        13,       91,      455,
+             1820,      6188,    18564,    50388,
+           125970,    293930,   646646,   1352078,
+          2704156,   5200300,  9657700,  17383860
+    };
+
     /** Binomial coefficients used to compute hash codes */
     private static final int[][] COEFFICIENTS = {
         { 0X0000000F, 0X00000078, 0X000002A8, 0X00000BF4,
@@ -293,7 +306,7 @@ public class OwareLeaves extends Book implements Leaves {
           0X000001CE, 0X0000039C, 0X000006B4, 0X00000BBB,
           0X0000138D, 0X00001F48, 0X00003058, 0X00004884 },
         { 0X00000006, 0X00000015, 0X00000038, 0X0000007E,
-          0X000000FC, 0X000001CE, 0X00000318, 0X00000507, 
+          0X000000FC, 0X000001CE, 0X00000318, 0X00000507,
           0X000007D2, 0X00000BBB, 0X00001110, 0X0000182C },
         { 0X00000005, 0X0000000F, 0X00000023, 0X00000046,
           0X0000007E, 0X000000D2, 0X0000014A, 0X000001EF,
@@ -311,13 +324,4 @@ public class OwareLeaves extends Book implements Leaves {
           0X00000001, 0X00000001, 0X00000001, 0X00000001,
           0X00000001, 0X00000001, 0X00000001, 0X00000001 }
     };
-    
-    /** Hash code offsets; i.e. number of positions with N seeds */
-    private static final int[] OFFSETS = {
-               0,       1,        13,       91,      455,     1820,
-            6188,   18564,     50388,   125970,   293930,   646646,
-         1352078, 2704156,   5200300,  9657700, 17383860
-    };
-    
 }
-

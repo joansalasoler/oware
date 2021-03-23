@@ -1,18 +1,18 @@
-package com.joansala.tools;
+package com.joansala.tools.trainer;
 
 /*
- * Copyright (C) 2014 Joan Sala Soler <contact@joansala.com>
+ * Copyright (c) 2014-2021 Joan Sala Soler <contact@joansala.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -39,20 +39,20 @@ import com.sleepycat.persist.StoreConfig;
  * @version   1.0.0
  */
 public class BGraph {
-    
+
     /** Name for the entity store */
     private static String storeName = "book";
-    
+
     /** Database environment */
     private Environment env;
-    
+
     /** Database entity store */
     private EntityStore store;
-    
+
     /** Primary index for the store */
     private PrimaryIndex<Long, BNode> nodes;
-    
-    
+
+
     /**
      * Instantiates a new directed graph object.
      *
@@ -61,28 +61,28 @@ public class BGraph {
      */
     public BGraph(String path) throws DatabaseException, FileNotFoundException {
         // Configure the environment
-        
+
         EnvironmentConfig envConfig = new EnvironmentConfig();
         StoreConfig storeConfig = new StoreConfig();
-        
+
         envConfig.setAllowCreate(true);
         envConfig.setTransactional(false);
-        
+
         storeConfig.setAllowCreate(true);
         storeConfig.setTransactional(false);
         storeConfig.setDeferredWrite(true);
-        
+
         // Open the environment and the entity store
-        
+
         env = new Environment(new File(path), envConfig);
         store = new EntityStore(env, storeName, storeConfig);
-        
+
         // Retrieve the primary index object
-        
+
         nodes = store.getPrimaryIndex(Long.class, BNode.class);
     }
-    
-    
+
+
     /**
      * Returns the node object to which the specified identifier is
      * linked, or {@code null} if this graph does not contain a node
@@ -95,14 +95,14 @@ public class BGraph {
      */
     public BNode get(long hash) throws DatabaseException {
         BNode node = nodes.get(hash);
-        
+
         if (node != null)
             node.setGraph(this);
-        
+
         return node;
     }
-    
-    
+
+
     /**
      * Ensures this graph contains a node with the specified identifier.
      *
@@ -117,7 +117,7 @@ public class BGraph {
      */
     public BNode add(long hash) throws DatabaseException {
         BNode node = null;
-        
+
         if (nodes.contains(hash)) {
             node = nodes.get(hash);
             node.setGraph(this);
@@ -127,11 +127,11 @@ public class BGraph {
             node.setHash(hash);
             nodes.putNoReturn(node);
         }
-        
+
         return node;
     }
-    
-    
+
+
     /**
      * Updates a node with a new value. Must be called each time a node
      * is modified to reflect the new values on the database.
@@ -144,7 +144,7 @@ public class BGraph {
      */
     public void update(BNode node) throws DatabaseException {
         long hash = node.getHash();
-        
+
         if (nodes.contains(hash)) {
             nodes.putNoReturn(node);
         } else {
@@ -152,8 +152,8 @@ public class BGraph {
                 "Node not found on the database");
         }
     }
-    
-    
+
+
     /**
      * Returns a sorted view of the keys in this graph.
      *
@@ -161,11 +161,11 @@ public class BGraph {
      * @throws DatabaseException  if a database failure occurs
      */
     public SortedSet<Long> keys() throws DatabaseException {
-        return new StoredSortedKeySet(
+        return new StoredSortedKeySet<>(
             nodes.getDatabase(), nodes.getKeyBinding(), false);
     }
-    
-    
+
+
     /**
      * Returns {@code true} if this graph contains a node with the
      * specified identifier.
@@ -179,8 +179,8 @@ public class BGraph {
     public boolean contains(long hash) throws DatabaseException {
         return nodes.contains(hash);
     }
-    
-    
+
+
     /**
      * Returns the number of nodes stored in this graph.
      *
@@ -191,8 +191,8 @@ public class BGraph {
     public long size() throws DatabaseException {
         return nodes.count();
     }
-    
-    
+
+
     /**
      * Flushes all the modification performed to the graph to the
      * physical storage.
@@ -202,8 +202,8 @@ public class BGraph {
     public void sync() throws DatabaseException {
         store.sync();
     }
-    
-    
+
+
     /**
      * Flushes all the modifications to the database and closes it
      *
@@ -213,6 +213,5 @@ public class BGraph {
         store.close();
         env.close();
     }
-    
-}
 
+}

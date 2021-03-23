@@ -18,8 +18,8 @@ package com.joansala.oware;
  */
 
 import com.joansala.engine.Game;
-import com.joansala.engine.UCIClient;
-import com.joansala.engine.UCIMatch;
+import com.joansala.uci.UCIClient;
+import com.joansala.uci.UCIMatch;
 
 
 /**

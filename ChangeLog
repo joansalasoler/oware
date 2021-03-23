@@ -1,3 +1,11 @@
+2021-03-23  Joan Sala Soler  <contact@joansala.com>
+
+    * New endgames book.
+    * Optimized game logic implementation.
+    * New performance test tool.
+    * Package reorganization.
+    * Other minor bug fixes.
+
 2020-09-01  Joan Sala Soler  <contact@joansala.com>
 
     * Report scores as 1/100 of a seed

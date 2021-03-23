@@ -1,7 +1,7 @@
-package com.joansala.engine;
+package com.joansala.uci;
 
 /*
- * Copyright (C) 2014 Joan Sala Soler <contact@joansala.com>
+ * Copyright (c) 2014-2021 Joan Sala Soler <contact@joansala.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 import java.util.function.Consumer;
+
+import com.joansala.engine.*;
 
 
 /**
@@ -360,7 +362,7 @@ public class UCIService {
             int depth = cache.getDepth() + 1;
             int score = cache.getScore();
             int outcome = cache.getOutcome();
-            byte flag = cache.getFlag();
+            int flag = cache.getFlag();
 
             int[] variation = null;
             int length = 0;

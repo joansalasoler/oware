@@ -1,4 +1,4 @@
-package com.joansala.tools;
+package com.joansala.tools.trainer;
 
 /*
  * Copyright (C) 2014 Joan Sala Soler <contact@joansala.com>
@@ -7,12 +7,12 @@ package com.joansala.tools;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -31,45 +31,45 @@ import com.sleepycat.persist.model.PrimaryKey;
  */
 @Entity
 public class BNode implements Serializable {
-    
+
     /** Class version identifier */
     private static final long serialVersionUID = 13L;
-    
+
     /** Graph to which this node pertains */
     private transient BGraph graph;
-    
+
     /** Unique identifier for this node */
     @PrimaryKey
     private long hash = 0;
-    
+
     /** Priority for the opponent */
     private float epo = 0.0F;
-    
+
     /** Priority for the book player */
     private float epb = 0.0F;
-    
+
     /** This node flag */
     private byte flag = 0;
-    
+
     /** Score for the node */
     private int score = Integer.MIN_VALUE;
-    
+
     /** Number of childs of this node */
     private int numEdges = 0;
-    
+
     /** Moves that lead to each of the childs */
     private byte[] moves = new byte[6];
-    
+
     /** Immediate descendents of this node */
     private long[] childs = new long[6];
-    
-    
+
+
     /**
      * Use a {@code BGraph} object to instantiate a node.
      */
     protected BNode() { }
-    
-    
+
+
     /**
      * Sets the graph object to which this node pertains.
      *
@@ -78,8 +78,8 @@ public class BNode implements Serializable {
     protected void setGraph(BGraph graph) {
         this.graph = graph;
     }
-    
-    
+
+
     /**
      * Sets the unique identifier for this node.
      *
@@ -88,8 +88,8 @@ public class BNode implements Serializable {
     protected void setHash(long hash) {
         this.hash = hash;
     }
-    
-    
+
+
     /**
      * Sets the score value of this node
      *
@@ -98,8 +98,8 @@ public class BNode implements Serializable {
     public void setScore(int score) {
         this.score = score;
     }
-    
-    
+
+
     /**
      * Sets the book player priority value of this node.
      *
@@ -108,8 +108,8 @@ public class BNode implements Serializable {
     public void setBPriority(float priority) {
         this.epb = priority;
     }
-    
-    
+
+
     /**
      * Sets the opponent priority value of this node.
      *
@@ -118,8 +118,8 @@ public class BNode implements Serializable {
     public void setOPriority(float priority) {
         this.epo = priority;
     }
-    
-    
+
+
     /**
      * Sets this node flag
      *
@@ -128,8 +128,8 @@ public class BNode implements Serializable {
     public void setFlag(byte flag) {
         this.flag = flag;
     }
-    
-    
+
+
     /**
      * Returns the unique identifier of this node
      *
@@ -138,8 +138,8 @@ public class BNode implements Serializable {
     public long getHash() {
         return hash;
     }
-    
-    
+
+
     /**
      * Returns the score for this node
      *
@@ -148,8 +148,8 @@ public class BNode implements Serializable {
     public int getScore() {
         return score;
     }
-    
-    
+
+
     /**
      * Returns the book player priority for this node
      *
@@ -158,8 +158,8 @@ public class BNode implements Serializable {
     public float getBPriority() {
         return epb;
     }
-    
-    
+
+
     /**
      * Returns the opponent priority for this node
      *
@@ -168,8 +168,8 @@ public class BNode implements Serializable {
     public float getOPriority() {
         return epo;
     }
-    
-    
+
+
     /**
      * Returns this node flag value
      *
@@ -178,8 +178,8 @@ public class BNode implements Serializable {
     public byte getFlag() {
         return flag;
     }
-    
-    
+
+
     /**
      * Returns the move for an specified edge.
      *
@@ -189,8 +189,8 @@ public class BNode implements Serializable {
     public byte getMove(int edge) {
         return moves[edge];
     }
-    
-    
+
+
     /**
      * Returns the number of childs of the node.
      *
@@ -199,8 +199,8 @@ public class BNode implements Serializable {
     public int numEdges() {
         return numEdges;
     }
-    
-    
+
+
     /**
      * Returns the child node linked to an specified edge.
      *
@@ -212,8 +212,8 @@ public class BNode implements Serializable {
     public BNode getChild(int edge) throws DatabaseException {
         return graph.get(childs[edge]);
     }
-    
-    
+
+
     /**
      * Adds a new edge to this node.
      *
@@ -232,11 +232,11 @@ public class BNode implements Serializable {
         moves[numEdges] = move;
         childs[numEdges] = hash;
         numEdges++;
-        
+
         return graph.add(hash);
     }
-    
-    
+
+
     /**
      * Returns an array containing all the childs of this node.
      *
@@ -248,14 +248,13 @@ public class BNode implements Serializable {
     public BNode[] childs() throws DatabaseException {
         if (numEdges == 0)
             return null;
-        
+
         BNode[] nodes = new BNode[numEdges];
-        
+
         for (int i = 0; i < numEdges; i++)
             nodes[i] = graph.get(childs[i]);
-        
+
         return nodes;
     }
-    
-}
 
+}

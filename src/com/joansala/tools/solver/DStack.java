@@ -1,4 +1,4 @@
-package com.joansala.tools;
+package com.joansala.tools.solver;
 
 /*
  * Copyright (C) 2014 Joan Sala Soler <contact@joansala.com>
@@ -7,12 +7,12 @@ package com.joansala.tools;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -35,26 +35,26 @@ import java.util.Arrays;
  *
  */
 public class DStack {
-    
+
     /** Null hash code */
     private final int NULL_NODE = -1;
-    
+
     /** Reserved node identifier */
     private final int ANY_NODE = -2;
-    
+
     /** Links to previous nodes */
     private final int[] prev;
-    
+
     /** Links to next nodes */
     private final int[] next;
-    
+
     /** Pointer to the head of the main stack */
     private int head = NULL_NODE;
-    
+
     /** Pointer to the head of the backtracking stack */
     private int back = NULL_NODE;
-    
-    
+
+
     /**
      * Instantiates a new double-stack object
      *
@@ -66,8 +66,8 @@ public class DStack {
         Arrays.fill(prev, NULL_NODE);
         Arrays.fill(next, NULL_NODE);
     }
-    
-    
+
+
     /**
      * Adds a node to the top of the main stack.
      *
@@ -80,8 +80,8 @@ public class DStack {
         next[node] = ANY_NODE;
         head = node;
     }
-    
-    
+
+
     /**
      * Promotes an already stacked node to the top of the main stack.
      *
@@ -90,17 +90,17 @@ public class DStack {
     public void raise(int node) {
         int n = next[node];
         int p = prev[node];
-        
+
         prev[n] = p;
         next[p] = n;
-        
+
         next[head] = node;
         prev[node] = head;
         next[node] = ANY_NODE;
         head = node;
     }
-    
-    
+
+
     /**
      * Removes a node from the top of the main stack.
      */
@@ -108,8 +108,8 @@ public class DStack {
         next[head] = NULL_NODE;
         head = prev[head];
     }
-    
-    
+
+
     /**
      * Returns the unique identifier of the node currently on the
      * top of the main stack.
@@ -119,8 +119,8 @@ public class DStack {
     public int peek() {
         return head;
     }
-    
-    
+
+
     /**
      * Checks if the main stack contains any nodes.
      *
@@ -129,8 +129,8 @@ public class DStack {
     public boolean empty() {
         return head == NULL_NODE;
     }
-    
-    
+
+
     /**
      * Adds a node to the top of the backtracking stack.
      *
@@ -140,16 +140,16 @@ public class DStack {
         prev[node] = back;
         back = node;
     }
-    
-    
+
+
     /**
      * Removes a node from the top of the backtracking stack.
      */
     public void popBack() {
         back = prev[back];
     }
-    
-    
+
+
     /**
      * Returns the unique identifier of the node currently on the
      * top of the backtracking stack.
@@ -159,8 +159,8 @@ public class DStack {
     public int peekBack() {
         return back;
     }
-    
-    
+
+
     /**
      * Checks if the backtracking stack contains any nodes.
      *
@@ -169,8 +169,8 @@ public class DStack {
     public boolean emptyBack() {
         return back == NULL_NODE;
     }
-    
-    
+
+
     /**
      * Returns {@code true} if either the main stack or the backtracking
      * stack contain the specified node.
@@ -181,6 +181,5 @@ public class DStack {
     public boolean contains(int node) {
         return next[node] != NULL_NODE;
     }
-    
-}
 
+}

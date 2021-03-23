@@ -2,7 +2,7 @@ package com.joansala.oware;
 
 /*
  * Aalina oware engine.
- * Copyright (C) 2014 Joan Sala Soler <contact@joansala.com>
+ * Copyright (c) 2014-2021 Joan Sala Soler <contact@joansala.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ public class OwareCache implements Cache {
     private long[] data;
 
     /** Current entry flag (2 bits) */
-    private byte flag = EMPTY;
+    private int flag = EMPTY;
 
     /** Current entry hash move (4 bits) */
     private int move = Game.NULL_MOVE;
@@ -138,7 +138,7 @@ public class OwareCache implements Cache {
      *
      * @return  Stored flag value or {@code Cache.EMPTY}
      */
-    public byte getFlag() {
+    public int getFlag() {
         return this.flag;
     }
 
@@ -164,7 +164,7 @@ public class OwareCache implements Cache {
             final long cdata = data[index];
 
             move = (int) (cdata >>> 35 & 0x0F);
-            flag = (byte) (cdata >>> 39 & 0x03);
+            flag = (int) (cdata >>> 39 & 0x03);
             depth = (int) (cdata >>> 41 & 0x7F);
             score = (int) (cdata >> 52);
 
@@ -195,7 +195,7 @@ public class OwareCache implements Cache {
      *               an exact value or empty.
      * @param move   The best move found so far for the position
      */
-    public synchronized void store(Game game, int score, int move, int depth, byte flag) {
+    public synchronized void store(Game game, int score, int move, int depth, int flag) {
         final long mask = 0x300000000L;
         final long hash = game.hash();
 

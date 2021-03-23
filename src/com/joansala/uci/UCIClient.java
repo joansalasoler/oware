@@ -1,4 +1,4 @@
-package com.joansala.engine;
+package com.joansala.uci;
 
 /*
  * Copyright (C) 2014 Joan Sala Soler <contact@joansala.com>
@@ -7,12 +7,12 @@ package com.joansala.engine;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -24,6 +24,8 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.Scanner;
 
+import com.joansala.engine.*;
+
 
 /**
  * Provides a client communication interface to an UCI service. This is
@@ -34,74 +36,74 @@ import java.util.Scanner;
  * @version   1.0.0
  */
 public class UCIClient {
-    
+
     /** Command regular expression */
     private static final Pattern pattern =
         Pattern.compile("^[ \\t]*(\\S+)(?:[ \\t]+(.*))?$");
-    
+
     /** Engine process */
     private Process service;
-    
+
     /** Game object */
     private Game game = null;
-    
+
     /** Contains the current start position and turn */
     private Board board = null;
-    
+
     /** Contains the initial board of the game */
     private Board start = null;
-    
+
     /** Current state of the engine */
     private State state = State.STOPPED;
-    
+
     /** Current engine name */
     private String name = "Unknown";
-    
+
     /** Current engine author */
     private String author = "Unknown";
-    
+
     /** Engine process input scanner */
     private Scanner input = null;
-    
+
     /** Engine process output stream */
     private PrintStream output = null;
-    
+
     /** Latest best move received */
     private int bestMove = Game.NULL_MOVE;
-    
+
     /** Latest ponder move received */
     private int ponderMove = Game.NULL_MOVE;
-    
+
     /** Infinite mode status flag */
     private boolean infinite = false;
-    
+
     /** Debug mode status flag */
     private boolean debug = false;
-    
+
     /** Used for synchronization */
     private boolean ready = false;
-    
+
     /** UCI protocol acknowledgement */
     private boolean uciok = true;
-    
-    
+
+
     /** Possible engine states */
     public enum State {
-        
+
         /** The engine process is not running */
         STOPPED,
-        
+
         /** The engine is waiting for commands */
         WAITING,
-        
+
         /** The engine is calculating a move */
         THINKING,
-        
+
         /** The engine is pondering a move */
         PONDERING
     }
-    
-    
+
+
     /**
      * Instantiates a new client object. This constructor takes as
      * parameters an engine process, a starting board for the game and
@@ -114,10 +116,10 @@ public class UCIClient {
     public UCIClient(Process service, Board start, Game game) {
         InputStream input = service.getInputStream();
         OutputStream output = service.getOutputStream();
-        
+
         this.input = new Scanner(input);
         this.output = new PrintStream(output, true);
-        
+
         this.service = service;
         this.start = start;
         this.board = start;
@@ -126,8 +128,8 @@ public class UCIClient {
         this.ready = true;
         this.uciok = true;
     }
-    
-    
+
+
     /**
      * Returns the engine process associated with this client.
      *
@@ -136,8 +138,8 @@ public class UCIClient {
     public Process getService() {
         return this.service;
     }
-    
-    
+
+
     /**
      * Returns a board representation of the current game state.
      *
@@ -146,8 +148,8 @@ public class UCIClient {
     public Board getBoard() {
         return start.toBoard(game);
     }
-    
-    
+
+
     /**
      * Returns the current engine state. Note that this method returns
      * the last known state of the engine; it may differ from the real
@@ -158,8 +160,8 @@ public class UCIClient {
     public State getState() {
         return state;
     }
-    
-    
+
+
     /**
      * Returns the last received best move.
      *
@@ -169,8 +171,8 @@ public class UCIClient {
     public int getBestMove() {
         return bestMove;
     }
-    
-    
+
+
     /**
      * Returns the last received ponder move.
      *
@@ -180,8 +182,8 @@ public class UCIClient {
     public int getPonderMove() {
         return ponderMove;
     }
-    
-    
+
+
     /**
      * Returns the current engine name.
      *
@@ -190,8 +192,8 @@ public class UCIClient {
     public String getName() {
         return name;
     }
-    
-    
+
+
     /**
      * Returns the current engine author name.
      *
@@ -200,8 +202,8 @@ public class UCIClient {
     public String getAuthor() {
         return author;
     }
-    
-    
+
+
     /**
      * Returns the current engine debug mode.
      *
@@ -210,8 +212,8 @@ public class UCIClient {
     public boolean isDebugOn() {
         return debug;
     }
-    
-    
+
+
     /**
      * Returns if the current engine is not thinking in infinite mode.
      * Infinite mode is enabled after a 'go ponder' or 'go infinite'
@@ -224,8 +226,8 @@ public class UCIClient {
     public boolean hasTimeLimit() {
         return !infinite;
     }
-    
-    
+
+
     /**
      * Returns true if the engine is in a thinking state. That is, the
      * last known state is {@code THINKING}.
@@ -235,8 +237,8 @@ public class UCIClient {
     public boolean isThinking() {
         return (state == State.THINKING);
     }
-    
-    
+
+
     /**
      * Returns true if the engine is in a pondering state. That is, the
      * last known state is {@code PONDERING}.
@@ -246,8 +248,8 @@ public class UCIClient {
     public boolean isPondering() {
         return (state == State.PONDERING);
     }
-    
-    
+
+
     /**
      * Returns if the engine process is running. That is, if the last
      * known state of the engine is not {@code STOPPED}.
@@ -257,8 +259,8 @@ public class UCIClient {
     public boolean isRunning() {
         return (state != State.STOPPED);
     }
-    
-    
+
+
     /**
      * Returns true whenever the engine is ready to receive new commands.
      * The ready state is set to {@code false} when an 'isready' command
@@ -271,11 +273,11 @@ public class UCIClient {
     public boolean isReady() {
         if (state == State.STOPPED)
             return false;
-        
+
         return ready;
     }
-    
-    
+
+
     /**
      * This method returns true whenever the engine is ready to receive
      * commands in UCI mode. The ready state is set to {@code false} when
@@ -289,11 +291,11 @@ public class UCIClient {
     public boolean isUCIReady() {
         if (state == State.STOPPED)
             return false;
-        
+
         return uciok;
     }
-    
-    
+
+
     /**
      * Parses the parameters of a 'uci' command and sets the relevant
      * engine state information.
@@ -303,8 +305,8 @@ public class UCIClient {
     private void parseUCI(String params) throws Exception {
         this.uciok = false;
     }
-    
-    
+
+
     /**
      * Parses the parameters of a 'debug' command and sets the relevant
      * engine state information.
@@ -314,13 +316,13 @@ public class UCIClient {
     private void parseDebug(String params) throws Exception {
         boolean debugSwitch = true;
         boolean debugValue = true;
-        
+
         if (params != null) {
             Scanner scanner = new Scanner(params);
-            
+
             while (scanner.hasNext()) {
                 String token = scanner.next();
-                
+
                 if (token.equals("on")) {
                     debugSwitch = false;
                     debugValue = true;
@@ -329,15 +331,15 @@ public class UCIClient {
                     debugValue = false;
                 }
             }
-            
+
             scanner.close();
         }
-        
+
         debug = (debugSwitch == true) ?
             !debug : debugValue;
     }
-    
-    
+
+
     /**
      * Parses the parameters of an 'isready' command and sets the
      * relevant engine state information.
@@ -347,8 +349,8 @@ public class UCIClient {
     private void parseIsReady(String params) throws Exception {
         this.ready = false;
     }
-    
-    
+
+
     /**
      * Parses the parameters of a 'setoption' command and sets the
      * relevant engine state information.
@@ -358,8 +360,8 @@ public class UCIClient {
     private void parseSetOption(String params) throws Exception {
         // Not implemented
     }
-    
-    
+
+
     /**
      * Parses the parameters of a 'register' command and sets the
      * relevant engine state information.
@@ -369,8 +371,8 @@ public class UCIClient {
     private void parseRegister(String params) throws Exception {
         // Not implemented
     }
-    
-    
+
+
     /**
      * Parses the parameters of an 'ucinewgame' command and sets
      * the relevant engine state information.
@@ -385,8 +387,8 @@ public class UCIClient {
                 "The engine is not waiting for commands");
         }
     }
-    
-    
+
+
     /**
      * Parses the parameters of a 'position' command and sets the
      * relevant engine state information. This method validates the
@@ -402,22 +404,22 @@ public class UCIClient {
         String notation = null;
         Board newBoard = null;
         int[] moves = null;
-        
+
         // This command requieres at least one parameter
-        
+
         if (params == null) {
             throw new IllegalArgumentException(
                 "No parameters were provided");
         }
-        
+
         // Parse the provided parameters
-        
+
         Scanner scanner = new Scanner(params);
         Pattern stop = Pattern.compile("startpos|fen|moves");
-        
+
         while (scanner.hasNext()) {
             String token = scanner.next();
-            
+
             if ("startpos".equals(token)) {
                 position = "startpos";
             } else if ("fen".equals(token)) {
@@ -427,34 +429,34 @@ public class UCIClient {
                 notation = consumeString(scanner, stop);
             }
         }
-        
+
         scanner.close();
-        
+
         // Obtain the board for the received position
-        
+
         if (position == null) {
             throw new IllegalArgumentException(
                 "No position was provided");
         }
-        
+
         board = ("startpos".equals(position)) ?
             start : start.toBoard(position);
-        
+
         game.setStart(board.position(), board.turn());
-        
+
         // Obtain the moves for the received notation
-        
+
         if (notation != null)
             moves = start.toMoves(notation);
-        
+
         // Change the game state only if all moves are legal
-        
+
         if (moves == null)
             return;
-        
+
         int madeCount = 0;
         game.ensureCapacity(moves.length);
-        
+
         for (int move : moves) {
             if (!game.isLegal(move)) {
                 for (int i = 0; i < madeCount; i++)
@@ -462,13 +464,13 @@ public class UCIClient {
                 throw new IllegalArgumentException(
                     "The provided moves are not legal");
             }
-            
+
             game.makeMove(move);
             madeCount++;
         }
     }
-    
-    
+
+
     /**
      * Parses the parameters of a 'go' command and sets the relevant
      * engine state information.
@@ -479,22 +481,22 @@ public class UCIClient {
     private void parseGo(String params) throws Exception {
         boolean infinite = false;
         boolean ponder = false;
-        
+
         // Ensure the engine is in a consistent state
-        
+
         if (state != State.WAITING) {
             throw new IllegalStateException(
                 "The engine is already thinking");
         }
-        
+
         // Parse the provided parameters
-        
+
         if (params != null) {
             Scanner scanner = new Scanner(params);
-            
+
             while (scanner.hasNext()) {
                 String token = scanner.next();
-                
+
                 if ("infinite".equals(token)) {
                     infinite = true;
                 } else if ("ponder".equals(token)) {
@@ -502,18 +504,18 @@ public class UCIClient {
                     infinite = true;
                 }
             }
-            
+
             scanner.close();
         }
-        
+
         // Change the engine state accordingly
-        
+
         this.state = (ponder == true) ?
             State.PONDERING : State.THINKING;
         this.infinite = infinite;
     }
-    
-    
+
+
     /**
      * Parses the parameters of an 'stop' command and sets the relevant
      * engine state information. This method does not change the state of
@@ -528,11 +530,11 @@ public class UCIClient {
             throw new IllegalStateException(
                 "The engine is not thinking");
         }
-        
+
         this.infinite = false;
     }
-    
-    
+
+
     /**
      * Parses the parameters of a 'quit' command and sets the relevant
      * engine state information. If the engine state was {@code PONDERING},
@@ -547,11 +549,11 @@ public class UCIClient {
             throw new IllegalStateException(
                 "The engine is not pondering");
         }
-        
+
         state = State.THINKING;
     }
-    
-    
+
+
     /**
      * Parses the parameters of a 'quit' command and sets the
      * relevant engine state information.
@@ -561,8 +563,8 @@ public class UCIClient {
     private void parseQuit(String params) throws Exception {
         this.state = State.STOPPED;
     }
-    
-    
+
+
     /**
      * Parses the parameters of an 'id' command and sets the
      * relevant engine state information.
@@ -574,24 +576,24 @@ public class UCIClient {
             throw new IllegalArgumentException(
                 "No parameters were provided");
         }
-        
+
         Scanner scanner = new Scanner(params);
         Pattern stop = Pattern.compile("name|value");
-        
+
         while (scanner.hasNext()) {
             String token = scanner.next();
-            
+
             if (token.equals("name")) {
                 this.name = consumeString(scanner, stop);
             } else if (token.equals("author")) {
                 this.author = consumeString(scanner, stop);
             }
         }
-        
+
         scanner.close();
     }
-    
-    
+
+
     /**
      * Parses the parameters of an 'uciok' command and sets the
      * relevant engine state information.
@@ -601,8 +603,8 @@ public class UCIClient {
     private void parseUCIOk(String params) throws Exception {
         this.uciok = true;
     }
-    
-    
+
+
     /**
      * Parses the parameters of an 'readyok' command and sets the
      * relevant engine state information.
@@ -612,8 +614,8 @@ public class UCIClient {
     private void parseReadyOk(String params) throws Exception {
         this.ready = true;
     }
-    
-    
+
+
     /**
      * Parses the parameters of a 'bestmove' command and sets the relevant
      * engine state information. This method validates the provided moves
@@ -626,62 +628,62 @@ public class UCIClient {
     private void parseBestMove(String params) throws Exception {
         String bestMove = null;
         String ponderMove = null;
-        
+
         // Change the state, even if moves are not valid
-        
+
         this.state = State.WAITING;
         this.infinite = false;
-        
+
         // This method requieres at least a parameter
-        
+
         if (params == null) {
             throw new IllegalArgumentException(
                 "No parameters were provided");
         }
-        
+
         // Parse the provided parameters
-        
+
         Scanner scanner = new Scanner(params);
-        
+
         if (scanner.hasNext())
             bestMove = scanner.next();
-        
+
         while (scanner.hasNext()) {
             String token = scanner.next();
-            
+
             if ("ponder".equals(token)) {
                 if (scanner.hasNext())
                     ponderMove = scanner.next();
             }
         }
-        
+
         scanner.close();
-        
+
         // Check if a null move was received
-        
+
         if ("0000".equals(bestMove)) {
             this.bestMove = Game.NULL_MOVE;
             this.ponderMove = Game.NULL_MOVE;
             return;
         }
-        
+
         // Validate the received moves legality
-        
+
         int best = start.toMove(bestMove);
         int ponder = Game.NULL_MOVE;
-        
+
         if (!game.isLegal(best)) {
             throw new IllegalArgumentException(
                 "The returned move is not legal");
         }
-        
+
         game.ensureCapacity(2 + game.length());
         game.makeMove(best);
-        
+
         try {
             if (ponderMove != null) {
                 ponder = start.toMove(ponderMove);
-                
+
                 if (!game.isLegal(ponder)) {
                     throw new IllegalArgumentException(
                         "The returned move is not legal");
@@ -690,16 +692,16 @@ public class UCIClient {
         } catch (Exception e) {
             throw e;
         }
-        
+
         game.unmakeMove();
-        
+
         // Save the received moves
-        
+
         this.bestMove = best;
         this.ponderMove = ponder;
     }
-    
-    
+
+
     /**
      * Parses the parameters of a 'copyprotection' command and sets
      * the relevant engine state information.
@@ -709,8 +711,8 @@ public class UCIClient {
     private void parseCopyProtection(String params) throws Exception {
         // Not implemented
     }
-    
-    
+
+
     /**
      * Parses the parameters of a 'registration' command and sets
      * the relevant engine state information.
@@ -720,8 +722,8 @@ public class UCIClient {
     private void parseRegistration(String params) throws Exception {
         // Not implemented
     }
-    
-    
+
+
     /**
      * Parses the parameters of an 'info' command and sets the
      * relevant engine state information.
@@ -731,8 +733,8 @@ public class UCIClient {
     private void parseInfo(String params) throws Exception {
         // Not implemented
     }
-    
-    
+
+
     /**
      * Parses the parameters of an 'option' command and sets the
      * relevant engine state information.
@@ -742,8 +744,8 @@ public class UCIClient {
     private void parseOption(String params) throws Exception {
         // Not implemented
     }
-    
-    
+
+
     /**
      * Builds a {@code String} from the {@code Scanner} concatenating
      * each token until it founds a token that matches the stop pattern
@@ -754,16 +756,16 @@ public class UCIClient {
      */
     private static String consumeString(Scanner scanner, Pattern stop) {
         StringBuilder sb = new StringBuilder();
-        
+
         while (scanner.hasNext() && !scanner.hasNext(stop)) {
             if (sb.length() > 0) sb.append(' ');
             sb.append(scanner.next());
         }
-        
+
         return sb.toString();
     }
-    
-    
+
+
     /**
      * Evaluates an engine-to-client command.
      *
@@ -772,19 +774,19 @@ public class UCIClient {
      */
     private void evaluateInput(String message) throws Exception {
         // Parse the input message
-        
+
         Matcher matcher = pattern.matcher(message);
-        
+
         if (matcher.matches() == false) {
             throw new IllegalArgumentException(
                 "Syntax error: " + message);
         }
-        
+
         // Parse the received command
-        
+
         String command = matcher.group(1);
         String params = matcher.group(2);
-        
+
         if ("id".equals(command)) {
             parseID(params);
         } else if ("uciok".equals(command)) {
@@ -806,8 +808,8 @@ public class UCIClient {
                 "Unknown engine command: " + command);
         }
     }
-    
-    
+
+
     /**
      * Evaluates a client-to-engine command.
      *
@@ -816,26 +818,26 @@ public class UCIClient {
      */
     private void evaluateOutput(String message) throws Exception {
         // Ensure that the engine is running
-        
+
         if (state == State.STOPPED) {
             throw new IllegalStateException(
                 "The engine is not running");
         }
-        
+
         // Parse the output message
-        
+
         Matcher matcher = pattern.matcher(message);
-        
+
         if (matcher.matches() == false) {
             throw new IllegalArgumentException(
                 "Syntax error: " + message);
         }
-        
+
         // Parse the received command
-        
+
         String command = matcher.group(1);
         String params = matcher.group(2);
-        
+
         if ("uci".equals(command)) {
             parseUCI(params);
         } else if ("debug".equals(command)) {
@@ -863,8 +865,8 @@ public class UCIClient {
                 "Unknown client command: " + command);
         }
     }
-    
-    
+
+
     /**
      * Evaluates and sends a single client-to-engine command. This method
      * evaluates a single command and if this succeeds the messages is sent
@@ -877,8 +879,8 @@ public class UCIClient {
         evaluateOutput(message);
         output.format("%s%n", message);
     }
-    
-    
+
+
     /**
      * Receives and evaluates the next engine-to-client command. Commands
      * are read from the current engine process input stream. Calling this
@@ -889,7 +891,7 @@ public class UCIClient {
      */
     public String receive() throws Exception {
         String message = null;
-        
+
         if (input.hasNextLine()) {
             message = input.nextLine();
             if (!message.isEmpty())
@@ -898,8 +900,8 @@ public class UCIClient {
             throw new IllegalStateException(
                 "Engine process is not responding");
         }
-        
+
         return message;
     }
-    
+
 }

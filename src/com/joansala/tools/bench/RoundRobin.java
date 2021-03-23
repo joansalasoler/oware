@@ -1,4 +1,4 @@
-package com.joansala.tools;
+package com.joansala.tools.bench;
 
 /*
  * Copyright (C) 2014 Joan Sala Soler <contact@joansala.com>
