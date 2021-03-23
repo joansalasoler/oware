@@ -96,8 +96,8 @@ public class OwareGame implements Game {
     /** Current move generation stage */
     private int stage;
 
-    /** Current move generation cursor */
-    private int cursor;
+    /** Current move generation house */
+    private int next;
 
     /** Position and move generation state */
     private int[] state;
@@ -255,7 +255,7 @@ public class OwareGame implements Game {
         captures[index] = capture;
         hashes[index] = hash;
         empties[index] = empty;
-        state[2 + BOARD_SIZE] = cursor;
+        state[2 + BOARD_SIZE] = next;
         state[3 + BOARD_SIZE] = stage;
         System.arraycopy(state, 0, states, index << 4, 4 + BOARD_SIZE);
     }
@@ -267,7 +267,7 @@ public class OwareGame implements Game {
     private void popState() {
         System.arraycopy(states, index << 4, state, 0, 4 + BOARD_SIZE);
         stage = state[3 + BOARD_SIZE];
-        cursor = state[2 + BOARD_SIZE];
+        next = state[2 + BOARD_SIZE];
         empty = empties[index];
         hash = hashes[index];
         capture = captures[index];
@@ -505,11 +505,32 @@ public class OwareGame implements Game {
 
 
     /**
+     * Current move generation cursor.
+     *
+     * @return  Cursor value
+     */
+    public int getCursor() {
+        return ((next << 2) | stage);
+    }
+
+
+    /**
+     * Sets the move generation cursor.
+     *
+     * @param   New cursor
+     */
+    public void setCursor(int cursor) {
+        stage = (cursor & 0x03);
+        next = (cursor >> 2);
+    }
+
+
+    /**
      * Resets the move generation cursor.
      */
-    private void resetCursor() {
+    public void resetCursor() {
         stage = ATTACKING_MOVES;
-        cursor = 1 + right;
+        next = 1 + right;
     }
 
 
@@ -657,8 +678,8 @@ public class OwareGame implements Game {
         pushState();
 
         final boolean isCapture = isCapture(move);
-        final int cursor = sowSeeds(move);
-        if (isCapture) captureSeeds(cursor);
+        final int house = sowSeeds(move);
+        if (isCapture) captureSeeds(house);
 
         setTurn(-turn);
         resetCursor();
@@ -679,25 +700,25 @@ public class OwareGame implements Game {
     /**
      * Distributes the seeds from the given house.
      *
-     * @param house     A house identifier
+     * @param move      A move identifier
      * @return          Last house that received a seed
      */
-    private int sowSeeds(int house) {
-        int cursor = house;
-        int seeds = state[house];
+    private int sowSeeds(int move) {
+        int house = move;
+        int seeds = state[move];
 
-        state[house] = 0;
-        empty |= (1 << house);
+        state[move] = 0;
+        empty |= (1 << move);
 
         while (seeds > 0) {
-            if ((cursor = ++cursor % BOARD_SIZE) != house) {
-                empty &= ~(1 << cursor);
-                state[cursor]++;
+            if ((house = ++house % BOARD_SIZE) != move) {
+                empty &= ~(1 << house);
+                state[house]++;
                 seeds--;
             }
         }
 
-        return cursor;
+        return house;
     }
 
 
@@ -706,22 +727,22 @@ public class OwareGame implements Game {
      *
      * @param house     A house identifier
      */
-    private void captureSeeds(int house) {
+    private void captureSeeds(int move) {
         this.capture = index;
 
         final int store = (turn == SOUTH) ?
             SOUTH_STORE : NORTH_STORE;
 
-        for (int cursor = house; cursor >= stop; cursor--) {
-            final int seeds = state[cursor];
+        for (int house = move; house >= stop; house--) {
+            final int seeds = state[house];
 
             if ((seeds >>> 1) != 1) {
                 break;
             }
 
-            empty |= (1 << cursor);
+            empty |= (1 << house);
             state[store] += seeds;
-            state[cursor] = 0;
+            state[house] = 0;
         }
     }
 
@@ -730,14 +751,14 @@ public class OwareGame implements Game {
      * Gather the remaining seeds from the board.
      */
     private void gatherSeeds() {
-        for (int house = SOUTH_LEFT; house <= SOUTH_RIGHT; house++) {
-            state[SOUTH_STORE] += state[house];
-            state[house] = 0;
+        for (int move = SOUTH_LEFT; move <= SOUTH_RIGHT; move++) {
+            state[SOUTH_STORE] += state[move];
+            state[move] = 0;
         }
 
-        for (int house = NORTH_LEFT; house <= NORTH_RIGHT; house++) {
-            state[NORTH_STORE] += state[house];
-            state[house] = 0;
+        for (int move = NORTH_LEFT; move <= NORTH_RIGHT; move++) {
+            state[NORTH_STORE] += state[move];
+            state[move] = 0;
         }
     }
 
@@ -814,13 +835,13 @@ public class OwareGame implements Game {
         // thus we want to iterate them first.
 
         if (stage == ATTACKING_MOVES) {
-            while (cursor > left) { cursor--;
-                if (feedsRival(cursor) && isCapture(cursor)) {
-                    return cursor;
+            while (next > left) { next--;
+                if (feedsRival(next) && isCapture(next)) {
+                    return next;
                 }
             }
 
-            cursor = 1 + right;
+            next = 1 + right;
             stage = rivalHasSeeds() ?
                 DEFENSIVE_MOVES : MANDATORY_MOVES;
         }
@@ -829,9 +850,9 @@ public class OwareGame implements Game {
         // that sow on the opponent houses are legal.
 
         if (stage == MANDATORY_MOVES) {
-            while (cursor > left) { cursor--;
-                if (feedsRival(cursor) && !isCapture(cursor)) {
-                    return cursor;
+            while (next > left) { next--;
+                if (feedsRival(next) && !isCapture(next)) {
+                    return next;
                 }
             }
 
@@ -842,22 +863,22 @@ public class OwareGame implements Game {
         // from capturing seeds. This also improves the cutouts.
 
         if (stage == DEFENSIVE_MOVES) {
-            while (cursor > left) { cursor--;
-                if (defendsAttack(cursor) && !isCapture(cursor)) {
-                    return cursor;
+            while (next > left) { next--;
+                if (defendsAttack(next) && !isCapture(next)) {
+                    return next;
                 }
             }
 
-            cursor = 1 + right;
+            next = 1 + right;
             stage = REMAINING_MOVES;
         }
 
         // Iterate the remaining moves last; those that do not capture
         // seeds or are less likely to prevent captures.
 
-        while (cursor > left) { cursor--;
-            if (state[cursor] > 2 && !isCapture(cursor)) {
-                return cursor;
+        while (next > left) { next--;
+            if (state[next] > 2 && !isCapture(next)) {
+                return next;
             }
         }
 
@@ -874,8 +895,7 @@ public class OwareGame implements Game {
         int length = 0;
         int move = NULL_MOVE;
 
-        final int cursor = this.cursor;
-        final int stage = this.stage;
+        final int cursor = getCursor();
         final int[] moves = new int[6];
 
         resetCursor();
@@ -884,8 +904,7 @@ public class OwareGame implements Game {
             moves[length++] = move;
         }
 
-        this.cursor = cursor;
-        this.stage = stage;
+        setCursor(cursor);
 
         return Arrays.copyOf(moves, length);
     }
