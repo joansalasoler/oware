@@ -80,9 +80,6 @@ public class Negamax implements Engine {
     /** Holds the best score found so far */
     private int bestScore = Integer.MAX_VALUE;
 
-    /** Score type of the current search */
-    private int scoreType = EXACT;
-
     /** Depth of the last completed search */
     private int scoreDepth = 0;
 
@@ -134,14 +131,6 @@ public class Negamax implements Engine {
      */
     public int getInfinity() {
         return maxScore;
-    }
-
-
-    /**
-     * Type of score obtained on the last search.
-     */
-    public int getScoreType() {
-        return scoreType;
     }
 
 
@@ -356,12 +345,9 @@ public class Negamax implements Engine {
         int bestMove = rootMoves[0];
 
         bestScore = Game.DRAW_SCORE;
-        scoreType = FUZZY;
         scoreDepth = 0;
 
         while (!aborted || depth == MIN_DEPTH) {
-            scoreType = EXACT;
-
             for (int move : rootMoves) {
                 game.makeMove(move);
                 score = search(minScore, beta, depth);
@@ -388,19 +374,13 @@ public class Negamax implements Engine {
                 scoreDepth = depth;
             }
 
-            if (!aborted && scoreType == EXACT) {
-                break;
-            }
-
             if (Math.abs(bestScore) == maxScore) {
-                scoreType = EXACT;
                 break;
             }
 
             // Stop on timeout elaspe or maximum recursion
 
             if (aborted || depth >= maxDepth) {
-                scoreType = aborted ? FUZZY : scoreType;
                 break;
             }
 
@@ -459,7 +439,6 @@ public class Negamax implements Engine {
         // Return the heuristic score of the node
 
         if (depth == 0) {
-            this.scoreType = FUZZY;
             return game.score() * game.turn();
         }
 
