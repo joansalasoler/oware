@@ -1,4 +1,4 @@
-package com.joansala.engine;
+package com.joansala.engine.negamax;
 
 /*
  * Copyright (c) 2014-2021 Joan Sala Soler <contact@joansala.com>
@@ -22,6 +22,11 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import com.joansala.engine.Cache;
+import com.joansala.engine.Engine;
+import com.joansala.engine.Game;
+import com.joansala.engine.Leaves;
 
 
 /**

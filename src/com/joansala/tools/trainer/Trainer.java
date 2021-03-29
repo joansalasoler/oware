@@ -27,7 +27,7 @@ import java.util.SortedSet;
 
 import com.sleepycat.je.DatabaseException;
 
-import com.joansala.engine.Negamax;
+import com.joansala.engine.negamax.Negamax;
 import com.joansala.oware.OwareBoard;
 import com.joansala.oware.OwareGame;
 

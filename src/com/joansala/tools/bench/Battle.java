@@ -25,6 +25,7 @@ import java.util.Comparator;
 import java.util.Properties;
 
 import com.joansala.engine.*;
+import com.joansala.engine.negamax.*;
 import com.joansala.engine.mcts.*;
 import com.joansala.oware.*;
 

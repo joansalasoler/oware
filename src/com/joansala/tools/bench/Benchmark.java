@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 import com.joansala.engine.*;
+import com.joansala.engine.negamax.*;
 import com.joansala.oware.*;
 
 
