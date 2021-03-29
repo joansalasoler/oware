@@ -38,7 +38,7 @@ import com.joansala.engine.*;
 public class UCIService {
 
     /** The default time per move for a search */
-    public static final long DEFAULT_TIME = 2000;
+    public static final long DEFAULT_MOVETIME = 3600;
 
     /** Thread where the computations are performed */
     private Brain brain = null;
@@ -671,7 +671,7 @@ public class UCIService {
 
         int contempt = this.contempt;
         int depth = Integer.MAX_VALUE;
-        long movetime = DEFAULT_TIME;
+        long movetime = DEFAULT_MOVETIME;
 
         infinite = false;
         ponder = false;

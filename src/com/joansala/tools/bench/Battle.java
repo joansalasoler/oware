@@ -25,6 +25,7 @@ import java.util.Comparator;
 import java.util.Properties;
 
 import com.joansala.engine.*;
+import com.joansala.engine.mcts.*;
 import com.joansala.oware.*;
 
 
@@ -37,7 +38,7 @@ import com.joansala.oware.*;
 public final class Battle {
 
     /** Engines participating in the tournament */
-    private static Negamax[] engines = null;
+    private static Engine[] engines = null;
 
     /** Engines participating in the tournament */
     private static Cache[] caches = null;
@@ -70,10 +71,10 @@ public final class Battle {
     private static String leavesPath = null;
 
     /** Default time per move */
-    private static long movetime = Negamax.DEFAULT_TIME;
+    private static long movetime = 2000;
 
     /** Default maximum depth */
-    private static int depth = Negamax.MAX_DEPTH;
+    private static int depth = Integer.MAX_VALUE;
 
     /** Default hash size */
     private static int hashsize = 32;
@@ -102,7 +103,7 @@ public final class Battle {
             "  Battle [parameters] [properties file]%n%n" +
             "Valid parameters are:%n%n" +
             "  -matches   <int>%n" +
-            "  -depth     <byte>    (plies)%n" +
+            "  -depth     <int>     (plies)%n" +
             "  -movetime  <long>    (milliseconds)%n" +
             "  -hashsize  <int>     (MB)%n" +
             "  -num-seeds <byte>    (MB)%n" +
@@ -110,6 +111,8 @@ public final class Battle {
             "  -book      <string>  (file path)%n",
             e.getMessage()
         );
+
+        e.printStackTrace();
     }
 
 
@@ -268,7 +271,7 @@ public final class Battle {
         System.out.format("Engine settings%n%s%n", separator);
 
         for (int i = 0; i < names.length; i++) {
-            long capacity = caches[i].size();
+            long capacity = (caches[i] != null) ? caches[i].size() : 0;
             int maxdepth = engines[i].getDepth() + 1;
             long settime = engines[i].getMoveTime();
             String bookName = "-";
@@ -302,7 +305,7 @@ public final class Battle {
      * @param size  number of engines
      */
     private static void initObjects(int size) {
-        engines = new Negamax[size];
+        engines = new Engine[size];
         caches = new Cache[size];
         roots = new Roots[size];
         leaves = new Leaves[size];
@@ -321,17 +324,22 @@ public final class Battle {
      * @param hsize     hash size in megabytes
      */
     private static void initEngine(int i, int depth, long mtime, int hsize) {
-        caches[i] = new OwareCache(hsize << 20);
         engines[i] = new Negamax();
 
         engines[i].setInfinity(OwareGame.MAX_SCORE);
         engines[i].setMoveTime(mtime);
         engines[i].setDepth(depth);
 
-        if (leaves[i] != null)
-            engines[i].setLeaves(leaves[i]);
+        if (engines[i] instanceof Negamax) {
+            Negamax engine = (Negamax) engines[i];
 
-        engines[i].setCache(caches[i]);
+            caches[i] = new OwareCache(hsize << 20);
+            engine.setCache(caches[i]);
+
+            if (leaves[i] != null) {
+                engine.setLeaves(leaves[i]);
+            }
+        }
     }
 
 
@@ -424,7 +432,7 @@ public final class Battle {
 
             value = properties.getProperty("battle.depth");
             depth = (value == null) ?
-                depth : Byte.parseByte(value);
+                depth : Integer.parseInt(value);
 
             value = properties.getProperty("battle.movetime");
             movetime = (value == null) ?
@@ -516,7 +524,7 @@ public final class Battle {
 
             for (i = 0; i < argv.length - 1; i++) {
                 if ("-depth".equals(argv[i])) {
-                    depth = Byte.parseByte(argv[++i]);
+                    depth = Integer.parseInt(argv[++i]);
                 } else if ("-movetime".equals(argv[i])) {
                     movetime = Long.parseLong(argv[++i]);
                 } else if ("-hashsize".equals(argv[i])) {

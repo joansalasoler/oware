@@ -192,8 +192,8 @@ public final class Benchmark {
         // Default configuration
 
         String path = null;
-        int depth = Negamax.MAX_DEPTH;
-        long movetime = Negamax.DEFAULT_TIME;
+        int depth = Integer.MAX_VALUE;
+        long movetime = 2000;
         int hashsize = 32;
 
         // Parse command line arguments
