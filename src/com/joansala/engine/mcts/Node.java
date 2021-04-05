@@ -44,6 +44,9 @@ class Node {
     /** Current move generation cursor */
     int cursor = Game.NULL_MOVE;
 
+    /** Whether it is fully expanded */
+    boolean expanded = false;
+
     /** Whether it is an endgame position */
     boolean terminal = false;
 
@@ -94,7 +97,7 @@ class Node {
      *
      * @param value     Simulation score
      */
-    void updateScore(int value) {
+    void updateScore(double value) {
         score += (value - score) / ++count;
     }
 
@@ -104,7 +107,7 @@ class Node {
      *
      * @param value     Terminal score
      */
-    void setScore(int value) {
+    void setScore(double value) {
         score = value;
         count++;
     }

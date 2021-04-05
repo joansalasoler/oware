@@ -36,13 +36,13 @@ import com.joansala.engine.Game;
  * @author    Joan Sala Soler
  * @version   1.0.0
  */
-public class MonteCarlo implements Engine {
+public class Montecarlo implements Engine {
 
     /** The default time per move for a search */
     public static final long DEFAULT_MOVETIME = 3600;
 
     /** Factors the amount of exploration of the tree */
-    public static final double BIAS_FACTOR = 1.41;
+    public static final double DEFAULT_BIAS = 1.4;
 
     /** Maximum depth allowed for a search */
     public static final int MAX_DEPTH = 254;
@@ -80,8 +80,11 @@ public class MonteCarlo implements Engine {
     /** Contempt factor used to evaluaty draws */
     private int contempt = Game.DRAW_SCORE;
 
+    /** Exploration bias parameter */
+    private double biasFactor = DEFAULT_BIAS;
+
     /** Exploration priority multiplier */
-    private double biasScore = BIAS_FACTOR * maxScore;
+    private double biasScore = DEFAULT_BIAS * maxScore;
 
     /** This flag is set to true to abort a computation */
     private volatile boolean aborted = false;
@@ -90,7 +93,7 @@ public class MonteCarlo implements Engine {
     /**
      * Create a new search engine.
      */
-    public MonteCarlo() {
+    public Montecarlo() {
         random = new Random();
         timer = new Timer(true);
     }
@@ -172,7 +175,18 @@ public class MonteCarlo implements Engine {
      */
     public synchronized void setInfinity(int score) {
         maxScore = Math.max(score, 1);
-        biasScore = BIAS_FACTOR * maxScore;
+        biasScore = maxScore * biasFactor;
+    }
+
+
+    /**
+     * Preference for exploring suboptimal moves.
+     *
+     * @param factor    Exploration parameter
+     */
+    public synchronized void setExplorationBias(double factor) {
+        biasFactor = factor;
+        biasScore = maxScore * biasFactor;
     }
 
 
@@ -386,9 +400,16 @@ public class MonteCarlo implements Engine {
      * @return          Next move or {@code NULL_MOVE}
      */
     private int getNextMove(Game game, Node node) {
-        game.setCursor(node.cursor);
-        final int move = game.nextMove();
-        node.cursor = game.getCursor();
+        final int move;
+
+        if (node.expanded) {
+            move = Game.NULL_MOVE;
+        } else {
+            game.setCursor(node.cursor);
+            move = game.nextMove();
+            node.cursor = game.getCursor();
+            node.expanded = (move == Game.NULL_MOVE);
+        }
 
         return move;
     }
@@ -426,24 +447,37 @@ public class MonteCarlo implements Engine {
 
 
     /**
-     * Expands a node with a new child and returns its score.
+     * Evaluate a node and return its score.
      *
-     * @param node      Node to expand
-     * @param move      Move to perform
+     * @param node      Node to evaluate
      * @param depth     Maximum search depth
      *
      * @return          Score of the node
      */
-    private int expand(Node parent, Node child, int move, int depth) {
-        final int score;
-
-        child.updateState(game);
-        child.updateParent(parent);
-        score = -simulateMatch(depth);
-        child.updateScore(score);
-        child.move = move;
+    private double evaluate(Node node, int depth) {
+        final double score = -simulateMatch(depth);
+        node.updateScore(score);
 
         return score;
+    }
+
+
+    /**
+     * Expands a node with a new child and returns its score.
+     *
+     * @param node      Node to expand
+     * @param move      Move to perform
+     *
+     * @return          New child node
+     */
+    private Node expandChild(Node parent, int move) {
+        final Node node = new Node();
+
+        node.updateState(game);
+        node.updateParent(parent);
+        node.move = move;
+
+        return node;
     }
 
 
@@ -453,13 +487,13 @@ public class MonteCarlo implements Engine {
      * @param game      Game
      * @param node      Root node
      */
-    private int search(Node node, int depth) {
+    private double search(Node node, int depth) {
         final int move;
-        final int score;
         final Node child;
+        final double score;
 
         if (node.terminal || depth == 0) {
-            score = (int) node.score;
+            score = node.score;
             node.increaseCount();
 
             return score;
@@ -468,9 +502,9 @@ public class MonteCarlo implements Engine {
         move = getNextMove(game, node);
 
         if (move != Game.NULL_MOVE) {
-            child = new Node();
             game.makeMove(move);
-            score = -expand(node, child, move, depth - 1);
+            child = expandChild(node, move);
+            score = -evaluate(child, depth - 1);
             game.unmakeMove();
         } else {
             child = findLeadChild(node);
