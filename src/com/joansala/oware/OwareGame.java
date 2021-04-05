@@ -322,7 +322,8 @@ public class OwareGame implements Game {
      * @return      A new moves array
      */
     public int[] moves() {
-        int[] moves = Arrays.copyOf(this.moves, length());
+        int[] moves = new int[length()];
+        System.arraycopy(this.moves, 1, moves, 0, length());
         if (index >= 0) moves[index] = this.move;
 
         return moves;
