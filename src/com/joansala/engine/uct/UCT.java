@@ -41,7 +41,7 @@ public class UCT implements Engine {
     public static final long DEFAULT_MOVETIME = 3600;
 
     /** Factors the amount of exploration of the tree */
-    public static final double DEFAULT_BIAS = 0.35;
+    public static final double DEFAULT_BIAS = 0.176;
 
     /** Maximum depth allowed for a search */
     public static final int MAX_DEPTH = 254;
@@ -83,10 +83,16 @@ public class UCT implements Engine {
     private double biasFactor = DEFAULT_BIAS;
 
     /** Exploration priority multiplier */
-    private double biasScore = DEFAULT_BIAS * maxScore;
+    private double bias = DEFAULT_BIAS * maxScore;
 
     /** This flag is set to true to abort a computation */
     private volatile boolean aborted = false;
+
+    /** Maximum score found so far */
+    private double beta = -maxScore;
+
+    /** Minimum score found so far */
+    private double alpha = maxScore;
 
 
     /**
@@ -175,7 +181,6 @@ public class UCT implements Engine {
      */
     public synchronized void setInfinity(int score) {
         maxScore = Math.max(score, 1);
-        biasScore = maxScore * biasFactor;
     }
 
 
@@ -185,8 +190,7 @@ public class UCT implements Engine {
      * @param factor    Exploration parameter
      */
     public synchronized void setExplorationBias(double factor) {
-        biasFactor = factor;
-        biasScore = maxScore * biasFactor;
+        this.biasFactor = factor;
     }
 
 
@@ -267,7 +271,11 @@ public class UCT implements Engine {
         timer.schedule(countDown, moveTime);
         root = findRootNode(game);
 
+        beta = -maxScore;
+        alpha = maxScore;
+
         while (!aborted || root.count < MIN_PROBES) {
+            bias = biasFactor * Math.abs(beta - alpha);
             search(root, maxDepth);
         }
 
@@ -289,7 +297,7 @@ public class UCT implements Engine {
      */
     private double computePriority(Node child, double factor) {
         final double E = Math.sqrt(factor / child.count);
-        final double priority = E * biasScore + child.score;
+        final double priority = E * bias + child.score;
 
         return priority;
     }
@@ -343,13 +351,6 @@ public class UCT implements Engine {
     }
 
 
-    /**
-     * Obtains a tree node for the given game position. If the node
-     * exists on the tree returns it; otherwise returns a new node.
-     *
-     * @param game      Game state
-     * @return          A root node
-     */
     /**
      * Obtains a tree node for the given game position. If the node
      * exists on the tree returns it; otherwise returns a new node.
@@ -525,6 +526,9 @@ public class UCT implements Engine {
         } else {
             node.updateScore(score);
         }
+
+        beta = Math.max(beta, score);
+        alpha = Math.min(alpha, score);
 
         return score;
     }
