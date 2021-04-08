@@ -19,8 +19,6 @@ package com.joansala.engine.uct;
 
 import java.util.function.Consumer;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 import java.util.Timer;
@@ -68,9 +66,6 @@ public class UCT implements Engine {
 
     /** Consumer of best moves */
     private Set<Consumer<Integer>> consumers = new HashSet<>();
-
-    /** Queue of nodes */
-    private Queue<Node> queue = new LinkedList<>();
 
     /** The maximum depth allowed for the current search */
     private int maxDepth = MAX_DEPTH;
@@ -355,33 +350,54 @@ public class UCT implements Engine {
      * @param game      Game state
      * @return          A root node
      */
+    /**
+     * Obtains a tree node for the given game position. If the node
+     * exists on the tree returns it; otherwise returns a new node.
+     *
+     * @param game      Game state
+     * @return          A root node
+     */
     private Node findRootNode(Game game) {
         final long hash = game.hash();
+        final Node node;
 
-        queue.clear();
-        queue.add(root);
-
-        while (!queue.isEmpty()) {
-            Node node = queue.remove();
-
-            if (node.hash == hash) {
-                node.detachNode();
-                return node;
-            }
-
-            if ((node = node.child) != null) {
-                queue.add(node);
-
-                while ((node = node.sibling) != null) {
-                    queue.add(node);
-                }
-            }
+        if ((node = findNode(root, hash, 2)) != null) {
+            node.detachNode();
+            return node;
         }
 
         Node root = new Node();
         root.updateState(game);
 
         return root;
+    }
+
+
+    /**
+     * Recursive lookup for a node given its hash code.
+     *
+     * @param node      Root node
+     * @param hash      Hash of the searched node
+     * @param depth     Maximum recursion depth
+     *
+     * @return          Matching node or null
+     */
+    private Node findNode(Node node, long hash, int depth) {
+        if (node.hash == hash) {
+            return node;
+        }
+
+        Node match = null;
+
+        if (depth > 0 && (node = node.child) != null) {
+            match = findNode(node, hash, depth - 1);
+
+            while (match == null && (node = node.sibling) != null) {
+                match = findNode(node, hash, depth - 1);
+            }
+        }
+
+        return match;
     }
 
 
