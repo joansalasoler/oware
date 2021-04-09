@@ -304,8 +304,7 @@ public class UCT implements Engine {
 
 
     /**
-     * Obtain the best move found so far. That is, the child of the root
-     * node where the highest number of simulations were performed.
+     * Obtain the best move found so far.
      *
      * @param root      Root node
      * @return          Child node
@@ -313,11 +312,11 @@ public class UCT implements Engine {
     private int findBestMove() {
         Node child = root.child;
         int bestMove = child.move;
-        int bestCount = child.count;
+        double bestScore = child.score;
 
         while ((child = child.sibling) != null) {
-            if (child.count >= bestCount) {
-                bestCount = child.count;
+            if (child.score >= bestScore) {
+                bestScore = child.score;
                 bestMove = child.move;
             }
         }
