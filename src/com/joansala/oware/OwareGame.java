@@ -912,6 +912,14 @@ public class OwareGame implements Game {
 
 
     /**
+     * {@inheritDoc}
+     */
+    public int toCentiPawns(int score) {
+        return (int) (2.5 * score);
+    }
+
+
+    /**
      * Ensures this object can store at least the give number of moves.
      *
      * @param size      Number of moves

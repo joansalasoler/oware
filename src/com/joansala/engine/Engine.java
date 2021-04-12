@@ -58,6 +58,12 @@ public interface Engine {
 
 
     /**
+     * Obtains the move this engine would like to ponder on.
+     */
+    int getPonderMove(Game game);
+
+
+    /**
      * Sets the maximum search depth for subsequent computations
      *
      * @param depth  The new depth value
@@ -106,7 +112,7 @@ public interface Engine {
      *
      * @param consumer  Best move consumer
      */
-    void attachConsumer(Consumer<Integer> consumer);
+    void attachConsumer(Consumer<Report> consumer);
 
 
     /**
@@ -114,7 +120,7 @@ public interface Engine {
      *
      * @param consumer  Best move consumer
      */
-    void detachConsumer(Consumer<Integer> consumer);
+    void detachConsumer(Consumer<Report> consumer);
 
 
     /**

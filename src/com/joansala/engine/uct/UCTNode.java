@@ -24,16 +24,16 @@ import com.joansala.engine.Game;
 /**
  * A game state on a search tree.
  */
-class Node {
+class UCTNode {
 
     /** Parent of this node */
-    Node parent = null;
+    UCTNode parent = null;
 
     /** First child of this node */
-    Node child = null;
+    UCTNode child = null;
 
     /** First sibling of this node */
-    Node sibling = null;
+    UCTNode sibling = null;
 
     /** Unique hash code of the node */
     long hash = 0x00;
@@ -89,7 +89,7 @@ class Node {
      *
      * @param parent    Parent node
      */
-    void updateParent(Node parent) {
+    void updateParent(UCTNode parent) {
         this.parent = parent;
         this.sibling = parent.child;
         parent.child = this;

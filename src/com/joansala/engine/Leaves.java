@@ -29,13 +29,6 @@ package com.joansala.engine;
  */
 public interface Leaves {
 
-    /** Unknown score flag */
-    int EMPTY = 0;
-
-    /** Exact score flag */
-    int EXACT = 3;
-
-
     /**
      * Flag of the last found position.
      *

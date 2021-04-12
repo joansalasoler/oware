@@ -24,9 +24,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.joansala.engine.Engine;
-import com.joansala.engine.Game;
-import com.joansala.engine.Leaves;
+import com.joansala.engine.*;
 
 
 /**
@@ -46,17 +44,17 @@ public class UCT implements Engine {
     /** Maximum depth allowed for a search */
     public static final int MAX_DEPTH = 254;
 
-    /** Minimum number of simulations */
-    public static final int MIN_PROBES = 50;
+    /** Minimum number of node expansions */
+    private static final int MIN_PROBES = 1000;
+
+    /** Minimum number of expansions between reports */
+    private static final int REPORT_PROBES = 250000;
 
     /** Search timer */
     private final Timer timer;
 
-    /** Random number generator */
-    private final Random random;
-
     /** Current computation root node */
-    private Node root = new Node();
+    private UCTNode root = new UCTNode();
 
     /** References the {@code Game} to search */
     private Game game = null;
@@ -65,7 +63,7 @@ public class UCT implements Engine {
     private Leaves leaves = null;
 
     /** Consumer of best moves */
-    private Set<Consumer<Integer>> consumers = new HashSet<>();
+    private Set<Consumer<Report>> consumers = new HashSet<>();
 
     /** The maximum depth allowed for the current search */
     private int maxDepth = MAX_DEPTH;
@@ -99,7 +97,6 @@ public class UCT implements Engine {
      * Create a new search engine.
      */
     public UCT() {
-        random = new Random();
         timer = new Timer(true);
         this.leaves = dummyLeaves;
     }
@@ -139,6 +136,14 @@ public class UCT implements Engine {
      */
     public int getInfinity() {
         return maxScore;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    public int getPonderMove(Game game) {
+        return Game.NULL_MOVE;
     }
 
 
@@ -207,7 +212,7 @@ public class UCT implements Engine {
     /**
      * {@inheritDoc}
      */
-    public synchronized void attachConsumer(Consumer<Integer> consumer) {
+    public synchronized void attachConsumer(Consumer<Report> consumer) {
         consumers.add(consumer);
     }
 
@@ -215,7 +220,7 @@ public class UCT implements Engine {
     /**
      * {@inheritDoc}
      */
-    public synchronized void detachConsumer(Consumer<Integer> consumer) {
+    public synchronized void detachConsumer(Consumer<Report> consumer) {
         consumers.remove(consumer);
     }
 
@@ -224,7 +229,7 @@ public class UCT implements Engine {
      * {@inheritDoc}
      */
     public synchronized void newMatch() {
-        root = new Node();
+        root = new UCTNode();
         timer.purge();
         System.gc();
     }
@@ -274,15 +279,34 @@ public class UCT implements Engine {
         beta = -maxScore;
         alpha = maxScore;
 
+        int sampleCount = 0;
+        UCTNode bestChild = null;
+        double bestScore = Game.DRAW_SCORE;
+
         while (!aborted || root.count < MIN_PROBES) {
             bias = biasFactor * Math.abs(beta - alpha);
             search(root, maxDepth);
+
+            if (sampleCount++ > REPORT_PROBES) {
+                sampleCount = 0;
+
+                UCTNode child = pickBestChild(root);
+                double change = Math.abs(child.score - bestScore);
+
+                if (child != bestChild || change > 1.0) {
+                    bestChild = child;
+                    bestScore = child.score;
+                    invokeConsumers(game);
+                }
+            }
         }
 
+        bestChild = pickBestChild(root);
+        invokeConsumers(game);
         countDown.cancel();
         aborted = false;
 
-        return findBestMove();
+        return bestChild.move;
     }
 
 
@@ -295,7 +319,7 @@ public class UCT implements Engine {
      *
      * @return           Expansion priority
      */
-    private double computePriority(Node child, double factor) {
+    private double computePriority(UCTNode child, double factor) {
         final double E = Math.sqrt(factor / child.count);
         final double priority = E * bias + child.score;
 
@@ -304,24 +328,24 @@ public class UCT implements Engine {
 
 
     /**
-     * Obtain the best move found so far.
+     * Best child found so far for the given node.
      *
-     * @param root      Root node
+     * @param node      Parent node
      * @return          Child node
      */
-    private int findBestMove() {
-        Node child = root.child;
-        int bestMove = child.move;
+    protected UCTNode pickBestChild(UCTNode node) {
+        UCTNode child = node.child;
+        UCTNode bestChild = node.child;
         double bestScore = child.score;
 
         while ((child = child.sibling) != null) {
             if (child.score >= bestScore) {
                 bestScore = child.score;
-                bestMove = child.move;
+                bestChild = child;
             }
         }
 
-        return bestMove;
+        return bestChild;
     }
 
 
@@ -331,9 +355,9 @@ public class UCT implements Engine {
      * @param node      Parent node
      * @return          A child node
      */
-    private Node findLeadChild(Node parent) {
-        Node child = parent.child;
-        Node bestNode = parent.child;
+    private UCTNode pickLeadChild(UCTNode parent) {
+        UCTNode child = parent.child;
+        UCTNode bestNode = parent.child;
         double factor = Math.log(parent.count);
         double bestScore = computePriority(child, factor);
 
@@ -357,16 +381,16 @@ public class UCT implements Engine {
      * @param game      Game state
      * @return          A root node
      */
-    private Node findRootNode(Game game) {
+    private UCTNode findRootNode(Game game) {
         final long hash = game.hash();
-        final Node node;
+        final UCTNode node;
 
         if ((node = findNode(root, hash, 2)) != null) {
             node.detachNode();
             return node;
         }
 
-        Node root = new Node();
+        UCTNode root = new UCTNode();
         root.updateState(game);
 
         return root;
@@ -382,12 +406,12 @@ public class UCT implements Engine {
      *
      * @return          Matching node or null
      */
-    private Node findNode(Node node, long hash, int depth) {
+    private UCTNode findNode(UCTNode node, long hash, int depth) {
         if (node.hash == hash) {
             return node;
         }
 
-        Node match = null;
+        UCTNode match = null;
 
         if (depth > 0 && (node = node.child) != null) {
             match = findNode(node, hash, depth - 1);
@@ -409,7 +433,7 @@ public class UCT implements Engine {
      *
      * @return          Next move or {@code NULL_MOVE}
      */
-    private int getNextMove(Game game, Node node) {
+    private int getNextMove(Game game, UCTNode node) {
         final int move;
 
         if (node.expanded) {
@@ -433,7 +457,7 @@ public class UCT implements Engine {
      *
      * @return          Score of the game
      */
-    private int score(Node node, int depth) {
+    private int score(UCTNode node, int depth) {
         int score;
 
         if (node.terminal) {
@@ -460,7 +484,7 @@ public class UCT implements Engine {
      *
      * @return          Score of the node
      */
-    private double evaluate(Node node, int depth) {
+    private double evaluate(UCTNode node, int depth) {
         final double score = -score(node, depth);
         node.updateScore(score);
 
@@ -476,8 +500,8 @@ public class UCT implements Engine {
      *
      * @return          New child node
      */
-    private Node expandChild(Node parent, int move) {
-        final Node node = new Node();
+    private UCTNode expandChild(UCTNode parent, int move) {
+        final UCTNode node = new UCTNode();
 
         node.updateState(game);
         node.updateParent(parent);
@@ -493,9 +517,9 @@ public class UCT implements Engine {
      * @param game      Game
      * @param node      Root node
      */
-    private double search(Node node, int depth) {
+    private double search(UCTNode node, int depth) {
         final int move;
-        final Node child;
+        final UCTNode child;
         final double score;
 
         if (node.terminal || depth == 0) {
@@ -513,7 +537,7 @@ public class UCT implements Engine {
             score = -evaluate(child, depth - 1);
             game.unmakeMove();
         } else {
-            child = findLeadChild(node);
+            child = pickLeadChild(node);
             game.makeMove(child.move);
             score = -search(child, depth - 1);
             game.unmakeMove();
@@ -534,11 +558,26 @@ public class UCT implements Engine {
 
 
     /**
+     * Notifies registered consumers of a state change.
+     *
+     * @param game          Game state before a search
+     * @param bestMove      Best move found so far
+     */
+    protected void invokeConsumers(Game game) {
+        Report report = new UCTReport(this, game, root);
+
+        for (Consumer<Report> consumer : consumers) {
+            consumer.accept(report);
+        }
+    }
+
+
+    /**
      * Empty endgames database implementation.
      */
     private final Leaves dummyLeaves = new Leaves() {
         public int getScore() { return 0; }
-        public int getFlag() { return Leaves.EMPTY; }
+        public int getFlag() { return Flag.EMPTY; }
         public boolean find(Game g) { return false; }
     };
 }

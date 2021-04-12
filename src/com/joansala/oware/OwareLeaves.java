@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 import com.joansala.engine.Book;
+import com.joansala.engine.Flag;
 import com.joansala.engine.Game;
 import com.joansala.engine.Leaves;
 import static com.joansala.oware.Oware.*;
@@ -54,7 +55,7 @@ public class OwareLeaves extends Book implements Leaves {
     private final int minStoreSeeds;
 
     /** Flag of the last found entry */
-    private int flag = EMPTY;
+    private int flag = Flag.EMPTY;
 
     /** Score of the last found entry */
     private int score = Game.DRAW_SCORE;
@@ -126,8 +127,8 @@ public class OwareLeaves extends Book implements Leaves {
      * <ul>
      *  <li>Exist on the database.</li>
      *  <li>Contain a maximum of {@code MAX_SEEDS}.</li>
-     *  <li>Its flag must be {@code EXACT} or, if the best outcome happens
-     *      as a result of a position repetition, its flag be {@code LOWER}
+     *  <li>Its flag must be {@code Flag.EXACT} or, if the best outcome happens
+     *      as a result of a position repetition, its flag be {@code Flag.LOWER}
      *      and the last performed move a capture.</li>
      * </ul>
      *
@@ -149,7 +150,7 @@ public class OwareLeaves extends Book implements Leaves {
         final int entry = data[hash];
         final int flag = (entry & 0x03);
 
-        if (flag != EXACT && !game.wasCapture()) {
+        if (flag != Flag.EXACT && !game.wasCapture()) {
             return false;
         }
 
@@ -219,7 +220,7 @@ public class OwareLeaves extends Book implements Leaves {
      * @return              A score value
      */
     private int score(int[] state) {
-        return (flag == EXACT) ? outcome(state) : heuristic(state);
+        return (flag == Flag.EXACT) ? outcome(state) : heuristic(state);
     }
 
 

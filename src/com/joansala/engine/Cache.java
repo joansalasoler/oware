@@ -43,27 +43,6 @@ package com.joansala.engine;
  */
 public interface Cache {
 
-    /** Flag of an unknown score */
-    int EMPTY = 0;
-
-    /** Flag of a lower bound score */
-    int LOWER = 1;
-
-    /** Flag of an upper bound score */
-    int UPPER = 2;
-
-    /** Flag of an exact score */
-    int EXACT = 3;
-
-
-    /**
-     * Returns the score for the last position found in centipawns.
-     *
-     * @return  Stored score value in centipawns
-     */
-    int getOutcome();
-
-
     /**
      * Returns the stored score value for the last position found.
      *

@@ -19,6 +19,7 @@ package com.joansala.oware;
  */
 
 import com.joansala.engine.Cache;
+import com.joansala.engine.Flag;
 import com.joansala.engine.Game;
 
 
@@ -50,7 +51,7 @@ public class OwareCache implements Cache {
     private long[] data;
 
     /** Current entry flag (2 bits) */
-    private int flag = EMPTY;
+    private int flag = Flag.EMPTY;
 
     /** Current entry hash move (4 bits) */
     private int move = Game.NULL_MOVE;
@@ -96,14 +97,6 @@ public class OwareCache implements Cache {
 
 
     /**
-     * {@inheritDoc}
-     */
-    public int getOutcome() {
-        return (int) (2.5 * this.score);
-    }
-
-
-    /**
      * Returns the stored score value for the last position found.
      *
      * @return  Stored score value or zero
@@ -136,7 +129,7 @@ public class OwareCache implements Cache {
     /**
      * Returns the stored flag value for the last position found.
      *
-     * @return  Stored flag value or {@code Cache.EMPTY}
+     * @return  Stored flag value or {@code Flag.EMPTY}
      */
     public int getFlag() {
         return this.flag;
@@ -257,7 +250,7 @@ public class OwareCache implements Cache {
     public synchronized void clear() {
         this.score = 0;
         this.depth = 0;
-        this.flag = EMPTY;
+        this.flag = Flag.EMPTY;
         this.move = Game.NULL_MOVE;
         this.data = null;
 

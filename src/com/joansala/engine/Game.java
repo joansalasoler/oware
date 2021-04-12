@@ -240,6 +240,15 @@ public interface Game {
 
 
     /**
+     * Converts an evaluation score to centipawns.
+     *
+     * @param score     Evaluation score
+     * @return          Score in centipawns
+     */
+    int toCentiPawns(int score);
+
+
+    /**
      * Increases the capacity of the game object if necessary. Calling
      * this method must ensure that the game object can store at least
      * the number of moves specified.

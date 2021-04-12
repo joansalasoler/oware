@@ -23,10 +23,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.joansala.engine.Cache;
-import com.joansala.engine.Engine;
-import com.joansala.engine.Game;
-import com.joansala.engine.Leaves;
+import com.joansala.engine.*;
 
 
 /**
@@ -65,7 +62,7 @@ public class Negamax implements Engine {
     private Leaves leaves = null;
 
     /** Consumer of best moves */
-    private Set<Consumer<Integer>> consumers = new HashSet<>();
+    private Set<Consumer<Report>> consumers = new HashSet<>();
 
     /** The maximum depth allowed for the current search */
     private int maxDepth = MAX_DEPTH;
@@ -144,6 +141,22 @@ public class Negamax implements Engine {
      */
     public int getScoreDepth() {
         return scoreDepth;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    public int getPonderMove(Game game) {
+        int move = Game.NULL_MOVE;
+
+        if (cache != null && cache.find(game)) {
+            if (cache.getFlag() == Flag.EXACT) {
+                move = cache.getMove();
+            }
+        }
+
+        return move;
     }
 
 
@@ -236,7 +249,7 @@ public class Negamax implements Engine {
     /**
      * {@inheritDoc}
      */
-    public synchronized void attachConsumer(Consumer<Integer> consumer) {
+    public synchronized void attachConsumer(Consumer<Report> consumer) {
         consumers.add(consumer);
     }
 
@@ -244,7 +257,7 @@ public class Negamax implements Engine {
     /**
      * {@inheritDoc}
      */
-    public synchronized void detachConsumer(Consumer<Integer> consumer) {
+    public synchronized void detachConsumer(Consumer<Report> consumer) {
         consumers.remove(consumer);
     }
 
@@ -389,8 +402,12 @@ public class Negamax implements Engine {
                 break;
             }
 
-            if (bestMove != lastMove || bestScore != lastScore) {
-                invokeConsumers(bestMove);
+            // Create a report of the current search results
+
+            if (depth > MIN_DEPTH) {
+                if (bestMove != lastMove || bestScore != lastScore) {
+                    invokeConsumers(game, bestMove);
+                }
             }
 
             // She's heading for the disco…
@@ -401,8 +418,7 @@ public class Negamax implements Engine {
             depth += 2;
         }
 
-        // Stop countdown
-
+        invokeConsumers(game, bestMove);
         countDown.cancel();
         aborted = false;
 
@@ -456,15 +472,15 @@ public class Negamax implements Engine {
 
             if (cache.getDepth() >= depth) {
                 switch (cache.getFlag()) {
-                    case Cache.UPPER:
+                    case Flag.UPPER:
                         if (cache.getScore() >= beta)
                             return beta;
                         break;
-                    case Cache.LOWER:
+                    case Flag.LOWER:
                         if (cache.getScore() <= alpha)
                             return alpha;
                         break;
-                    case Cache.EXACT:
+                    case Flag.EXACT:
                         return cache.getScore();
                 }
             }
@@ -477,7 +493,7 @@ public class Negamax implements Engine {
         // Initialize score and flags
 
         int score = minScore;
-        int flag = Cache.LOWER;
+        int flag = Flag.LOWER;
 
         // Try the hash move first
 
@@ -487,13 +503,13 @@ public class Negamax implements Engine {
             game.unmakeMove();
 
             if (score >= beta && aborted == false) {
-                cache.store(game, score, hashMove, depth, Cache.UPPER);
+                cache.store(game, score, hashMove, depth, Flag.UPPER);
                 return beta;
             }
 
             if (score > alpha) {
                 alpha = score;
-                flag = Cache.EXACT;
+                flag = Flag.EXACT;
             }
         }
 
@@ -512,14 +528,14 @@ public class Negamax implements Engine {
             if (score >= beta) {
                 alpha = beta;
                 hashMove = cmove;
-                flag = Cache.UPPER;
+                flag = Flag.UPPER;
                 break;
             }
 
             if (score > alpha) {
                 alpha = score;
                 hashMove = cmove;
-                flag = Cache.EXACT;
+                flag = Flag.EXACT;
             }
         }
 
@@ -538,11 +554,14 @@ public class Negamax implements Engine {
     /**
      * Notifies registered consumers of a state change.
      *
-     * @param move  Best move found so far
+     * @param game          Game state before a search
+     * @param bestMove      Best move found so far
      */
-    protected void invokeConsumers(int move) {
-        for (Consumer<Integer> consumer : consumers) {
-            consumer.accept(move);
+    protected void invokeConsumers(Game game, int bestMove) {
+        Report report = new CacheReport(game, cache, bestMove);
+
+        for (Consumer<Report> consumer : consumers) {
+            consumer.accept(report);
         }
     }
 
@@ -554,11 +573,10 @@ public class Negamax implements Engine {
      */
     private final Cache dummyCache = new Cache() {
         public long size() { return 0L; }
-        public int getOutcome() { return 0; }
         public int getScore() { return 0; }
         public int getMove() { return Game.NULL_MOVE; }
         public int getDepth() { return 0; }
-        public int getFlag() { return Cache.EMPTY; }
+        public int getFlag() { return Flag.EMPTY; }
         public boolean find(Game g) { return false; }
         public void store(Game g, int s, int m, int d, int f) { }
         public void discharge() { }
@@ -572,7 +590,7 @@ public class Negamax implements Engine {
      */
     private final Leaves dummyLeaves = new Leaves() {
         public int getScore() { return 0; }
-        public int getFlag() { return Leaves.EMPTY; }
+        public int getFlag() { return Flag.EMPTY; }
         public boolean find(Game g) { return false; }
     };
 }

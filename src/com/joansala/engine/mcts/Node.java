@@ -61,9 +61,13 @@ class Node {
      * Detach this node from the tree.
      */
     void detachNode() {
-        this.sibling = null;
-        parent.child = null;
-        parent = null;
+        sibling = null;
+
+        if (parent != null) {
+            parent.child = null;
+            parent = null;
+        }
+
         System.gc();
     }
 

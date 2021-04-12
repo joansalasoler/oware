@@ -22,8 +22,7 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-import com.joansala.engine.Engine;
-import com.joansala.engine.Game;
+import com.joansala.engine.*;
 
 
 /**
@@ -35,7 +34,7 @@ public class Erratic implements Engine {
     public static final int MAX_DEPTH = 1;
 
     /** Consumer of best moves */
-    private Set<Consumer<Integer>> consumers = new HashSet<>();
+    private Set<Consumer<Report>> consumers = new HashSet<>();
 
     /** Random number generator */
     private Random random = new Random();
@@ -88,6 +87,14 @@ public class Erratic implements Engine {
     /**
      * {@inheritDoc}
      */
+    public int getPonderMove(Game game) {
+        return Game.NULL_MOVE;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
     public synchronized void setDepth(int depth) {
         maxDepth = Math.min(depth, MAX_DEPTH);
     }
@@ -120,7 +127,7 @@ public class Erratic implements Engine {
     /**
      * {@inheritDoc}
      */
-    public synchronized void attachConsumer(Consumer<Integer> consumer) {
+    public synchronized void attachConsumer(Consumer<Report> consumer) {
         consumers.add(consumer);
     }
 
@@ -128,7 +135,7 @@ public class Erratic implements Engine {
     /**
      * {@inheritDoc}
      */
-    public synchronized void detachConsumer(Consumer<Integer> consumer) {
+    public synchronized void detachConsumer(Consumer<Report> consumer) {
         consumers.remove(consumer);
     }
 

@@ -24,8 +24,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import com.joansala.engine.Engine;
-import com.joansala.engine.Game;
+import com.joansala.engine.*;
 
 
 /**
@@ -61,7 +60,7 @@ public class Montecarlo implements Engine {
     private Game game = null;
 
     /** Consumer of best moves */
-    private Set<Consumer<Integer>> consumers = new HashSet<>();
+    private Set<Consumer<Report>> consumers = new HashSet<>();
 
     /** The maximum depth allowed for the current search */
     private int maxDepth = MAX_DEPTH;
@@ -132,6 +131,14 @@ public class Montecarlo implements Engine {
 
 
     /**
+     * {@inheritDoc}
+     */
+    public int getPonderMove(Game game) {
+        return Game.NULL_MOVE;
+    }
+
+
+    /**
      * Sets the maximum depth for subsequent computations.
      *
      * @param depth  Requested maximum depth
@@ -188,7 +195,7 @@ public class Montecarlo implements Engine {
     /**
      * {@inheritDoc}
      */
-    public synchronized void attachConsumer(Consumer<Integer> consumer) {
+    public synchronized void attachConsumer(Consumer<Report> consumer) {
         consumers.add(consumer);
     }
 
@@ -196,7 +203,7 @@ public class Montecarlo implements Engine {
     /**
      * {@inheritDoc}
      */
-    public synchronized void detachConsumer(Consumer<Integer> consumer) {
+    public synchronized void detachConsumer(Consumer<Report> consumer) {
         consumers.remove(consumer);
     }
 

@@ -61,6 +61,9 @@ public class UCIService {
     /** Contains the initial board of the game */
     private Board start = null;
 
+    /** Last info shown for the current computation */
+    private String lastInfo = null;
+
     /** Contains the performed moves for the next computation */
     private int[] moves = null;
 
@@ -235,12 +238,13 @@ public class UCIService {
          * The main bucle for the brain.
          */
         public void run() {
-            final Consumer<Integer> consumer = createSearchConsumer();
+            final Consumer<Report> consumer = createSearchConsumer();
             engine.attachConsumer(consumer);
 
             while (true) {
                 synchronized (this) {
                     try {
+                        lastInfo = null;
                         thinking = false;
                         this.wait();
                         findBestMove();
@@ -302,8 +306,9 @@ public class UCIService {
 
             // Use the book to find a move
 
-            if (ownBook && !infinite)
+            if (ownBook && !infinite) {
                 bestMove = getBookMove(game);
+            }
 
             // Use the engine to compute a move
 
@@ -313,18 +318,6 @@ public class UCIService {
                 output("info string A book move was chosen");
             }
 
-            // Add the move to the game
-
-            performMove(game, bestMove);
-
-            // Show a report of the performed search
-
-            final String report = collectSearchInfo(game, bestMove);
-
-            if (report instanceof String) {
-                output(report);
-            }
-
             // Show the computed best and ponder moves
 
             StringBuilder response = new StringBuilder();
@@ -332,7 +325,8 @@ public class UCIService {
             response.append("bestmove ");
             response.append(start.toAlgebraic(bestMove));
 
-            final int ponderMove = getPonderMove(game);
+            performMove(game, bestMove);
+            int ponderMove = getPonderMove(game);
 
             if (ponderMove != Game.NULL_MOVE) {
                 response.append(" ponder ");
@@ -344,102 +338,40 @@ public class UCIService {
 
 
         /**
-         * Prints statistics for a game object. The data is collected
-         * from the transposition table and includes the game score,
-         * reached depth and principal variation.
+         * Prints information for an engine's search.
          *
-         * @param game  Game object for which to print information
-         * @return      Information string or null
+         * @param report    Search report
+         * @return          Information string
          */
-        private String collectSearchInfo(Game game, int bestMove) {
-            if (cache == null || !cache.find(game)) {
-                return null;
-            }
-
-            // Collect game stats from the transposition table
-
-            int winner = Game.DRAW;
-            int depth = cache.getDepth() + 1;
-            int score = cache.getScore();
-            int outcome = cache.getOutcome();
-            int flag = cache.getFlag();
-
-            int[] variation = null;
-            int length = 0;
-
-            // If we have an endgame score assume the score is exact
-
-            if (Math.abs(score) == engine.getInfinity())
-                flag = Cache.EXACT;
-
-            // Collect principal variation
-
-            if (cache.getMove() != Game.NULL_MOVE) {
-                if (depth > 0 && flag == Cache.EXACT) {
-                    int moveCount = 0;
-
-                    variation = new int[depth + 2];
-                    variation[0] = bestMove;
-                    variation[1] = cache.getMove();
-                    length = 2;
-
-                    for (int i = 0; i < depth; i++) {
-                        performMove(game, cache.getMove());
-                        moveCount++;
-
-                        if (game.hasEnded()) {
-                            winner = game.winner();
-                            break;
-                        }
-
-                        if (!cache.find(game))
-                            break;
-
-                        if (cache.getMove() == Game.NULL_MOVE)
-                            break;
-
-                        if (cache.getFlag() != Cache.EXACT) {
-                            if (Math.abs(score) != engine.getInfinity())
-                                break;
-                        }
-
-                        variation[length++] = cache.getMove();
-                    }
-
-                    for (int i = 0; i < moveCount; i++) {
-                        game.unmakeMove();
-                    }
-                }
-            }
-
-            // Print all the collected information
-
+        private String formatReport(Report report) {
             StringBuilder response = new StringBuilder();
 
-            response.append("info");
-            response.append(" depth ");
-            response.append(depth);
-            response.append(" score cp ");
-            response.append(-outcome);
+            int flag = report.getFlag();
+            int score = report.getScore();
+            int depth = report.getDepth();
+            int[] variation = report.getVariation();
 
-            if (winner != Game.DRAW) {
-                int numMoves = (int) (length / 2.0D + .5D);
-                int value = (score > 0) ? -numMoves : numMoves;
-                response.append(" mate ");
-                response.append(value);
+            response.append("info");
+
+            if (depth > 0) {
+                response.append(" depth ");
+                response.append(depth);
             }
 
-            if (flag == Cache.LOWER)
+            response.append(" score cp ");
+            response.append(score);
+
+            if (flag == Flag.LOWER) {
                 response.append(" lowerbound");
+            }
 
-            if (flag == Cache.UPPER)
+            if (flag == Flag.UPPER) {
                 response.append(" upperbound");
+            }
 
-            if (variation != null) {
-                int[] moves = new int[length];
-                System.arraycopy(variation, 0, moves, 0, length);
+            if (variation.length > 0) {
                 response.append(" pv ");
-                response.append(start.toAlgebraic(moves));
+                response.append(start.toAlgebraic(variation));
             }
 
             return response.toString();
@@ -447,28 +379,20 @@ public class UCIService {
 
 
         /**
-         * A consumer that prints search information for the current state
-         * of the game if a principal variation is found on the cache.
+         * A consumer that prints search information for the current state.
          *
          * @return      New search consumer instance
          */
-        private Consumer<Integer> createSearchConsumer() {
-            return (move) -> {
-                final String report;
+        private Consumer<Report> createSearchConsumer() {
+            return (report) -> {
+                if (report.getFlag() != Flag.EMPTY) {
+                    String info = formatReport(report);
 
-                game.makeMove(move);
-
-                if (cache != null && cache.find(game)) {
-                    if (Cache.EXACT == cache.getFlag()) {
-                        report = collectSearchInfo(game, move);
-
-                        if (report instanceof String) {
-                            output(report);
-                        }
+                    if (!info.equals(lastInfo)) {
+                        lastInfo = info;
+                        output(info);
                     }
                 }
-
-                game.unmakeMove();
             };
         }
 
@@ -498,19 +422,11 @@ public class UCIService {
          * @return      A move or {@code Game.NULL_MOVE}
          */
         private int getPonderMove(Game game) {
-            int move = Game.NULL_MOVE;
+            int move = engine.getPonderMove(game);
 
-            // Find a move to ponder on the transposition table
-
-            if (cache != null && cache.find(game)) {
-                if (cache.getFlag() == Cache.EXACT)
-                    move = cache.getMove();
-            }
-
-            // Find a move to ponder on the book
-
-            if (move == Game.NULL_MOVE && ownBook)
+            if (move == Game.NULL_MOVE && ownBook) {
                 move = getBookMove(game);
+            }
 
             return move;
         }
