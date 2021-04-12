@@ -384,18 +384,20 @@ public class UCT implements Engine {
 
 
     /**
-     * Obtains a tree node for the given game position. If the node
-     * exists on the tree returns it; otherwise returns a new node.
+     * Obtains a tree node for the given game position.
      *
      * @param game      Game state
      * @return          A root node
      */
     private UCTNode findRootNode(Game game) {
         final long hash = game.hash();
-        final UCTNode node;
+        UCTNode node = root;
 
-        if ((node = findNode(root, hash, 2)) != null) {
-            node.detachNode();
+        if (node != null && node.parent != null) {
+            node = node.parent;
+        }
+
+        if ((node = findNode(node, hash, 3)) != null) {
             return node;
         }
 
