@@ -143,6 +143,15 @@ public class UCT implements Engine {
      * {@inheritDoc}
      */
     public int getPonderMove(Game game) {
+        long hash = game.hash();
+        UCTNode node = null;
+
+        if ((node = findNode(root, hash, 1)) != null) {
+            if ((node = pickBestChild(node)) != null) {
+                return node.move;
+            }
+        }
+
         return Game.NULL_MOVE;
     }
 
