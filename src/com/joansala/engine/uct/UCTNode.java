@@ -58,17 +58,14 @@ class UCTNode {
 
 
     /**
-     * Detach this node from the tree.
+     * Adds a new child node to this parent.
+     *
+     * @param node      Child node
      */
-    void detachNode() {
-        sibling = null;
-
-        if (parent != null) {
-            parent.child = null;
-            parent = null;
-        }
-
-        System.gc();
+    void pushChild(UCTNode node) {
+        node.parent = this;
+        node.sibling = child;
+        child = node;
     }
 
 
@@ -76,28 +73,42 @@ class UCTNode {
      * Init this node from a new game state.
      *
      * @param game      Game state
+     * @param move      Performed move
      */
-    void updateState(Game game) {
+    void setState(Game game, int move) {
         hash = game.hash();
         cursor = game.getCursor();
         terminal = game.hasEnded();
+        this.move = move;
+        expanded = false;
     }
 
 
     /**
-     * Sets a new parent for this node.
+     * Sets the initial score of this node.
      *
-     * @param parent    Parent node
+     * @param value     Node score
      */
-    void updateParent(UCTNode parent) {
-        this.parent = parent;
-        this.sibling = parent.child;
-        parent.child = this;
+    void setFirstScore(double value) {
+        score = value;
+        count = 1;
     }
 
 
     /**
-     * Update this node's score with the result of a simulation.
+     * Sets this node as terminal and fixes its score.
+     *
+     * @param value     Terminal score
+     */
+    void setExactScore(double value) {
+        terminal = true;
+        score = value;
+        count++;
+    }
+
+
+    /**
+     * Update the average score with a new value.
      *
      * @param value     Simulation score
      */
@@ -107,20 +118,36 @@ class UCTNode {
 
 
     /**
-     * Sets the terminal score of this node.
-     *
-     * @param value     Terminal score
+     * Increase the number of simulations.
      */
-    void setScore(double value) {
-        score = value;
+    void increaseCount() {
         count++;
     }
 
 
     /**
-     * Increase the number of simulations.
+     * Detach this node from the tree. Removes all the refernces to the
+     * node found on the tree; so the node can be garbage collected.
      */
-    void increaseCount() {
-        count++;
+    void detachFromTree() {
+        if (parent == null) {
+            return;
+        }
+
+        if (parent.child == this) {
+            parent.child = null;
+            parent = null;
+            return;
+        }
+
+        UCTNode node = parent.child;
+
+        while ((node = node.sibling) != null) {
+            if (node.sibling == this) {
+                node.sibling = null;
+                parent = null;
+                break;
+            }
+        }
     }
 }

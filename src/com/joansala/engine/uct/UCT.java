@@ -98,7 +98,7 @@ public class UCT implements Engine {
      */
     public UCT() {
         timer = new Timer(true);
-        this.leaves = dummyLeaves;
+        leaves = dummyLeaves;
     }
 
 
@@ -147,8 +147,10 @@ public class UCT implements Engine {
         UCTNode node = null;
 
         if ((node = findNode(root, hash, 1)) != null) {
-            if ((node = pickBestChild(node)) != null) {
-                return node.move;
+            if (node.expanded && !node.terminal) {
+                if ((node = pickBestChild(node)) != null) {
+                    return node.move;
+                }
             }
         }
 
@@ -292,6 +294,10 @@ public class UCT implements Engine {
         UCTNode bestChild = null;
         double bestScore = Game.DRAW_SCORE;
 
+        if (root.parent != null) {
+            root.parent.detachFromTree();
+        }
+
         while (!aborted || root.count < MIN_PROBES) {
             bias = biasFactor * Math.abs(beta - alpha);
             search(root, maxDepth);
@@ -397,12 +403,13 @@ public class UCT implements Engine {
             node = node.parent;
         }
 
-        if ((node = findNode(node, hash, 3)) != null) {
+        if ((node = findNode(node, hash, 2)) != null) {
             return node;
         }
 
         UCTNode root = new UCTNode();
-        root.updateState(game);
+        root.setState(game, Game.NULL_MOVE);
+        root.setFirstScore(0.0);
 
         return root;
     }
@@ -497,7 +504,7 @@ public class UCT implements Engine {
      */
     private double evaluate(UCTNode node, int depth) {
         final double score = -score(node, depth);
-        node.updateScore(score);
+        node.setFirstScore(score);
 
         return score;
     }
@@ -514,9 +521,8 @@ public class UCT implements Engine {
     private UCTNode expandChild(UCTNode parent, int move) {
         final UCTNode node = new UCTNode();
 
-        node.updateState(game);
-        node.updateParent(parent);
-        node.move = move;
+        parent.pushChild(node);
+        node.setState(game, move);
 
         return node;
     }
@@ -555,8 +561,7 @@ public class UCT implements Engine {
         }
 
         if (child.terminal && score == -maxScore) {
-            node.setScore(score);
-            node.terminal = true;
+            node.setExactScore(score);
         } else {
             node.updateScore(score);
         }
