@@ -44,6 +44,9 @@ class UCTNode {
     /** Current move generation cursor */
     int cursor = Game.NULL_MOVE;
 
+    /** Initial move generation cursor */
+    int reset = Game.NULL_MOVE;
+
     /** Whether it is fully expanded */
     boolean expanded = false;
 
@@ -51,7 +54,7 @@ class UCTNode {
     boolean terminal = false;
 
     /** Number of played simulations */
-    int count = 0;
+    long count = 0;
 
     /** Average score of the simulations */
     double score = 0.0;
@@ -70,7 +73,7 @@ class UCTNode {
 
 
     /**
-     * Init this node from a new game state.
+     * Set the initial state of this node.
      *
      * @param game      Game state
      * @param move      Performed move
@@ -79,8 +82,8 @@ class UCTNode {
         hash = game.hash();
         cursor = game.getCursor();
         terminal = game.hasEnded();
+        this.reset = cursor;
         this.move = move;
-        expanded = false;
     }
 
 
@@ -126,7 +129,30 @@ class UCTNode {
 
 
     /**
-     * Detach this node from the tree. Removes all the refernces to the
+     * Detach all the children of this node. Removes all the references
+     * to this node from its children and resets the move cursor; so the
+     * children subtrees can then be garbage collected.
+     */
+    void detachChildren() {
+        if (child == null) {
+            return;
+        }
+
+        UCTNode node = child;
+
+        while ((node = node.sibling) != null) {
+            node.parent = null;
+        }
+
+        cursor = reset;
+        expanded = false;
+        child.parent = null;
+        child = null;
+    }
+
+
+    /**
+     * Detach this node from the tree. Removes all the references to the
      * node found on the tree; so the node can be garbage collected.
      */
     void detachFromTree() {

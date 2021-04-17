@@ -48,7 +48,13 @@ public class UCT implements Engine {
     private static final int MIN_PROBES = 1000;
 
     /** Minimum number of expansions between reports */
-    private static final int REPORT_PROBES = 250000;
+    private static final int REPORT_PROBES = 500000;
+
+    /** Prune when less than this amount of memory is available */
+    private static final int PRUNE_MEMORY_LIMIT = 2 << 21;
+
+    /** Number of pruning iterations to run at once */
+    private static final int PRUNE_ITERATIONS = 20;
 
     /** Search timer */
     private final Timer timer;
@@ -296,11 +302,13 @@ public class UCT implements Engine {
 
         if (root.parent != null) {
             root.parent.detachFromTree();
+            System.gc();
         }
 
         while (!aborted || root.count < MIN_PROBES) {
             bias = biasFactor * Math.abs(beta - alpha);
             search(root, maxDepth);
+            pruneGarbage(root);
 
             if (sampleCount++ > REPORT_PROBES) {
                 sampleCount = 0;
@@ -351,16 +359,36 @@ public class UCT implements Engine {
     protected UCTNode pickBestChild(UCTNode node) {
         UCTNode child = node.child;
         UCTNode bestChild = node.child;
-        double bestScore = child.score;
 
         while ((child = child.sibling) != null) {
-            if (child.score >= bestScore) {
-                bestScore = child.score;
+            if (child.score >= bestChild.score) {
                 bestChild = child;
             }
         }
 
         return bestChild;
+    }
+
+
+    /**
+     *
+     *
+     * @param node      Parent node
+     * @return          Child node
+     */
+    private UCTNode pickFutileChild(UCTNode node) {
+        UCTNode child = node.child;
+        UCTNode futileNode = node.child;
+
+        while ((child = child.sibling) != null) {
+            if (child.score <= futileNode.score) {
+                if (child.expanded == true) {
+                    futileNode = child;
+                }
+            }
+        }
+
+        return futileNode;
     }
 
 
@@ -585,6 +613,50 @@ public class UCT implements Engine {
         for (Consumer<Report> consumer : consumers) {
             consumer.accept(report);
         }
+    }
+
+
+    /**
+     * If the free memory is below a certain threshold prunes one or more
+     * nodes from the tree so they can be garbage collected.
+     *
+     * @param root  Root of the tree
+     */
+    private void pruneGarbage(UCTNode root) {
+        if (Runtime.getRuntime().freeMemory() < PRUNE_MEMORY_LIMIT) {
+            for (int i = 0; i < PRUNE_ITERATIONS; i++) {
+                pruneChilds(root, root);
+
+                if (root.parent != null) {
+                    pruneChilds(root.parent, root);
+                }
+            }
+
+            System.gc();
+        }
+    }
+
+
+    /**
+     * Prunes one ore more leafs from each subtree of a parent node.
+     *
+     * @param parent    Parent node to prune
+     * @param ignore    Do not prune this child
+     */
+    private void pruneChilds(UCTNode parent, UCTNode ignore) {
+        UCTNode node = parent.child;
+
+        do {
+            if (node.expanded && node != ignore) {
+                while (node.expanded) {
+                    node = pickFutileChild(node);
+                }
+
+                if (node.parent != ignore) {
+                    node.parent.detachChildren();
+                }
+            }
+        } while ((node = node.sibling) != null);
     }
 
 
