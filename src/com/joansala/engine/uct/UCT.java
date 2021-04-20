@@ -48,7 +48,7 @@ public class UCT implements Engine {
     private static final int MIN_PROBES = 1000;
 
     /** Minimum number of expansions between reports */
-    private static final int REPORT_PROBES = 500000;
+    private static final int REPORT_PROBES = 125000;
 
     /** Prune when less than this amount of memory is available */
     private static final int PRUNE_MEMORY_LIMIT = 2 << 21;
@@ -296,9 +296,10 @@ public class UCT implements Engine {
         beta = -maxScore;
         alpha = maxScore;
 
-        int sampleCount = 0;
         UCTNode bestChild = null;
         double bestScore = Game.DRAW_SCORE;
+        int reportCount = REPORT_PROBES;
+        int reportProbes = REPORT_PROBES;
 
         if (root.parent != null) {
             root.parent.detachFromTree();
@@ -310,17 +311,22 @@ public class UCT implements Engine {
             search(root, maxDepth);
             pruneGarbage(root);
 
-            if (sampleCount++ > REPORT_PROBES) {
-                sampleCount = 0;
+            if (reportCount-- > 0) {
+                continue;
+            }
 
-                UCTNode child = pickBestChild(root);
-                double change = Math.abs(child.score - bestScore);
+            // Create a report for the current search state
 
-                if (child != bestChild || change > 5.0) {
-                    bestChild = child;
-                    bestScore = child.score;
-                    invokeConsumers(game);
-                }
+            reportProbes = (int) (1.35 * reportProbes);
+            reportCount = reportProbes;
+
+            UCTNode child = pickBestChild(root);
+            double change = Math.abs(child.score - bestScore);
+
+            if (child != bestChild || change > 5.0) {
+                bestChild = child;
+                bestScore = child.score;
+                invokeConsumers(game);
             }
         }
 
