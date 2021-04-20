@@ -39,7 +39,7 @@ public class UCT implements Engine {
     public static final long DEFAULT_MOVETIME = 3600;
 
     /** Factors the amount of exploration of the tree */
-    public static final double DEFAULT_BIAS = 0.176;
+    public static final double DEFAULT_BIAS = 0.353;
 
     /** Maximum depth allowed for a search */
     public static final int MAX_DEPTH = 254;
@@ -316,7 +316,7 @@ public class UCT implements Engine {
                 UCTNode child = pickBestChild(root);
                 double change = Math.abs(child.score - bestScore);
 
-                if (child != bestChild || change > 1.0) {
+                if (child != bestChild || change > 5.0) {
                     bestChild = child;
                     bestScore = child.score;
                     invokeConsumers(game);
@@ -351,6 +351,20 @@ public class UCT implements Engine {
 
 
     /**
+     * Compute the selection score of a node.
+     *
+     * @param node      A node
+     * @return          Score of the node
+     */
+    private double computeScore(UCTNode node) {
+        final double reward = maxScore / Math.sqrt(node.count);
+        final double score = node.score + reward;
+
+        return score;
+    }
+
+
+    /**
      * Best child found so far for the given node.
      *
      * @param node      Parent node
@@ -359,9 +373,13 @@ public class UCT implements Engine {
     protected UCTNode pickBestChild(UCTNode node) {
         UCTNode child = node.child;
         UCTNode bestChild = node.child;
+        double bestScore = computeScore(bestChild);
 
         while ((child = child.sibling) != null) {
-            if (child.score >= bestChild.score) {
+            double score = computeScore(child);
+
+            if (score >= bestScore) {
+                bestScore = score;
                 bestChild = child;
             }
         }
