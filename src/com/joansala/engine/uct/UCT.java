@@ -461,7 +461,7 @@ public class UCT implements Engine {
 
         UCTNode root = new UCTNode();
         root.setState(game, Game.NULL_MOVE);
-        root.setFirstScore(0.0);
+        root.initScore(0.0);
 
         return root;
     }
@@ -556,7 +556,7 @@ public class UCT implements Engine {
      */
     private double evaluate(UCTNode node, int depth) {
         final double score = -score(node, depth);
-        node.setFirstScore(score);
+        node.initScore(score);
 
         return score;
     }
@@ -612,8 +612,12 @@ public class UCT implements Engine {
             game.unmakeMove();
         }
 
-        if (child.terminal && score == -maxScore) {
-            node.setExactScore(score);
+        if (child.terminal == false) {
+            node.updateScore(score);
+        } else if (score == -maxScore) {
+            node.settleScore(score);
+        } else if (score == maxScore && node.expanded) {
+            node.proveScore(score);
         } else {
             node.updateScore(score);
         }

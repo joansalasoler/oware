@@ -88,11 +88,19 @@ class UCTNode {
 
 
     /**
+     * Increase the number of simulations.
+     */
+    void increaseCount() {
+        count++;
+    }
+
+
+    /**
      * Sets the initial score of this node.
      *
      * @param value     Node score
      */
-    void setFirstScore(double value) {
+    void initScore(double value) {
         score = value;
         count = 1;
     }
@@ -103,7 +111,7 @@ class UCTNode {
      *
      * @param value     Terminal score
      */
-    void setExactScore(double value) {
+    void settleScore(double value) {
         terminal = true;
         score = value;
         count++;
@@ -121,10 +129,25 @@ class UCTNode {
 
 
     /**
-     * Increase the number of simulations.
+     * Proves the terminal score of a node.
+     *
+     * If all children are terminal and their scores equal to the given
+     * value sets the terminal score of the node; otherwise, updates the
+     * average score of the node with the new value.
+     *
+     * @param value     Terminal score
      */
-    void increaseCount() {
-        count++;
+    void proveScore(double score) {
+        UCTNode child = this.child;
+
+        do {
+            if (!child.terminal || child.score != -score) {
+                updateScore(score);
+                return;
+            }
+        } while ((child = child.sibling) != null);
+
+        settleScore(score);
     }
 
 
