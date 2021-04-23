@@ -19,7 +19,6 @@ package com.joansala.engine.uct;
 
 import java.util.function.Consumer;
 import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -91,12 +90,6 @@ public class UCT implements Engine {
 
     /** This flag is set to true to abort a computation */
     private volatile boolean aborted = false;
-
-    /** Maximum score found so far */
-    private double beta = -maxScore;
-
-    /** Minimum score found so far */
-    private double alpha = maxScore;
 
 
     /**
@@ -203,6 +196,7 @@ public class UCT implements Engine {
      */
     public synchronized void setInfinity(int score) {
         maxScore = Math.max(score, 1);
+        bias = biasFactor * maxScore;
     }
 
 
@@ -212,7 +206,8 @@ public class UCT implements Engine {
      * @param factor    Exploration parameter
      */
     public synchronized void setExplorationBias(double factor) {
-        this.biasFactor = factor;
+        biasFactor = factor;
+        bias = biasFactor * maxScore;
     }
 
 
@@ -293,9 +288,6 @@ public class UCT implements Engine {
         timer.schedule(countDown, moveTime);
         root = findRootNode(game);
 
-        beta = -maxScore;
-        alpha = maxScore;
-
         UCTNode bestChild = null;
         double bestScore = Game.DRAW_SCORE;
         int reportCount = REPORT_PROBES;
@@ -307,7 +299,6 @@ public class UCT implements Engine {
         }
 
         while (!aborted || root.count < MIN_PROBES) {
-            bias = biasFactor * Math.abs(beta - alpha);
             search(root, maxDepth);
             pruneGarbage(root);
 
@@ -621,9 +612,6 @@ public class UCT implements Engine {
         } else {
             node.updateScore(score);
         }
-
-        beta = Math.max(beta, score);
-        alpha = Math.min(alpha, score);
 
         return score;
     }
