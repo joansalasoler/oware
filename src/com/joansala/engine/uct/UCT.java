@@ -59,16 +59,16 @@ public class UCT implements Engine {
     private final Timer timer;
 
     /** Current computation root node */
-    private UCTNode root = new UCTNode();
+    protected UCTNode root = new UCTNode();
 
     /** References the {@code Game} to search */
-    private Game game = null;
+    protected Game game = null;
 
     /** Endgame database */
-    private Leaves leaves = null;
+    protected Leaves leaves = null;
 
     /** Consumer of best moves */
-    private Set<Consumer<Report>> consumers = new HashSet<>();
+    protected Set<Consumer<Report>> consumers = new HashSet<>();
 
     /** The maximum depth allowed for the current search */
     private int maxDepth = MAX_DEPTH;
@@ -83,7 +83,7 @@ public class UCT implements Engine {
     private int contempt = Game.DRAW_SCORE;
 
     /** Exploration bias parameter */
-    private double biasFactor = DEFAULT_BIAS;
+    public double biasFactor = DEFAULT_BIAS;
 
     /** Exploration priority multiplier */
     private double bias = DEFAULT_BIAS * maxScore;
@@ -96,8 +96,17 @@ public class UCT implements Engine {
      * Create a new search engine.
      */
     public UCT() {
-        timer = new Timer(true);
+        this(DEFAULT_BIAS);
+    }
+
+
+    /**
+     * Create a new search engine.
+     */
+    protected UCT(double biasFactor) {
         leaves = dummyLeaves;
+        timer = new Timer(true);
+        setExplorationBias(biasFactor);
     }
 
 
@@ -526,7 +535,7 @@ public class UCT implements Engine {
         } else if (leaves.find(game)) {
             score = leaves.getScore();
         } else {
-            score = game.score();
+            score = simulateMatch(depth);
         }
 
         if (score == Game.DRAW_SCORE) {
@@ -534,6 +543,17 @@ public class UCT implements Engine {
         }
 
         return score * game.turn();
+    }
+
+
+    /**
+     * Simulates a match and return its final score.
+     *
+     * @param depth     Maximum simulation depth
+     * @return          Outcome of the simulation
+     */
+    protected int simulateMatch(int maxDepth) {
+        return game.score();
     }
 
 
