@@ -161,6 +161,15 @@ public interface Game {
 
 
     /**
+     * Score to which to evaluate a draw.
+     *
+     * @see     Game#score
+     * @return  Contempt evaluation value
+     */
+    int contempt();
+
+
+    /**
      * Returns an unique hash code for the current position.
      *
      * @return  The hash code for the current position

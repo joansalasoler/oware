@@ -18,8 +18,8 @@ package com.joansala.uci;
  */
 
 import java.io.Console;
-import java.io.IOException;
 import java.io.PrintWriter;
+import com.google.inject.Inject;
 
 import com.joansala.engine.Board;
 
@@ -46,7 +46,7 @@ public class UCIShell {
     /**
      * This class cannot be instantiated
      */
-    public UCIShell(UCIClient client) {
+    @Inject public UCIShell(UCIClient client) {
         this.console = System.console();
         this.writer = console.writer();
         this.client = client;
@@ -61,12 +61,8 @@ public class UCIShell {
     private void showWelcome() {
         Package pack = UCIShell.class.getPackage();
         String version = pack.getImplementationVersion();
-
-        writer.format(
-            "UCI Protocol Shell, version %s%n" +
-            "Type UCI commands to send them to the engine.%n%n",
-            version
-        );
+        writer.format("UCI Interpreter %s%n", version);
+        writer.format("Type UCI commands to send them to the engine.%n%n");
     }
 
 

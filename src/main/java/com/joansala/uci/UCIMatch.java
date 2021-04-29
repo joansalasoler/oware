@@ -21,6 +21,7 @@ import java.io.Console;
 import java.io.PrintWriter;
 import java.util.TimerTask;
 import java.util.Timer;
+import com.google.inject.Inject;
 
 import com.joansala.engine.*;
 
@@ -49,12 +50,6 @@ public final class UCIMatch {
     /** Current console writer */
     private PrintWriter writer;
 
-    /** Human playing turn */
-    private int turn = Game.SOUTH;
-
-    /** Human playing turn */
-    private int movetime = 2000;
-
 
     /**
      * Instantiates a new match object
@@ -63,7 +58,7 @@ public final class UCIMatch {
      * @param start    Start board for the game
      * @param game     Game object where moves will be performed
      */
-    public UCIMatch(UCIClient client, Board start, Game game) {
+    @Inject public UCIMatch(UCIClient client, Board start, Game game) {
         this.console = System.console();
         this.writer = console.writer();
         this.client = client;
@@ -78,11 +73,7 @@ public final class UCIMatch {
     private void showWelcome() {
         Package pack = UCIMatch.class.getPackage();
         String version = pack.getImplementationVersion();
-
-        writer.format(
-            "UCI Command-line Interface, version %s%n",
-            version
-        );
+        writer.format("UCI Match %s%n", version);
     }
 
 
@@ -91,13 +82,7 @@ public final class UCIMatch {
      */
     private void showEngineID() {
         String name = client.getName();
-        String author = client.getAuthor();
-
-        writer.format(
-            "%nYou will be playing with %s;%n" +
-            "a game engine authored by %s.%n",
-            name, author
-        );
+        writer.format("You are playing against %s%n", name);
     }
 
 
@@ -184,7 +169,7 @@ public final class UCIMatch {
      *
      * @return  a move
      */
-    private int requestEngineMove() {
+    private int requestEngineMove(long movetime) {
         int move = Game.NULL_MOVE;
         int ponder = Game.NULL_MOVE;
 
@@ -260,7 +245,7 @@ public final class UCIMatch {
      *
      * @return  go command
      */
-    private String getGoCommand(int movetime) {
+    private String getGoCommand(long movetime) {
         return String.format("go movetime %d", movetime);
     }
 
@@ -292,11 +277,8 @@ public final class UCIMatch {
      * @param turn      Human player turn
      * @param movetime  Engine's time per move
      */
-    public void start(int turn, int movetime) {
+    public void start(int turn, long movetime) {
         try {
-            this.turn = turn;
-            this.movetime = movetime;
-
             showWelcome();
             initEngine();
             showEngineID();
@@ -312,7 +294,7 @@ public final class UCIMatch {
 
                 int move = (turn == game.turn()) ?
                     requestUserMove() :
-                    requestEngineMove();
+                    requestEngineMove(movetime);
 
                 try {
                     performMove(game, move);

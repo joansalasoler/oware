@@ -23,6 +23,7 @@ import java.io.PrintStream;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.Scanner;
+import com.google.inject.Inject;
 
 import com.joansala.engine.*;
 
@@ -113,7 +114,7 @@ public class UCIClient {
      * @param start     Start board position
      * @param game      A game object
      */
-    public UCIClient(Process service, Board start, Game game) {
+    @Inject public UCIClient(Process service, Board start, Game game) {
         InputStream input = service.getInputStream();
         OutputStream output = service.getOutputStream();
 

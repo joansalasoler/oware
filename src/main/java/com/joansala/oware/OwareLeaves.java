@@ -36,17 +36,20 @@ import static com.joansala.oware.OwareGame.*;
  * <p>All the positions on the database up to the specified number of
  * seeds are kept on main memory. To obtain the score of a position a
  * search must be performed first with the method {@code find}.</p>
- *
- * @author    Joan Sala Soler
- * @version   1.0.0
  */
 public class OwareLeaves extends Book implements Leaves {
 
     /** Header signature for the book format */
     public static final String SIGNATURE = "Oware Endgames ";
 
+    /** Default path to the endgames book binary file */
+    public static final String LEAVES_PATH = "/oware-leaves.bin";
+
     /** Maximum number of seeds that a position can contain */
     public static final int MAX_SEEDS = 15;
+
+    /** Default number of seeds of the endgames book */
+    public static final int DEFAULT_SEEDS = 12;
 
     /** Used to calculate the remaining seeds for a hash */
     private static final int HASH_OFFSET = MAX_SEEDS - SEED_COUNT;
@@ -68,6 +71,14 @@ public class OwareLeaves extends Book implements Leaves {
 
     /** Entries of the database */
     private final byte[] data;
+
+
+    /**
+     * Create a new endgames book instance.
+     */
+    public OwareLeaves() throws IOException {
+        this(getResourceFile(LEAVES_PATH), DEFAULT_SEEDS);
+    }
 
 
     /**
@@ -106,6 +117,14 @@ public class OwareLeaves extends Book implements Leaves {
      */
     public int getScore() {
         return score;
+    }
+
+
+    /**
+     * Expected captures.
+     */
+    public int getCaptures() {
+        return captures;
     }
 
 
@@ -150,13 +169,13 @@ public class OwareLeaves extends Book implements Leaves {
         final int entry = data[hash];
         final int flag = (entry & 0x03);
 
-        if (flag != Flag.EXACT && !game.wasCapture()) {
-            return false;
-        }
-
         this.flag = flag;
         this.captures = (entry >> 2);
         this.score = game.turn() * score(state);
+
+        if (flag != Flag.EXACT && !game.wasCapture()) {
+            return false;
+        }
 
         return true;
     }

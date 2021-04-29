@@ -20,7 +20,6 @@ package com.joansala.oware;
 
 import java.util.Arrays;
 
-import com.joansala.engine.Engine;
 import com.joansala.engine.Game;
 import static com.joansala.oware.Oware.*;
 
@@ -35,6 +34,9 @@ public class OwareGame implements Game {
 
     /** Maximum score to which positions are evaluated */
     public static final int MAX_SCORE = 1000;
+
+    /** Recommended score to evaluate draws */
+    public static final int CONTEMPT_SCORE = -9;
 
     /** The maximum number of moves this object can store */
     public static final int MAX_CAPACITY = Integer.MAX_VALUE >> 4;
@@ -424,6 +426,14 @@ public class OwareGame implements Game {
         }
 
         return DRAW_SCORE;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    public int contempt() {
+        return CONTEMPT_SCORE;
     }
 
 

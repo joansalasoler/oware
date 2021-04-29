@@ -25,11 +25,11 @@ import com.joansala.engine.Game;
 
 /**
  * Implements a transposition table for an oware game.
- *
- * @author    Joan Sala Soler
- * @version   1.0.0
  */
 public class OwareCache implements Cache {
+
+    /** Default size of the cache in bytes */
+    public static final long CACHE_SIZE = 32 << 20;
 
     /** Size of a table slot in bytes */
     public static final int SLOT_SIZE = 8;
@@ -67,6 +67,14 @@ public class OwareCache implements Cache {
 
     /** Current entries overwrite stamp */
     private long reset = 0x100000000L;
+
+
+    /**
+     * Creates a new empty cache.
+     */
+    public OwareCache() {
+        this(toCapacity(CACHE_SIZE));
+    }
 
 
     /**

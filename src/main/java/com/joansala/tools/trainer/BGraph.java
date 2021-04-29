@@ -160,6 +160,7 @@ public class BGraph {
      * @return  sorted view of the keys
      * @throws DatabaseException  if a database failure occurs
      */
+    @SuppressWarnings("unchecked")
     public SortedSet<Long> keys() throws DatabaseException {
         return new StoredSortedKeySet(
             nodes.getDatabase(), nodes.getKeyBinding(), false);

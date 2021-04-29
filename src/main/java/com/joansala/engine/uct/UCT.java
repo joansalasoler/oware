@@ -17,6 +17,7 @@ package com.joansala.engine.uct;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import com.google.inject.Inject;
 import java.util.function.Consumer;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,9 +34,6 @@ import com.joansala.engine.*;
  * @version   1.0.0
  */
 public class UCT implements Engine {
-
-    /** The default time per move for a search */
-    public static final long DEFAULT_MOVETIME = 3600;
 
     /** Factors the amount of exploration of the tree */
     public static final double DEFAULT_BIAS = 0.353;
@@ -225,7 +223,7 @@ public class UCT implements Engine {
      *
      * @param leaves    Leaves instance or {@code null}
      */
-    public synchronized void setLeaves(Leaves leaves) {
+    @Inject public synchronized void setLeaves(Leaves leaves) {
         this.leaves = (leaves != null) ? leaves : dummyLeaves;
     }
 

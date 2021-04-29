@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 import java.util.function.Consumer;
+import com.google.inject.Inject;
 
 import com.joansala.engine.*;
 
@@ -36,9 +37,6 @@ import com.joansala.engine.*;
  * @version   1.0.0
  */
 public class UCIService {
-
-    /** The default time per move for a search */
-    public static final long DEFAULT_MOVETIME = 3600;
 
     /** Thread where the computations are performed */
     private Brain brain = null;
@@ -107,7 +105,7 @@ public class UCIService {
      * @param game      A game object
      * @param engine    An engine object
      */
-    public UCIService(Board start, Game game, Engine engine) {
+    @Inject public UCIService(Board start, Game game, Engine engine) {
         this.board = null;
         this.start = start;
         this.game = game;
@@ -138,6 +136,7 @@ public class UCIService {
      * @param cache     A cache object or {@code null} to disable
      *                  the transposition table
      */
+    @Inject(optional=true)
     public synchronized void setCache(Cache cache) {
         this.cache = cache;
     }
@@ -149,6 +148,7 @@ public class UCIService {
      * @param roots     A roots object or {@code null} to disable
      *                  the use of an opening book
      */
+    @Inject(optional=true)
     public synchronized void setRoots(Roots roots) {
         this.roots = roots;
     }
@@ -587,7 +587,7 @@ public class UCIService {
 
         int contempt = this.contempt;
         int depth = Integer.MAX_VALUE;
-        long movetime = DEFAULT_MOVETIME;
+        long movetime = Engine.DEFAULT_MOVETIME;
 
         infinite = false;
         ponder = false;
@@ -650,8 +650,11 @@ public class UCIService {
 
         // Set the comptempt factor
 
-        if (drawSearch == true)
+        contempt = game.contempt();
+
+        if (drawSearch == true) {
             contempt = engine.getInfinity();
+        }
 
         // Set engine parameters
 

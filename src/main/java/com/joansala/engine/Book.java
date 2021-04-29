@@ -136,6 +136,17 @@ public class Book {
 
 
     /**
+     * Open a new file for the given resource.
+     *
+     * @param path      Resource path
+     * @return          New file instance
+     */
+    protected static File getResourceFile(String path) {
+        return new File(Book.class.getResource(path).getFile());
+    }
+
+
+    /**
      * Reads the header information of the database.
      *
      * @return  Set containing all the header fields

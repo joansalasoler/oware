@@ -28,6 +28,10 @@ import java.util.function.Consumer;
  */
 public interface Engine {
 
+    /** Default time per move */
+    long DEFAULT_MOVETIME = 3600;
+
+
     /**
      * Returns the maximum depth allowed for the search
      *

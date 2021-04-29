@@ -17,6 +17,7 @@ package com.joansala.engine.negamax;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import com.google.inject.Inject;
 import java.util.function.Consumer;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,9 +34,6 @@ import com.joansala.engine.*;
  * @version   1.1.0
  */
 public class Negamax implements Engine {
-
-    /** The default time per move for a search */
-    public static final long DEFAULT_MOVETIME = 3600;
 
     /** The maximum depth allowed for a search */
     public static final int MAX_DEPTH = 254;
@@ -230,6 +228,7 @@ public class Negamax implements Engine {
      * @param cache     A cache object or {@code null} to disable
      *                  the transposition table
      */
+    @Inject(optional=true)
     public synchronized void setCache(Cache cache) {
         this.cache = (cache != null) ? cache : dummyCache;
     }
@@ -241,6 +240,7 @@ public class Negamax implements Engine {
      * @param leaves    A leaves object or {@code null} to disable
      *                  the use of precomputed endgames
      */
+    @Inject(optional=true)
     public synchronized void setLeaves(Leaves leaves) {
         this.leaves = (leaves != null) ? leaves : dummyLeaves;
     }
