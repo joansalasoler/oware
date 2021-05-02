@@ -28,7 +28,10 @@ import java.util.function.Consumer;
  */
 public interface Engine {
 
-    /** Default time per move */
+    /** Default depth limit per move */
+    int DEFAULT_DEPTH = 127;
+
+    /** Default time limit per move */
     long DEFAULT_MOVETIME = 3600;
 
 

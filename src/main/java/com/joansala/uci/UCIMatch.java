@@ -50,6 +50,12 @@ public final class UCIMatch {
     /** Current console writer */
     private PrintWriter writer;
 
+    /** Time limit per move (milliseconds) */
+    private long moveTime = Engine.DEFAULT_MOVETIME;
+
+    /** Depth limit per move (plies) */
+    private int depth = Engine.DEFAULT_DEPTH;
+
 
     /**
      * Instantiates a new match object
@@ -64,6 +70,34 @@ public final class UCIMatch {
         this.client = client;
         this.start = start;
         this.game = game;
+    }
+
+
+    /**
+     * Obtain this object's UCI client.
+     */
+    public UCIClient getUCIClient() {
+        return client;
+    }
+
+
+    /**
+     * Sets a depth limit for subsequent computations.
+     *
+     * @param depth         Plies
+     */
+    public synchronized void setDepth(int depth) {
+        this.depth = Math.max(1, depth);
+    }
+
+
+    /**
+     * Sets a time limit for subsequent computations.
+     *
+     * @param moveTime      Milliseconds
+     */
+    public synchronized void setMoveTime(long moveTime) {
+        this.moveTime = Math.max(1, moveTime);
     }
 
 
@@ -169,7 +203,7 @@ public final class UCIMatch {
      *
      * @return  a move
      */
-    private int requestEngineMove(long movetime) {
+    private int requestEngineMove(long moveTime) {
         int move = Game.NULL_MOVE;
         int ponder = Game.NULL_MOVE;
 
@@ -182,7 +216,7 @@ public final class UCIMatch {
             }
 
             client.send(getPositionCommand(game));
-            client.send(getGoCommand(movetime));
+            client.send(getGoCommand(moveTime, depth));
 
             while (client.isThinking())
                 client.receive();
@@ -245,8 +279,8 @@ public final class UCIMatch {
      *
      * @return  go command
      */
-    private String getGoCommand(long movetime) {
-        return String.format("go movetime %d", movetime);
+    private String getGoCommand(long moveTime, int depth) {
+        return String.format("go movetime %d depth %d", moveTime, depth);
     }
 
 
@@ -272,17 +306,29 @@ public final class UCIMatch {
 
 
     /**
+     * Ask the player who moves first.
+     */
+    private int requestUserTurn() {
+        String reply = console.readLine("%nShall I move first? ");
+        boolean isYes = reply != null && reply.matches("^\\s*y.*");
+
+        return isYes ? Game.NORTH : Game.SOUTH;
+    }
+
+
+    /**
      * Runs a match against an engine process.
      *
      * @param turn      Human player turn
-     * @param movetime  Engine's time per move
      */
-    public void start(int turn, long movetime) {
+    public void start() {
         try {
             showWelcome();
             initEngine();
             showEngineID();
             startNewGame();
+
+            final int turn = requestUserTurn();
 
             while (!game.hasEnded()) {
                 if (!client.isRunning()) {
@@ -294,7 +340,7 @@ public final class UCIMatch {
 
                 int move = (turn == game.turn()) ?
                     requestUserMove() :
-                    requestEngineMove(movetime);
+                    requestEngineMove(moveTime);
 
                 try {
                     performMove(game, move);
@@ -321,5 +367,4 @@ public final class UCIMatch {
             writer.format("%s%n", e.getMessage());
         }
     }
-
 }

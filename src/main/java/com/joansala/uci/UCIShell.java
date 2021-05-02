@@ -54,6 +54,14 @@ public class UCIShell {
 
 
     /**
+     * Obtain this object's UCI client.
+     */
+    public UCIClient getUCIClient() {
+        return client;
+    }
+
+
+    /**
      * Prints a welcome message on the specified print writer.
      *
      * @param writer    a print writer
@@ -162,6 +170,4 @@ public class UCIShell {
             }
         }
     }
-
-
 }

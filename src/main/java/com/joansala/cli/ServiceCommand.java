@@ -18,18 +18,41 @@ package com.joansala.cli;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+import java.util.concurrent.Callable;
+import com.google.inject.Inject;
+import picocli.CommandLine.*;
+
 import com.joansala.uci.UCIService;
 
 
 /**
- * Universal Chess Interface service.
+ * Executes the Universal Chess Interface service.
  */
-public class CLIService {
-    public static void main(String[] argv) throws Exception {
-        CLIModule module = new CLIModule(argv);
-        Injector injector = Guice.createInjector(module);
-        injector.getInstance(UCIService.class).start();
+@Command(
+  name = "service",
+  version = "1.2.1",
+  description = "Starts the engine in UCI mode",
+  mixinStandardHelpOptions = true
+)
+public class ServiceCommand implements Callable<Integer> {
+
+    /** Injected UCI service instance */
+    private UCIService service;
+
+
+    /**
+     * Creates a new service.
+     */
+    @Inject public ServiceCommand(UCIService service) {
+        this.service = service;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override public Integer call() throws Exception {
+        service.start();
+        return 0;
     }
 }

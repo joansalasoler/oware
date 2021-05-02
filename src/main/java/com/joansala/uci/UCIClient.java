@@ -110,34 +110,42 @@ public class UCIClient {
      * parameters an engine process, a starting board for the game and
      * a game object where moves will be performed.
      *
-     * @param service   An engine process
      * @param start     Start board position
      * @param game      A game object
      */
-    @Inject public UCIClient(Process service, Board start, Game game) {
-        InputStream input = service.getInputStream();
-        OutputStream output = service.getOutputStream();
-
-        this.input = new Scanner(input);
-        this.output = new PrintStream(output, true);
-
-        this.service = service;
+    @Inject public UCIClient(Board start, Game game) {
         this.start = start;
         this.board = start;
         this.game = game;
-        this.state = State.WAITING;
+        this.state = State.STOPPED;
         this.ready = true;
         this.uciok = true;
     }
 
 
     /**
-     * Returns the engine process associated with this client.
+     * Obtains the engine service.
      *
      * @return  Engine process
      */
     public Process getService() {
         return this.service;
+    }
+
+
+    /**
+     * Sets the engine service.
+     *
+     * @param   UCI process
+     */
+    public void setService(Process service) {
+        InputStream in = service.getInputStream();
+        OutputStream out = service.getOutputStream();
+
+        this.input = new Scanner(in);
+        this.output = new PrintStream(out, true);
+        this.state = State.WAITING;
+        this.service = service;
     }
 
 
@@ -403,7 +411,6 @@ public class UCIClient {
     private void parsePosition(String params) throws Exception {
         String position = null;
         String notation = null;
-        Board newBoard = null;
         int[] moves = null;
 
         // This command requieres at least one parameter
@@ -863,7 +870,7 @@ public class UCIClient {
             parseQuit(params);
         } else {
             throw new IllegalArgumentException(
-                "Unknown client command: " + command);
+                "Unknown UCI command: " + command);
         }
     }
 
@@ -904,5 +911,4 @@ public class UCIClient {
 
         return message;
     }
-
 }

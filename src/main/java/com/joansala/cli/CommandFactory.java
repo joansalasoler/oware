@@ -18,32 +18,43 @@ package com.joansala.cli;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import picocli.CommandLine.IFactory;
 
-import com.joansala.engine.Engine;
-import com.joansala.engine.Game;
-import com.joansala.uci.UCIMatch;
+import com.joansala.oware.OwareModule;
+
 
 /**
- * Command line interface to play against an engine.
+ * Factory for instantiating the command line tools. This factory uses
+ * Guice to inject the dependencies of the Picocli commands.
  */
-public final class CLIMatch {
+public class CommandFactory implements IFactory {
 
-    /** Turn of the human player */
-    private static int turn = Game.SOUTH;
-
-    /** Time per move of the engine */
-    private static long movetime = Engine.DEFAULT_MOVETIME;
+    /** Module injector instance */
+    private Injector injector;
 
 
     /**
-     * Run a match against an UCI service.
+     * Creates a new factory.
      */
-    public static void main(String[] argv) throws Exception {
-        CLIModule module = new CLIModule(argv);
-        Injector injector = Guice.createInjector(module);
-        UCIMatch match = injector.getInstance(UCIMatch.class);
-        match.start(turn, movetime);
+    public CommandFactory() {
+        injector = Guice.createInjector(new AbstractModule() {
+            @Override protected void configure() {
+                install(new OwareModule());
+            }
+        });
+    }
+
+
+    /**
+     * Inject and instantiate the given type.
+     *
+     * @param type      Class type
+     * @return          Class instance
+     */
+    @Override public <T> T create(Class<T> type) {
+        return injector.getInstance(type);
     }
 }

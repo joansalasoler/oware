@@ -18,18 +18,28 @@ package com.joansala.cli;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.joansala.uci.UCIShell;
+import picocli.CommandLine;
+import picocli.CommandLine.*;
 
 
 /**
- * Universal Chess Interface interpreter.
+ * Parent of all the command line tools.
  */
-public class CLIShell {
-    public static void main(String[] argv) throws Exception {
-        CLIModule module = new CLIModule(argv);
-        Injector injector = Guice.createInjector(module);
-        injector.getInstance(UCIShell.class).start();
+@Command(
+  name = "aalina",
+  version = "1.2.1",
+  description = "Aalina is an Oware game engine",
+  mixinStandardHelpOptions = true,
+  subcommands = {
+      MatchCommand.class,
+      ServiceCommand.class,
+      ShellCommand.class
+  }
+)
+public final class MainCommand {
+    public static void main(String[] args) throws Exception {
+        CommandFactory factory = new CommandFactory();
+        CommandLine c = new CommandLine(MainCommand.class, factory);
+        System.exit(c.execute(args));
     }
 }
