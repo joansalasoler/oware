@@ -77,8 +77,11 @@ public class UCIService {
     /** Requested hash table capacity for subsequent computations */
     private int requestedHashSize = minHashSize;
 
-    /** Default contempt factor for the engine */
+    /** Contempt factor for the engine */
     private int contempt = Game.DRAW_SCORE;
+
+    /** Infinity score for the engine */
+    private int infinity = Integer.MAX_VALUE;
 
     /** If debug mode is enabled the engine sends additional infos */
     private boolean debug = false;
@@ -114,14 +117,22 @@ public class UCIService {
 
 
     /**
-     * Sets the contempt factor. That is, the score to which end game
-     * positions that are draw will be evaluated.
+     * Sets the contempt factor of the engine.
      *
-     * @see Engine#setInfinity(int)
-     * @param score     Score for draw positions
+     * @param score     Score for drawn positions
      */
     public synchronized void setContempt(int score) {
         this.contempt = score;
+    }
+
+
+    /**
+     * Sets the infinity score of the engine.
+     *
+     * @param score     Maximum possible score
+     */
+    public synchronized void setInfinity(int score) {
+        this.infinity = score;
     }
 
 
@@ -650,10 +661,11 @@ public class UCIService {
 
         // Set the comptempt factor
 
+        infinity = game.infinity();
         contempt = game.contempt();
 
         if (drawSearch == true) {
-            contempt = engine.getInfinity();
+            contempt = infinity;
         }
 
         // Set engine parameters
@@ -661,6 +673,7 @@ public class UCIService {
         engine.setDepth(depth - 1);
         engine.setMoveTime(movetime);
         engine.setContempt(contempt);
+        engine.setInfinity(infinity);
 
         // Resize the hash table if requested
 

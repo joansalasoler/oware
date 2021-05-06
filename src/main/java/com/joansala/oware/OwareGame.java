@@ -438,6 +438,14 @@ public class OwareGame implements Game {
 
 
     /**
+     * {@inheritDoc}
+     */
+    public int infinity() {
+        return MAX_SCORE;
+    }
+
+
+    /**
      * Returns the heuristic evaluation of the current position
      *
      * @return  The heuristic evaluation as a value between
@@ -968,5 +976,13 @@ public class OwareGame implements Game {
         this.empties = empties;
 
         System.gc();
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    public OwareGame cast() {
+        return this;
     }
 }

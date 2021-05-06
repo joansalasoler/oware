@@ -51,6 +51,12 @@ public interface Game {
 
 
     /**
+     * Cast this game object.
+     */
+    Game cast();
+
+
+    /**
      * Returns the number of moves performed on this game. From the
      * initial position until the current move.
      *
@@ -167,6 +173,15 @@ public interface Game {
      * @return  Contempt evaluation value
      */
     int contempt();
+
+
+    /**
+     * Maximus ccore to which a position can be evaluated.
+     *
+     * @see     Game#score
+     * @return  Infinity evaluation value
+     */
+    int infinity();
 
 
     /**

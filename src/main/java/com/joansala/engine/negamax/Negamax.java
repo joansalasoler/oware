@@ -33,7 +33,7 @@ import com.joansala.engine.*;
  * @author    Joan Sala Soler
  * @version   1.1.0
  */
-public class Negamax implements Engine {
+public class Negamax implements Engine, HasLeaves, HasCache {
 
     /** The maximum depth allowed for a search */
     public static final int MAX_DEPTH = 254;

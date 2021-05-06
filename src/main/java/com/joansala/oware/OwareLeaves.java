@@ -132,7 +132,7 @@ public class OwareLeaves extends Book implements Leaves {
      * {@inheritDoc}
      */
     public boolean find(Game game) {
-        return find((OwareGame) game);
+        return find((OwareGame) game.cast());
     }
 
 

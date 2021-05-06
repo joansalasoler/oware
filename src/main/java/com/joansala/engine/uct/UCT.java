@@ -33,7 +33,7 @@ import com.joansala.engine.*;
  * @author    Joan Sala Soler
  * @version   1.0.0
  */
-public class UCT implements Engine {
+public class UCT implements Engine, HasLeaves {
 
     /** Factors the amount of exploration of the tree */
     public static final double DEFAULT_BIAS = 0.353;
