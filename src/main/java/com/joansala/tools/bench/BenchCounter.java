@@ -78,4 +78,13 @@ public final class BenchCounter {
         fails += value ? 0 : 1; count++;
         return value;
     }
+
+
+    /**
+     * Resets this counter.
+     */
+    public void clear() {
+        count = 0;
+        fails = 0;
+    }
 }

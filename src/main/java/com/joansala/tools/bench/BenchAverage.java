@@ -64,4 +64,14 @@ public final class BenchAverage {
         average += (value - offset - average) / ++count;
         return value;
     }
+
+
+    /**
+     * Resets this aggregator.
+     */
+    public void clear() {
+        count = 0;
+        offset = 0;
+        average = 0.0;
+    }
 }

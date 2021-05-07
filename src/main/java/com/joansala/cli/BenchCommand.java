@@ -103,7 +103,7 @@ public final class BenchCommand implements Callable<Integer> {
 
         try (GameScanner scanner = new GameScanner(parser)) {
             scanner.forEachRemaining((suite) -> {
-                System.out.format("%s%n", ellipsis(suite, 59));
+                System.out.format("Game: %s%n", ellipsis(suite, 53));
 
                 Board board = suite.board();
                 int[] moves = suite.moves();
@@ -216,7 +216,17 @@ public final class BenchCommand implements Callable<Integer> {
      * @retun       A string
      */
     private String formatSetup() {
+        Game game = this.game;
+        Cache cache = this.cache;
         Leaves leaves = this.leaves;
+
+        if (game instanceof BenchGame) {
+            game = this.game.cast();
+        }
+
+        if (cache instanceof BenchCache) {
+            cache = this.cache.cast();
+        }
 
         if (leaves instanceof BenchLeaves) {
             leaves = this.leaves.cast();
@@ -229,12 +239,16 @@ public final class BenchCommand implements Callable<Integer> {
             "Depth limit:   %,39d plies%n" +
             "Cache size:    %,39d bytes%n" +
             "Engine class:  %45s%n" +
+            "Game class:    %45s%n" +
+            "Cache class:   %45s%n" +
             "Leaves class:  %45s%n",
             horizontalRule('-'),
             engine.getMoveTime(),
             engine.getDepth(),
             cache == null ? 0 : cache.size(),
             ellipsis(className(engine), 44),
+            ellipsis(className(game), 44),
+            ellipsis(className(cache), 44),
             ellipsis(className(leaves), 44)
         );
     }

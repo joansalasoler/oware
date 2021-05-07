@@ -33,6 +33,7 @@ import picocli.CommandLine.*;
   subcommands = {
       BenchCommand.class,
       MatchCommand.class,
+      PerftCommand.class,
       ServiceCommand.class,
       ShellCommand.class
   }
