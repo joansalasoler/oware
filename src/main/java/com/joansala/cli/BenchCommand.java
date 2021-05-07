@@ -30,7 +30,7 @@ import com.joansala.bench.*;
 import com.joansala.util.GameScanner;
 
 /**
- * Executes the user interface to play against an engine.
+ * Runs an engine benchmark.
  */
 @Command(
   name = "bench",

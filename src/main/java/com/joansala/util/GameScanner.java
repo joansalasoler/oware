@@ -58,7 +58,7 @@ public class GameScanner implements Closeable, Iterator<GameState> {
     /**
      * {@inheritDoc}
      */
-    public boolean hasNext() {
+    @Override public boolean hasNext() {
         return scanner.hasNextLine();
     }
 
@@ -66,7 +66,7 @@ public class GameScanner implements Closeable, Iterator<GameState> {
     /**
      * {@inheritDoc}
      */
-    public GameState next() {
+    @Override public GameState next() {
         String line = scanner.nextLine();
         String[] parts = line.trim().split("\\s", 2);
         Board board = parser.toBoard(parts[0]);
@@ -83,7 +83,7 @@ public class GameScanner implements Closeable, Iterator<GameState> {
     /**
      * {@inheritDoc}
      */
-    public void close() throws IOException {
+    @Override public void close() throws IOException {
         scanner.close();
     }
 }

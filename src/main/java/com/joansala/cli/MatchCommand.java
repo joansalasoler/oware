@@ -29,7 +29,7 @@ import picocli.CommandLine.*;
 import com.joansala.engine.Board;
 import com.joansala.engine.Engine;
 import com.joansala.engine.Game;
-import com.joansala.uci.UCIClient;
+import com.joansala.uci.UCIPlayer;
 
 /**
  * Executes the user interface to play against an engine.
@@ -42,14 +42,14 @@ import com.joansala.uci.UCIClient;
 )
 public final class MatchCommand implements Callable<Integer> {
 
-    /** UCI client instance */
-    private UCIClient client;
+    /** UCI player instance */
+    private UCIPlayer player;
 
     /** Game being played */
-    private Game game = null;
+    private Game game;
 
     /** Initial board of the game */
-    private Board board = null;
+    private Board parser;
 
     /** Turn of the human player */
     private int turn = Game.SOUTH;
@@ -78,9 +78,9 @@ public final class MatchCommand implements Callable<Integer> {
     /**
      * Creates a new service.
      */
-    @Inject public MatchCommand(UCIClient client, Game game) {
-        this.board = client.getBoard();
-        this.client = client;
+    @Inject public MatchCommand(UCIPlayer player, Game game) {
+        this.parser = player.getClient().getBoard();
+        this.player = player;
         this.game = game;
     }
 
@@ -89,7 +89,7 @@ public final class MatchCommand implements Callable<Integer> {
      * {@inheritDoc}
      */
     @Override public Integer call() throws Exception {
-        client.setService(service);
+        player.setService(service);
         runMatch();
         return 0;
     }
@@ -103,14 +103,14 @@ public final class MatchCommand implements Callable<Integer> {
         PrintWriter writer = reader.getTerminal().writer();
 
         try {
-            startEngine();
-            startNewGame();
+            player.startEngine();
+            player.startNewGame();
             printWelcome(writer);
             printBoard(writer);
 
             turn = askForTurn(reader);
 
-            while (client.isRunning() && !game.hasEnded()) {
+            while (player.isRunning() && !game.hasEnded()) {
                 boolean isUserTurn = (turn == game.turn());
 
                 try {
@@ -119,10 +119,10 @@ public final class MatchCommand implements Callable<Integer> {
                         makeMove(game, move);
                         printBoard(writer);
                     } else {
-                        stopPondering();
+                        player.stopPondering();
                         int move = askForMove(writer);
                         makeMove(game, move);
-                        startPondering(game);
+                        player.startPondering(game);
                         printMove(writer, move);
                         printBoard(writer);
                     }
@@ -144,7 +144,10 @@ public final class MatchCommand implements Callable<Integer> {
         } catch (Exception e) {
             writer.println("Unhandled exception.");
         } finally {
-            if (client.isRunning()) quitEngine();
+            if (player.isRunning()) {
+                player.quitEngine();
+            }
+
             writer.println("Bye.");
             writer.flush();
         }
@@ -169,88 +172,6 @@ public final class MatchCommand implements Callable<Integer> {
 
 
     /**
-     * Asks the engine process to quit.
-     */
-    private void quitEngine() throws Exception {
-        client.send("quit");
-    }
-
-
-    /**
-     * Asks the engine process to start its UCI mode.
-     */
-    private void startEngine() throws Exception {
-        client.send("uci");
-
-        while (!client.isUCIReady()) {
-            client.receive();
-        }
-    }
-
-
-    /**
-     * Asks the engine process to get ready for a new game.
-     */
-    private void startNewGame() throws Exception {
-        client.send("ucinewgame");
-        client.send("isready");
-
-        while (!client.isReady()) {
-            client.receive();
-        }
-    }
-
-
-    /**
-     * Asks the engine process to think for a move.
-     *
-     * @param game      Game to ponder
-     */
-    private void startThinking(Game game) throws Exception {
-        client.send(toUCIPosition(game));
-        client.send(toUCIGo(moveTime, depth));
-
-        while (client.isThinking()) {
-            client.receive();
-        }
-    }
-
-
-    /**
-     * Asks the engine process to start pondering a move.
-     *
-     * @param game      Game to ponder
-     */
-    private void startPondering(Game game) throws Exception {
-        String position = toUCIPosition(game);
-        int ponder = client.getPonderMove();
-
-        if (ponder != Game.NULL_MOVE) {
-            game.makeMove(ponder);
-            position = toUCIPosition(game);
-            game.unmakeMove();
-        }
-
-        client.send(position);
-        client.send("go ponder");
-    }
-
-
-    /**
-     * Asks the engine process to stop pondering a move.
-     */
-    private void stopPondering() throws Exception {
-        if (client.isPondering()) {
-            client.send("stop");
-
-            while (client.isPondering()) {
-                client.receive();
-            }
-        }
-    }
-
-
-    /**
      * Asks the user which move to perform.
      *
      * @param reader    Terminal reader
@@ -258,7 +179,7 @@ public final class MatchCommand implements Callable<Integer> {
      */
     private int askForMove(LineReader reader) throws Exception {
         String notation = reader.readLine("Your move? ");
-        return board.toMove(notation.trim());
+        return parser.toMove(notation.trim());
     }
 
 
@@ -269,8 +190,7 @@ public final class MatchCommand implements Callable<Integer> {
      * @return          Move identifier
      */
     private int askForMove(PrintWriter writer) throws Exception {
-        startThinking(game);
-        return client.getBestMove();
+        return player.startThinking(game);
     }
 
 
@@ -291,8 +211,8 @@ public final class MatchCommand implements Callable<Integer> {
      * Prints a welcome message to the console.
      */
     private void printWelcome(PrintWriter writer) {
-        String name = client.getName();
-        Package pack = UCIClient.class.getPackage();
+        String name = player.getClient().getName();
+        Package pack = UCIPlayer.class.getPackage();
         String version = pack.getImplementationVersion();
         writer.format("UCI Match %s%n", version);
         writer.format("Playing against %s%n", name);
@@ -305,7 +225,7 @@ public final class MatchCommand implements Callable<Integer> {
      * @param writer    Terminal writer
      */
     private void printBoard(PrintWriter writer) {
-        writer.format("%n%s%n%n", board.toBoard(game));
+        writer.format("%n%s%n%n", parser.toBoard(game));
         writer.flush();
     }
 
@@ -316,7 +236,7 @@ public final class MatchCommand implements Callable<Integer> {
      * @param writer    Terminal writer
      */
     private void printMove(PrintWriter writer, int move) {
-        String notation = board.toAlgebraic(move);
+        String notation = parser.toAlgebraic(move);
         writer.format("My move is: %s%n", notation);
         writer.flush();
     }
@@ -335,33 +255,6 @@ public final class MatchCommand implements Callable<Integer> {
         } else {
             writer.println("You lost this match.");
         }
-    }
-
-
-    /**
-     * Format a UCI position command for the given game state.
-     *
-     * @param game      Game state
-     * @return          UCI command string
-     */
-    private String toUCIPosition(Game game) {
-        String command = "position startpos";
-        String moves = board.toAlgebraic(game.moves());
-        String params = moves.isEmpty() ? moves : " moves " + moves;
-        return String.format("%s%s", command, params);
-    }
-
-
-    /**
-     * Format a UCI go command for the given parameters.
-     *
-     * @param moveTime  Time limit
-     * @param depth     Depth limit
-     * @return          UCI command string
-     */
-    private String toUCIGo(long moveTime, int depth) {
-        String command = "go movetime %d depth %d";
-        return String.format(command, moveTime, depth);
     }
 
 

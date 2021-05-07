@@ -30,7 +30,7 @@ import static com.joansala.engine.Game.NULL_MOVE;
 
 
 /**
- * Executes the user interface to play against an engine.
+ * Count leaf nodes of a certain depth.
  */
 @Command(
   name = "perft",
