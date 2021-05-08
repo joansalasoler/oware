@@ -1,4 +1,4 @@
-package com.joansala.tools.trainer;
+package com.joansala.tools.train;
 
 /*
  * Copyright (c) 2014-2021 Joan Sala Soler <contact@joansala.com>
@@ -38,7 +38,7 @@ import com.sleepycat.persist.StoreConfig;
  * @author    Joan Sala Soler
  * @version   1.0.0
  */
-public class BGraph {
+public class TrainGraph {
 
     /** Name for the entity store */
     private static String storeName = "book";
@@ -50,7 +50,7 @@ public class BGraph {
     private EntityStore store;
 
     /** Primary index for the store */
-    private PrimaryIndex<Long, BNode> nodes;
+    private PrimaryIndex<Long, TrainNode> nodes;
 
 
     /**
@@ -59,7 +59,7 @@ public class BGraph {
      * @param path          directory where the database is stored
      * @throws Exception    if the database cannot be accessed
      */
-    public BGraph(String path) throws DatabaseException, FileNotFoundException {
+    public TrainGraph(String path) throws DatabaseException, FileNotFoundException {
         // Configure the environment
 
         EnvironmentConfig envConfig = new EnvironmentConfig();
@@ -79,7 +79,7 @@ public class BGraph {
 
         // Retrieve the primary index object
 
-        nodes = store.getPrimaryIndex(Long.class, BNode.class);
+        nodes = store.getPrimaryIndex(Long.class, TrainNode.class);
     }
 
 
@@ -93,8 +93,8 @@ public class BGraph {
      *
      * @throws DatabaseException  if a database failure occurs
      */
-    public BNode get(long hash) throws DatabaseException {
-        BNode node = nodes.get(hash);
+    public TrainNode get(long hash) throws DatabaseException {
+        TrainNode node = nodes.get(hash);
 
         if (node != null)
             node.setGraph(this);
@@ -115,14 +115,14 @@ public class BGraph {
      *
      * @throws DatabaseException  if a database failure occurs
      */
-    public BNode add(long hash) throws DatabaseException {
-        BNode node = null;
+    public TrainNode add(long hash) throws DatabaseException {
+        TrainNode node = null;
 
         if (nodes.contains(hash)) {
             node = nodes.get(hash);
             node.setGraph(this);
         } else {
-            node = new BNode();
+            node = new TrainNode();
             node.setGraph(this);
             node.setHash(hash);
             nodes.putNoReturn(node);
@@ -142,7 +142,7 @@ public class BGraph {
      *          stored on the database
      * @throws DatabaseException  if a database failure occurs
      */
-    public void update(BNode node) throws DatabaseException {
+    public void update(TrainNode node) throws DatabaseException {
         long hash = node.getHash();
 
         if (nodes.contains(hash)) {
@@ -214,5 +214,4 @@ public class BGraph {
         store.close();
         env.close();
     }
-
 }

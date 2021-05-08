@@ -1,4 +1,4 @@
-package com.joansala.tools.solver;
+package com.joansala.util;
 
 /*
  * Copyright (C) 2014 Joan Sala Soler <contact@joansala.com>
@@ -34,7 +34,7 @@ import java.util.Arrays;
  * disjoint sets.</p>
  *
  */
-public class DStack {
+public class DoubleStack {
 
     /** Null hash code */
     private final int NULL_NODE = -1;
@@ -60,7 +60,7 @@ public class DStack {
      *
      * @param size  size of the stack
      */
-    public DStack(int size) {
+    public DoubleStack(int size) {
         prev = new int[size];
         next = new int[size];
         Arrays.fill(prev, NULL_NODE);
@@ -181,5 +181,4 @@ public class DStack {
     public boolean contains(int node) {
         return next[node] != NULL_NODE;
     }
-
 }

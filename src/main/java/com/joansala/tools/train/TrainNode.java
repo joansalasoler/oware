@@ -1,4 +1,4 @@
-package com.joansala.tools.trainer;
+package com.joansala.tools.train;
 
 /*
  * Copyright (C) 2014 Joan Sala Soler <contact@joansala.com>
@@ -17,8 +17,6 @@ package com.joansala.tools.trainer;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import com.sleepycat.je.DatabaseException;
@@ -30,13 +28,13 @@ import com.sleepycat.persist.model.PrimaryKey;
  * Represents a node of a game state space.
  */
 @Entity
-public class BNode implements Serializable {
+public class TrainNode implements Serializable {
 
     /** Class version identifier */
     private static final long serialVersionUID = 13L;
 
     /** Graph to which this node pertains */
-    private transient BGraph graph;
+    private transient TrainGraph graph;
 
     /** Unique identifier for this node */
     @PrimaryKey
@@ -65,9 +63,9 @@ public class BNode implements Serializable {
 
 
     /**
-     * Use a {@code BGraph} object to instantiate a node.
+     * Use a {@code TrainGraph} object to instantiate a node.
      */
-    protected BNode() { }
+    protected TrainNode() {}
 
 
     /**
@@ -75,7 +73,7 @@ public class BNode implements Serializable {
      *
      * @param graph  a graph object
      */
-    protected void setGraph(BGraph graph) {
+    protected void setGraph(TrainGraph graph) {
         this.graph = graph;
     }
 
@@ -209,7 +207,7 @@ public class BNode implements Serializable {
      *
      * @throws DatabaseException  if a database failure occurs
      */
-    public BNode getChild(int edge) throws DatabaseException {
+    public TrainNode getChild(int edge) throws DatabaseException {
         return graph.get(childs[edge]);
     }
 
@@ -228,7 +226,7 @@ public class BNode implements Serializable {
      *
      * @throws DatabaseException  if a database failure occurs
      */
-    public BNode addEdge(long hash, byte move) throws DatabaseException {
+    public TrainNode addEdge(long hash, byte move) throws DatabaseException {
         moves[numEdges] = move;
         childs[numEdges] = hash;
         numEdges++;
@@ -245,16 +243,15 @@ public class BNode implements Serializable {
      *
      * @throws DatabaseException  if a database failure occurs
      */
-    public BNode[] childs() throws DatabaseException {
+    public TrainNode[] childs() throws DatabaseException {
         if (numEdges == 0)
             return null;
 
-        BNode[] nodes = new BNode[numEdges];
+        TrainNode[] nodes = new TrainNode[numEdges];
 
         for (int i = 0; i < numEdges; i++)
             nodes[i] = graph.get(childs[i]);
 
         return nodes;
     }
-
 }

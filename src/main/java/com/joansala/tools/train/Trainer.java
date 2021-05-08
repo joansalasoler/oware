@@ -1,4 +1,4 @@
-package com.joansala.tools.trainer;
+package com.joansala.tools.train;
 
 /*
  * Copyright (C) 2014 Joan Sala Soler <contact@joansala.com>
@@ -27,6 +27,7 @@ import java.util.SortedSet;
 
 import com.sleepycat.je.DatabaseException;
 
+import com.joansala.engine.*;
 import com.joansala.engine.negamax.Negamax;
 import com.joansala.oware.OwareBoard;
 import com.joansala.oware.OwareGame;
@@ -63,22 +64,22 @@ public class Trainer {
     private final Hashtable<Long, Integer> queueNodes;
 
     /** Graph object which stores all the generated nodes */
-    private final BGraph graph;
+    private final TrainGraph graph;
 
     /** Internal engine for leaves computation */
     private final Negamax engine;
 
     /** Game state object */
-    private final OwareGame game;
+    private final Game game;
 
     /** Start board for the game */
-    private final OwareBoard start;
+    private final Board board;
 
     /** Root node hash */
     private final long rootHash;
 
     /** Expansion window */
-    private float window = OwareGame.MAX_SCORE;
+    private float window = Integer.MAX_VALUE;
 
     /** Weight of the priority penalty */
     private float weight = 0.0F;
@@ -89,14 +90,19 @@ public class Trainer {
      *
      * @throws Exception  if the database cannot be opened
      */
-    public Trainer(BGraph graph, Negamax engine) throws DatabaseException {
+    public Trainer(TrainGraph graph, Game game, Board board, Negamax engine) throws DatabaseException {
         this.graph = graph;
         this.engine = engine;
-        this.game = new OwareGame();
-        this.start = new OwareBoard();
+        this.game = game;
+        this.board = board;
         this.rootHash = game.hash();
         this.queue = new ArrayList<int[]>(QUEUE_SIZE);
         this.queueNodes = new Hashtable<Long, Integer>();
+
+        engine.setContempt(0);
+        engine.setInfinity(game.infinity());
+        engine.setDepth(Negamax.MAX_DEPTH);
+        engine.setMoveTime(10000);
         graph.add(rootHash);
     }
 
@@ -148,11 +154,11 @@ public class Trainer {
         if (graph.get(rootHash).numEdges() == 0) {
             System.out.print("root: ");
 
-            game.setStart(start.position(), start.turn());
+            game.setStart(board.position(), board.turn());
 
             expandNode(game);
 
-            BNode root = graph.get(rootHash);
+            TrainNode root = graph.get(rootHash);
             updateValues(root);
         }
 
@@ -163,7 +169,7 @@ public class Trainer {
         while (count <= numPaths) {
             // Check if the root is solved
 
-            BNode root = graph.get(rootHash);
+            TrainNode root = graph.get(rootHash);
 
             if (root.getBPriority() == MIN_PRIORITY) {
                 System.err.println("Warning: Root node is solved");
@@ -172,7 +178,7 @@ public class Trainer {
 
             // Enqueue a new path for expansion
 
-            game.setStart(start.position(), start.turn());
+            game.setStart(board.position(), board.turn());
 
             if (enqueuePath(game, book) == false) {
                 System.err.println("Warnning: Cannot enqueue a path");
@@ -200,7 +206,7 @@ public class Trainer {
 
             while (game.length() > 0) {
                 long hash = game.hash();
-                BNode parent = graph.get(hash);
+                TrainNode parent = graph.get(hash);
                 queueNodes.remove(hash);
                 updateValues(parent);
                 game.unmakeMove();
@@ -237,7 +243,7 @@ public class Trainer {
         // after its values are propagated to all its parents
 
         for (long hash : hashes) {
-            BNode node = graph.get(hash);
+            TrainNode node = graph.get(hash);
             byte flag = node.getFlag();
 
             if (node.numEdges() == 0) {
@@ -264,7 +270,7 @@ public class Trainer {
             hasChanged = false;
 
             for (long hash : hashes) {
-                BNode node = graph.get(hash);
+                TrainNode node = graph.get(hash);
                 byte flag = node.getFlag();
                 boolean hasUnknown = false;
 
@@ -274,7 +280,7 @@ public class Trainer {
                 if ((flag & KNOWN_NODE) == 0)
                     continue;
 
-                for (BNode child : node.childs()) {
+                for (TrainNode child : node.childs()) {
                     byte f = child.getFlag();
 
                     if ((f & PROPAGATED_NODE) == 0) {
@@ -296,9 +302,9 @@ public class Trainer {
         // If there are unknown nodes left that means the book contains
         // cycles that must be evaluated manually
 
-        if (knownCount != graph.size())
-            System.err.println(
-                "Warning: Graph contains cycles");
+        if (knownCount != graph.size()) {
+            System.err.println("Warning: Graph contains cycles");
+        }
 
         // Syncronize to the phystical storage
 
@@ -334,7 +340,7 @@ public class Trainer {
         // Write all the expanded nodes in ascending order
 
         for (long hash : graph.keys()) {
-            BNode node = graph.get(hash);
+            TrainNode node = graph.get(hash);
             short[] scores = new short[6];
 
             if ((node.getFlag() & KNOWN_NODE) == 0)
@@ -347,7 +353,7 @@ public class Trainer {
                 scores[i] = Short.MIN_VALUE;
 
             for (int i = 0; i < node.numEdges(); i++) {
-                BNode child = node.getChild(i);
+                TrainNode child = node.getChild(i);
                 byte move = node.getMove(i);
                 int index = (move > 5) ? move - 6 : move;
                 scores[index] = (short) -child.getScore();
@@ -381,11 +387,11 @@ public class Trainer {
      * @param game  initial game position
      * @param book  {@code true} if the book player is to move
      */
-    private void outputLeaves(OwareGame game, boolean book) throws DatabaseException {
-        BNode node = graph.get(game.hash());
+    private void outputLeaves(Game game, boolean book) throws DatabaseException {
+        TrainNode node = graph.get(game.hash());
 
         for (int edge = 0; edge < node.numEdges(); edge++) {
-            BNode child = node.getChild(edge);
+            TrainNode child = node.getChild(edge);
             byte move = node.getMove(edge);
             int score = -child.getScore();
 
@@ -393,11 +399,6 @@ public class Trainer {
                 continue;
 
             performMove(game, move);
-
-            if (game.isRepetition()) {
-                System.err.println("Warning: Graph contains cycles");
-                continue;
-            }
 
             if (child.numEdges() == 0) {
                 if (book == true) {
@@ -430,7 +431,7 @@ public class Trainer {
      *
      * @return  penalty value
      */
-    private float scorePenalty(BNode node, BNode child) {
+    private float scorePenalty(TrainNode node, TrainNode child) {
         return weight * (child.getScore() + node.getScore());
     }
 
@@ -444,7 +445,7 @@ public class Trainer {
      * @param node  a node object
      * @param game  game position of the node object
      */
-    private float leafPenalty(BNode node, OwareGame game) {
+    private float leafPenalty(TrainNode node, Game game) {
         int score = Math.abs(node.getScore());
         int value = Math.abs(game.score());
 
@@ -463,7 +464,7 @@ public class Trainer {
      *
      * @return  a penalty value between zero and one
      */
-    private float depthPenalty(BNode node) throws DatabaseException {
+    private float depthPenalty(TrainNode node) throws DatabaseException {
         // If the node has only one child it is not penalized
 
         if (node.numEdges() <= 1)
@@ -472,10 +473,10 @@ public class Trainer {
         // Find the difference between the two best scores
 
         int bestScore = -node.getScore();
-        int secondScore = OwareGame.MAX_SCORE;
+        int secondScore = game.infinity();
         boolean hasSecond = false;
 
-        for (BNode child : node.childs()) {
+        for (TrainNode child : node.childs()) {
             int score = child.getScore();
 
             if (score != bestScore) {
@@ -493,7 +494,7 @@ public class Trainer {
         // If the difference is big the penalty is low
 
         float penalty = Math.abs(bestScore - secondScore);
-        float range = 2.0F * OwareGame.MAX_SCORE;
+        float range = 2.0F * game.infinity();
 
         return 1.0F - (penalty / range);
     }
@@ -510,8 +511,8 @@ public class Trainer {
      * @param node  node for which to compute its values
      * @param game  game state for the node
      */
-    private void computeValues(OwareGame game) throws DatabaseException {
-        BNode node = graph.get(game.hash());
+    private void computeValues(Game game) throws DatabaseException {
+        TrainNode node = graph.get(game.hash());
 
         if (game.hasEnded()) {
             int score = game.outcome() * game.turn();
@@ -540,18 +541,18 @@ public class Trainer {
      *
      * @param node  a node object
      */
-    private void updateValues(BNode node) throws DatabaseException {
+    private void updateValues(TrainNode node) throws DatabaseException {
         // Negamax propagation of the score
 
-        int bestScore = OwareGame.MAX_SCORE;
+        int bestScore = game.infinity();
 
-        for (BNode child : node.childs()) {
+        for (TrainNode child : node.childs()) {
             int score = child.getScore();
 
             if (bestScore > score)
                 bestScore = score;
 
-            if (score == -OwareGame.MAX_SCORE)
+            if (score == -game.infinity())
                 break;
         }
 
@@ -563,10 +564,10 @@ public class Trainer {
         float bookPriority = MIN_PRIORITY;
         float oppoPriority = MIN_PRIORITY;
 
-        if (bestScore != -OwareGame.MAX_SCORE) {
+        if (bestScore != -game.infinity()) {
             // Propagate book and opponent priorities
 
-            for (BNode child : node.childs()) {
+            for (TrainNode child : node.childs()) {
                 float epb = child.getBPriority();
                 float epo = child.getOPriority();
 
@@ -614,14 +615,14 @@ public class Trainer {
      *              the set of best moves; {@code false} otherwise
      * @return      an edge or {@code NULL_EDGE}
      */
-    private int pickBestEdge(BNode node, boolean book) throws DatabaseException {
+    private int pickBestEdge(TrainNode node, boolean book) throws DatabaseException {
         int bestEdge = NULL_EDGE;
-        int bestScore = OwareGame.MAX_SCORE;
+        int bestScore = game.infinity();
         float bestPriority = MIN_PRIORITY;
         boolean hasUnqueuedChilds = false;
 
         for (int i = 0; i < node.numEdges(); i++) {
-            BNode child = node.getChild(i);
+            TrainNode child = node.getChild(i);
             float priority = (book == true) ?
                 child.getBPriority() : child.getOPriority();
 
@@ -691,8 +692,8 @@ public class Trainer {
      *              book player, which plays only best moves
      * @return      {@code true} if a path was enqueued
      */
-    private boolean enqueuePath(OwareGame game, boolean book) throws DatabaseException {
-        BNode node = graph.get(game.hash());
+    private boolean enqueuePath(Game game, boolean book) throws DatabaseException {
+        TrainNode node = graph.get(game.hash());
 
         // Enqueue the path if the node is a leaf and the
         // leaf is not already in the queue
@@ -717,12 +718,6 @@ public class Trainer {
         if (edge != NULL_EDGE) {
             byte move = node.getMove(edge);
             performMove(game, move);
-
-            if (game.isRepetition()) {
-                System.err.println("Warning: Cycle detected.");
-                return false;
-            }
-
             enqueued = enqueuePath(game, !book);
             game.unmakeMove();
         }
@@ -750,8 +745,8 @@ public class Trainer {
      * @return      number of child nodes already present in the
      *              graph before the expansion began
      */
-    private int expandNode(OwareGame game) throws DatabaseException {
-        BNode node = graph.get(game.hash());
+    private int expandNode(Game game) throws DatabaseException {
+        TrainNode node = graph.get(game.hash());
 
         // Show feedback
 
@@ -765,13 +760,13 @@ public class Trainer {
         int knownNodes = 0;
 
         for (int move : moves) {
-            if (move == OwareGame.NULL_MOVE)
+            if (move == Game.NULL_MOVE)
                 break;
 
             performMove(game, move);
 
             long hash = game.hash();
-            BNode child = node.addEdge(hash, (byte) move);
+            TrainNode child = node.addEdge(hash, (byte) move);
             byte flag = child.getFlag();
 
             if ((flag & KNOWN_NODE) == 0) {
@@ -799,7 +794,7 @@ public class Trainer {
      * @throws IllegalArgumentException  if the move cannot be
      *      performed on the provided game object
      */
-    private void performMove(OwareGame game, int move) {
+    private void performMove(Game game, int move) {
         if (game.isLegal(move)) {
             game.ensureCapacity(1 + game.length());
             game.makeMove(move);
@@ -818,7 +813,10 @@ public class Trainer {
      */
     public static void main(String[] argv) throws Exception {
         Negamax engine = null;
-        BGraph graph = null;
+        Game game = new OwareGame();
+        Board board = new OwareBoard();
+
+        TrainGraph graph = null;
         Trainer trainer = null;
 
         // Configuration
@@ -833,16 +831,11 @@ public class Trainer {
 
         engine = new Negamax();
 
-        engine.setContempt(0);
-        engine.setInfinity(OwareGame.MAX_SCORE);
-        engine.setDepth(Negamax.MAX_DEPTH);
-        engine.setMoveTime(10000);
-
         // Open the graph and begin training it
 
         try {
-            graph = new BGraph(graphPath);
-            trainer = new Trainer(graph, engine);
+            graph = new TrainGraph(graphPath);
+            trainer = new Trainer(graph, game, board, engine);
 
             trainer.setWindow(window);
             trainer.setWeight(weight);
@@ -878,5 +871,4 @@ public class Trainer {
             graph.close();
         }
     }
-
 }

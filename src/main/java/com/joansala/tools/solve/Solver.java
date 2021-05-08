@@ -1,4 +1,4 @@
-package com.joansala.tools.solver;
+package com.joansala.tools.solve;
 
 /*
  * Copyright (C) 2014 Joan Sala Soler <contact@joansala.com>
@@ -26,6 +26,8 @@ import java.io.RandomAccessFile;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Date;
+
+import com.joansala.util.DoubleStack;
 
 
 /**
@@ -96,7 +98,7 @@ public class Solver implements Serializable {
     /* Strongly-connected components algorithm */
 
     /** Stack used for the cycle detection algorithm */
-    private transient DStack stack;
+    private transient DoubleStack stack;
 
     /** Labels for the cycle detection algorithm */
     private int[] labels = new int[SIZE];
@@ -106,7 +108,7 @@ public class Solver implements Serializable {
      * Instantiates a new endgame solver.
      */
     public Solver() {
-        stack = new DStack(SIZE);
+        stack = new DoubleStack(SIZE);
     }
 
 
@@ -1026,7 +1028,7 @@ public class Solver implements Serializable {
         ObjectInputStream in = new ObjectInputStream(file);
 
         Solver solver = (Solver) in.readObject();
-        solver.stack = new DStack(SIZE);
+        solver.stack = new DoubleStack(SIZE);
 
         in.close();
         file.close();
