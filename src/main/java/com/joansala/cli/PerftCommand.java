@@ -24,7 +24,7 @@ import com.google.inject.Inject;
 import picocli.CommandLine.*;
 
 import com.joansala.engine.*;
-import com.joansala.bench.*;
+import com.joansala.util.bench.*;
 import com.joansala.util.GameScanner;
 import static com.joansala.engine.Game.NULL_MOVE;
 

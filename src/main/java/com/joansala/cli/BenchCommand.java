@@ -26,7 +26,7 @@ import com.google.inject.ConfigurationException;
 import picocli.CommandLine.*;
 
 import com.joansala.engine.*;
-import com.joansala.bench.*;
+import com.joansala.util.bench.*;
 import com.joansala.util.GameScanner;
 
 /**
