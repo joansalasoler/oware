@@ -30,6 +30,12 @@ import com.sleepycat.persist.model.PrimaryKey;
 @Entity
 public class TrainNode implements Serializable {
 
+    /** Known node flag */
+    public static final int KNOWN = 0x01;
+
+    /** Propagated node flag */
+    public static final int PROPAGATED = 0x02;
+
     /** Class version identifier */
     private static final long serialVersionUID = 13L;
 
@@ -47,7 +53,7 @@ public class TrainNode implements Serializable {
     private float epb = 0.0F;
 
     /** This node flag */
-    private byte flag = 0;
+    private int flag = 0;
 
     /** Score for the node */
     private int score = Integer.MIN_VALUE;
@@ -56,7 +62,7 @@ public class TrainNode implements Serializable {
     private int numEdges = 0;
 
     /** Moves that lead to each of the childs */
-    private byte[] moves = new byte[6];
+    private int[] moves = new int[6];
 
     /** Immediate descendents of this node */
     private long[] childs = new long[6];
@@ -123,7 +129,7 @@ public class TrainNode implements Serializable {
      *
      * @param flag  flag for this node
      */
-    public void setFlag(byte flag) {
+    public void setFlag(int flag) {
         this.flag = flag;
     }
 
@@ -173,7 +179,7 @@ public class TrainNode implements Serializable {
      *
      * @return flag value
      */
-    public byte getFlag() {
+    public int getFlag() {
         return flag;
     }
 
@@ -184,7 +190,7 @@ public class TrainNode implements Serializable {
      * @param edge  edge identifier
      * @return      move performed
      */
-    public byte getMove(int edge) {
+    public int getMove(int edge) {
         return moves[edge];
     }
 
@@ -226,7 +232,7 @@ public class TrainNode implements Serializable {
      *
      * @throws DatabaseException  if a database failure occurs
      */
-    public TrainNode addEdge(long hash, byte move) throws DatabaseException {
+    public TrainNode addEdge(long hash, int move) throws DatabaseException {
         moves[numEdges] = move;
         childs[numEdges] = hash;
         numEdges++;

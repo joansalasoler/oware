@@ -95,9 +95,6 @@ public class UCIService {
     /** If set to true the time for next computation will be infinite */
     private volatile boolean infinite = false;
 
-    /** If set to true the next computation will be in pondering mode */
-    private volatile boolean ponder = false;
-
 
     /**
      * Instantiates a new UCI service for the given game. The provided
@@ -601,7 +598,6 @@ public class UCIService {
         long movetime = Engine.DEFAULT_MOVETIME;
 
         infinite = false;
-        ponder = false;
 
         // Obtain search params
 
@@ -619,7 +615,6 @@ public class UCIService {
                 if (scanner.hasNextLong())
                     movetime = scanner.nextLong();
             } else if (token.equals("ponder")) {
-                ponder = true;
                 infinite = true;
             }
         }
@@ -703,9 +698,7 @@ public class UCIService {
      * Parses the 'ponderhit' command parameters setting the relevant
      * engine propieties.
      */
-    private void stopPondering() {
-        ponder = false;
-    }
+    private void stopPondering() {}
 
 
     /**

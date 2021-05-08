@@ -55,5 +55,4 @@ public interface Leaves {
      *              could be found; {@code false} otherwise
      */
     public boolean find(Game game);
-
 }

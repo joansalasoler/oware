@@ -1,7 +1,4 @@
 /**
- * Command line tools used to fine-tune the oware engine.
- *
- * @author  Joan Sala Soler
- * @version 1.0
+ * Utility tools to build an engine.
  */
 package com.joansala.tools;

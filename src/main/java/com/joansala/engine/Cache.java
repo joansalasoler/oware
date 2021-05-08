@@ -128,5 +128,4 @@ public interface Cache {
      * @return  Allocated bytes for the cache
      */
     long size();
-
 }

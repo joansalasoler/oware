@@ -28,7 +28,6 @@ import java.io.IOException;
  */
 public interface Roots {
 
-
     /**
      * Notifies the book intance that the next positions are going to
      * be from a different match.

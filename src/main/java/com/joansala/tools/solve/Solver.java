@@ -17,9 +17,7 @@ package com.joansala.tools.solve;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -39,13 +37,13 @@ public class Solver implements Serializable {
     private static final long serialVersionUID = 1;
 
     /** Number of possible endgame positions */
-    public static final int SIZE = 17383861;
+    private static final int SIZE = 17383861;
 
     /** Maximum search depth */
-    public static final int MAX_DEPTH = 50;
+    private static final int MAX_DEPTH = 50;
 
     /** Maximum number of seeds in a position */
-    public static final int MAX_SEEDS = 15;
+    private static final int MAX_SEEDS = 15;
 
     /** Node type for an unknown node score */
     private static final byte UNKNOWN_SCORE = 0;
@@ -86,9 +84,6 @@ public class Solver implements Serializable {
     /** Visited nodes during a search */
     private final boolean[] visited = new boolean[SIZE];
 
-    /** Solved on a search cycle nodes */
-    private final boolean[] solved = new boolean[SIZE];
-
     /** Counts exact scores for each number of seeds */
     private final int[] exactCount = new int[16];
 
@@ -118,7 +113,7 @@ public class Solver implements Serializable {
      *
      * @param numSeeds  number of seeds
      */
-    public void expand(byte numSeeds) {
+    private void expand(byte numSeeds) {
         int start = OFFSETS[numSeeds];
         int end = OFFSETS[numSeeds + 1];
 
@@ -161,7 +156,7 @@ public class Solver implements Serializable {
      *
      * @param numSeeds  number of seeds for the nodes
      */
-    public void propagate(byte numSeeds) {
+    private void propagate(byte numSeeds) {
         int start = OFFSETS[numSeeds];
         int end = OFFSETS[numSeeds + 1];
 
@@ -225,7 +220,7 @@ public class Solver implements Serializable {
      * @param numSeeds  number of seeds
      * @return          number of components marked
      */
-    public int markComponents(int numSeeds) {
+    private int markComponents(int numSeeds) {
         int start = OFFSETS[numSeeds];
         int end = OFFSETS[numSeeds + 1];
         int prevFlag = flag;
@@ -388,10 +383,9 @@ public class Solver implements Serializable {
      * @param numSeeds  number of seeds
      * @param flag      component flag
      */
-    public void solveComponent(int numSeeds, int flag) {
+    private void solveComponent(int numSeeds, int flag) {
         // Preprocess the child nodes for a faster solving
 
-        int numEdges = computeCosts(numSeeds, flag);
         int numNodes = sortChilds(numSeeds, flag);
 
         // Show some feedback for the component
@@ -473,39 +467,6 @@ public class Solver implements Serializable {
         visited[node] = false;
 
         return alpha;
-    }
-
-
-    /**
-     * Precomputes edge scores for all the unknown nodes with the given
-     * number of seeds and component flag.
-     *
-     * @param numSeeds  number of seeds
-     * @param flag      component flag
-     * @return          computed edge scores count
-     */
-    private int computeCosts(int numSeeds, int flag) {
-        int start = OFFSETS[numSeeds];
-        int end = OFFSETS[numSeeds + 1];
-        int count = 0;
-
-        for (int node = start; node < end; node++) {
-            if (flags[node] != flag)
-                continue;
-
-            if (types[node] != UNKNOWN_SCORE)
-                continue;
-
-            int first = node * 6;
-            int last = first + edges[node];
-
-            for (int i = first; i < last; i++) {
-                costs[i] = edgeScore(node, childs[i]);
-                count++;
-            }
-        }
-
-        return count;
     }
 
 
@@ -751,7 +712,7 @@ public class Solver implements Serializable {
      * @param move      the move to determine if it's a capture
      * @return          {@code true} if the move is a legal capture
      */
-    public boolean isCapture(byte[] position, byte move) {
+    private boolean isCapture(byte[] position, byte move) {
         final int last = (int) REAPER[move][position[move]];
 
         if (last == -1 || position[last] > 2)
@@ -816,27 +777,6 @@ public class Solver implements Serializable {
         }
 
         return false;
-    }
-
-
-    /**
-     * Given a position array where the south player is to move returns
-     * an unique 25 bits identifier for the position from the player's
-     * perspective. The position must contain exactly 16 seeds.
-     *
-     * @param position  An array representation of the position
-     * @return          Hash of the position
-     */
-    private int rankSouthPosition(byte[] position) {
-        int rank = 0;
-        int n = (int) position[12];
-
-        for (int i = 11; n < MAX_SEEDS && i >= 0; i--) {
-            rank += COEFFICIENTS[n][i];
-            n += (int) position[i];
-        }
-
-        return rank;
     }
 
 
@@ -907,7 +847,7 @@ public class Solver implements Serializable {
      *
      * @param numSeeds  number of seeds
      */
-    public int exactCount(int numSeeds) {
+    private int exactCount(int numSeeds) {
         return exactCount[numSeeds];
     }
 
@@ -915,7 +855,7 @@ public class Solver implements Serializable {
     /**
      * Returns the total number of known positions.
      */
-    public int exactCount() {
+    private int exactCount() {
         int count = 0;
 
         for (int seeds = 0; seeds <= MAX_SEEDS; seeds++)
@@ -931,7 +871,7 @@ public class Solver implements Serializable {
      *
      * @param numSeeds  number of seeds
      */
-    public int numPositions(int numSeeds) {
+    private int numPositions(int numSeeds) {
         if (numSeeds >= 0 && numSeeds < MAX_SEEDS) {
             return OFFSETS[numSeeds + 1] - OFFSETS[numSeeds];
         } else if (numSeeds == MAX_SEEDS) {
@@ -943,17 +883,9 @@ public class Solver implements Serializable {
 
 
     /**
-     * Returns the total number of positions that exist.
-     */
-    public int numPositions() {
-        return SIZE;
-    }
-
-
-    /**
      * Returns the latest used cycle flag.
      */
-    public int previousFlag() {
+    private int previousFlag() {
         return flag;
     }
 
@@ -963,7 +895,7 @@ public class Solver implements Serializable {
      *
      * @param path  file path
      */
-    public void exportToBook(String path, int numSeeds) throws IOException {
+    private void exportToBook(String path, int numSeeds) throws IOException {
         RandomAccessFile raf = new RandomAccessFile(path, "rw");
 
         int size = 1 + OFFSETS[1 + numSeeds];
@@ -1007,7 +939,7 @@ public class Solver implements Serializable {
      *
      * @param path  file path
      */
-    public void writeGraph(String path) throws IOException {
+    private void writeGraph(String path) throws IOException {
         FileOutputStream file = new FileOutputStream(path);
         ObjectOutputStream out = new ObjectOutputStream(file);
 
@@ -1015,25 +947,6 @@ public class Solver implements Serializable {
 
         out.close();
         file.close();
-    }
-
-
-    /**
-     * Unserializes this object from a file.
-     *
-     * @param path  file path
-     */
-    public static Solver readGraph(String path) throws Exception {
-        FileInputStream file = new FileInputStream(path);
-        ObjectInputStream in = new ObjectInputStream(file);
-
-        Solver solver = (Solver) in.readObject();
-        solver.stack = new DoubleStack(SIZE);
-
-        in.close();
-        file.close();
-
-        return solver;
     }
 
 
@@ -1077,12 +990,12 @@ public class Solver implements Serializable {
 
             // Solve each component in topological order
 
-            // if (cycles > 0) {
-            //     for (int i = 0; i < cycles; i++) {
-            //         solver.solveComponent(seeds, 1 + flag++);
-            //         solver.propagate(seeds);
-            //     }
-            // }
+            if (cycles > 0) {
+                for (int i = 0; i < cycles; i++) {
+                    solver.solveComponent(seeds, 1 + flag++);
+                    solver.propagate(seeds);
+                }
+            }
 
             // Show positions statistics
 
@@ -1108,7 +1021,7 @@ public class Solver implements Serializable {
 
         try {
             solver.exportToBook(bookPath, maxSeeds);
-            // solver.writeGraph(graphPath);
+            solver.writeGraph(graphPath);
         } catch (IOException e) {
             System.err.println(e);
         }
@@ -1265,5 +1178,4 @@ public class Solver implements Serializable {
             6188,   18564,     50388,   125970,   293930,   646646,
          1352078, 2704156,   5200300,  9657700, 17383860
     };
-
 }

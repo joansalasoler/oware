@@ -17,11 +17,7 @@ package com.joansala.tools.train;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Locale;
 import java.util.Hashtable;
 import java.util.SortedSet;
 
@@ -31,6 +27,8 @@ import com.joansala.engine.*;
 import com.joansala.engine.negamax.Negamax;
 import com.joansala.oware.OwareBoard;
 import com.joansala.oware.OwareGame;
+import com.joansala.util.dump.BookExporter;
+import static com.joansala.tools.train.TrainNode.*;
 
 
 /**
@@ -44,12 +42,6 @@ public class Trainer {
 
     /** Minimum possible expansion priority */
     public static final float MIN_PRIORITY = Float.MAX_VALUE;
-
-    /** Known node flag bitmask */
-    private static final byte KNOWN_NODE = 0x01;
-
-    /** Propagated node flag bitmask */
-    private static final byte PROPAGATED_NODE = 0x02;
 
     /** Null edge identifier */
     private static final int NULL_EDGE = -1;
@@ -133,22 +125,12 @@ public class Trainer {
 
 
     /**
-     * Returns the current root node's score.
-     *
-     * @return  a score value
-     */
-    public int rootScore() throws DatabaseException {
-        return graph.get(rootHash).getScore();
-    }
-
-
-    /**
      * Expands the given number of paths using the internal engine.
      *
      * @param numPaths  number of paths to expand
      * @param book      {@code true} if the book player moves first
      */
-    public void expandPaths(int numPaths, boolean book) throws DatabaseException {
+    private void expandPaths(int numPaths, boolean book) throws DatabaseException {
         // Expand the root if it's not expanded
 
         if (graph.get(rootHash).numEdges() == 0) {
@@ -235,7 +217,7 @@ public class Trainer {
      * <p>Note that all nodes of the graph are updated during this method
      * call, therefore this operation is expensive to perform.</p>
      */
-    public void refreshGraph() throws DatabaseException {
+    private void refreshGraph() throws DatabaseException {
         SortedSet<Long> hashes = graph.keys();
         long knownCount = 0L;
 
@@ -244,15 +226,15 @@ public class Trainer {
 
         for (long hash : hashes) {
             TrainNode node = graph.get(hash);
-            byte flag = node.getFlag();
+            int flag = node.getFlag();
 
             if (node.numEdges() == 0) {
                 knownCount++;
-                flag |= PROPAGATED_NODE;
+                flag |= PROPAGATED;
                 node.setFlag(flag);
                 graph.update(node);
             } else {
-                flag &= (PROPAGATED_NODE ^ 0xFF);
+                flag &= (PROPAGATED ^ 0xFF);
                 node.setFlag(flag);
                 graph.update(node);
             }
@@ -271,19 +253,19 @@ public class Trainer {
 
             for (long hash : hashes) {
                 TrainNode node = graph.get(hash);
-                byte flag = node.getFlag();
+                int flag = node.getFlag();
                 boolean hasUnknown = false;
 
-                if ((flag & PROPAGATED_NODE) != 0)
+                if ((flag & PROPAGATED) != 0)
                     continue;
 
-                if ((flag & KNOWN_NODE) == 0)
+                if ((flag & KNOWN) == 0)
                     continue;
 
                 for (TrainNode child : node.childs()) {
-                    byte f = child.getFlag();
+                    int f = child.getFlag();
 
-                    if ((f & PROPAGATED_NODE) == 0) {
+                    if ((f & PROPAGATED) == 0) {
                         hasUnknown = true;
                         break;
                     }
@@ -292,7 +274,7 @@ public class Trainer {
                 if (hasUnknown == false) {
                     hasChanged = true;
                     knownCount++;
-                    flag |= PROPAGATED_NODE;
+                    flag |= PROPAGATED;
                     node.setFlag(flag);
                     updateValues(node);
                 }
@@ -309,117 +291,6 @@ public class Trainer {
         // Syncronize to the phystical storage
 
         graph.sync();
-    }
-
-
-    /**
-     * Exports all the positions found in the graph to a book file with a
-     * format suitable for a game engine.
-     *
-     * The exported book contains for each node its hash and a score for
-     * each of the six houses of the player. If a house is not a legal
-     * move for the player its score is set to {@code Shor.MIN_VALUE}.
-     * The nodes are sorted according to their hash number, from the
-     * lowest hash to the highest.
-     *
-     * @param path  file path to which to write the book
-     */
-    public void exportToBook(String path) throws DatabaseException, IOException {
-        RandomAccessFile raf = new RandomAccessFile(path, "rw");
-
-        // Write the book header information
-
-        raf.writeChars("Oware Opening Book 1.0\n");
-        raf.writeChars("Date: " + (new Date().toString()) + "\n");
-        raf.writeChars("Positions: " + graph.size() + "\n");
-        raf.writeChars("Name: Aalina's Openings\n");
-        raf.writeChars("Author: Joan Sala Soler\n");
-        raf.writeChars("License: GNU General Public License version 3\n");
-        raf.writeChar('\n');
-
-        // Write all the expanded nodes in ascending order
-
-        for (long hash : graph.keys()) {
-            TrainNode node = graph.get(hash);
-            short[] scores = new short[6];
-
-            if ((node.getFlag() & KNOWN_NODE) == 0)
-                continue;
-
-            if (node.numEdges() < 1)
-                continue;
-
-            for (int i = 0; i < 6; i++)
-                scores[i] = Short.MIN_VALUE;
-
-            for (int i = 0; i < node.numEdges(); i++) {
-                TrainNode child = node.getChild(i);
-                byte move = node.getMove(i);
-                int index = (move > 5) ? move - 6 : move;
-                scores[index] = (short) -child.getScore();
-            }
-
-            raf.writeLong(hash);
-
-            for (short score : scores)
-                raf.writeShort(score);
-        }
-
-        raf.close();
-    }
-
-
-    /**
-     * Outputs all the values of the leaves that can be played by the book
-     * player in a comma-separated values format.
-     *
-     * @param book  {@code true} if the book player moves first
-     */
-    public void outputBestLeaves(boolean book) throws DatabaseException {
-        System.out.println("hash,flag,edges,epb,epo,score,depth");
-        outputLeaves(game, book);
-    }
-
-    /**
-     * Outputs the values of the leaves that can be played by the book
-     * player given an root game position.
-     *
-     * @param game  initial game position
-     * @param book  {@code true} if the book player is to move
-     */
-    private void outputLeaves(Game game, boolean book) throws DatabaseException {
-        TrainNode node = graph.get(game.hash());
-
-        for (int edge = 0; edge < node.numEdges(); edge++) {
-            TrainNode child = node.getChild(edge);
-            byte move = node.getMove(edge);
-            int score = -child.getScore();
-
-            if (book && score != node.getScore())
-                continue;
-
-            performMove(game, move);
-
-            if (child.numEdges() == 0) {
-                if (book == true) {
-                    System.out.format(
-                        Locale.ENGLISH,
-                        "%d,%d,%d,%.2f,%.2f,%d,%d",
-                        child.getHash(),
-                        child.getFlag(),
-                        child.numEdges(),
-                        child.getBPriority(),
-                        child.getOPriority(),
-                        score,
-                        game.length() + 1
-                    );
-                }
-            } else {
-                outputLeaves(game, !book);
-            }
-
-            game.unmakeMove();
-        }
     }
 
 
@@ -528,7 +399,7 @@ public class Trainer {
             node.setOPriority(priority);
         }
 
-        node.setFlag(KNOWN_NODE);
+        node.setFlag(KNOWN);
         graph.update(node);
     }
 
@@ -716,7 +587,7 @@ public class Trainer {
         int edge = pickBestEdge(node, book);
 
         if (edge != NULL_EDGE) {
-            byte move = node.getMove(edge);
+            int move = node.getMove(edge);
             performMove(game, move);
             enqueued = enqueuePath(game, !book);
             game.unmakeMove();
@@ -766,10 +637,10 @@ public class Trainer {
             performMove(game, move);
 
             long hash = game.hash();
-            TrainNode child = node.addEdge(hash, (byte) move);
-            byte flag = child.getFlag();
+            TrainNode child = node.addEdge(hash, move);
+            int flag = child.getFlag();
 
-            if ((flag & KNOWN_NODE) == 0) {
+            if ((flag & KNOWN) == 0) {
                 computeValues(game);
             } else {
                 knownNodes++;
@@ -839,16 +710,9 @@ public class Trainer {
 
             trainer.setWindow(window);
             trainer.setWeight(weight);
-
-            /*
             trainer.refreshGraph();
-            trainer.outputBestLeaves(true);
-            trainer.outputBestLeaves(false);
-            System.exit(0);
-            */
 
             System.out.println("Graph size: " + graph.size());
-            System.out.println("Root score: " + trainer.rootScore());
             System.out.println();
 
             System.out.println("> Expanding " + numPaths + " paths");
@@ -861,10 +725,9 @@ public class Trainer {
             trainer.refreshGraph();
 
             System.out.println("> Exporting the book");
-            trainer.exportToBook(bookPath);
+            new BookExporter().export(graph, bookPath);
 
             System.out.println("New graph size: " + graph.size());
-            System.out.println("New root score: " + trainer.rootScore());
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
