@@ -149,11 +149,14 @@ public class UCIPlayer {
         int ponder = client.getPonderMove();
 
         if (ponder != Game.NULL_MOVE) {
-            int cursor = game.getCursor();
-            game.makeMove(ponder);
-            position = toUCIPosition(game);
-            game.unmakeMove();
-            game.setCursor(cursor);
+            if (game.isLegal(ponder)) {
+                int cursor = game.getCursor();
+                game.ensureCapacity(1 + game.length());
+                game.makeMove(ponder);
+                position = toUCIPosition(game);
+                game.unmakeMove();
+                game.setCursor(cursor);
+            }
         }
 
         client.send(position);

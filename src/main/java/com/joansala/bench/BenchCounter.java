@@ -21,7 +21,7 @@ package com.joansala.bench;
 /**
  * Counts tests.
  */
-public final class BenchCounter {
+public final class BenchCounter implements Comparable<BenchCounter> {
 
     /** Number of tests */
     private long count = 0;
@@ -86,5 +86,11 @@ public final class BenchCounter {
     public void clear() {
         count = 0;
         fails = 0;
+    }
+
+
+    /** {@inheritDoc} */
+    @Override public int compareTo(BenchCounter o) {
+        return Double.compare(ratio(), o.ratio());
     }
 }

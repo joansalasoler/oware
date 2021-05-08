@@ -31,6 +31,7 @@ import picocli.CommandLine.*;
   description = "Aalina is an Oware game engine",
   mixinStandardHelpOptions = true,
   subcommands = {
+      BattleCommand.class,
       BenchCommand.class,
       MatchCommand.class,
       PerftCommand.class,

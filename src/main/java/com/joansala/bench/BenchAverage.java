@@ -21,7 +21,7 @@ package com.joansala.bench;
 /**
  * Accumulates values into an average.
  */
-public final class BenchAverage {
+public final class BenchAverage implements Comparable<BenchAverage> {
 
     /** Number of tests */
     private long count = 0;
@@ -73,5 +73,11 @@ public final class BenchAverage {
         count = 0;
         offset = 0;
         average = 0.0;
+    }
+
+
+    /** {@inheritDoc} */
+    @Override public int compareTo(BenchAverage o) {
+        return Double.compare(average(), o.average());
     }
 }
