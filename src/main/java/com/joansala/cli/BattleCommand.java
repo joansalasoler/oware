@@ -80,7 +80,14 @@ public class BattleCommand implements Callable<Integer> {
       names = "--matches",
       description = "Number of matches to play."
     )
-    private int matches = 10;
+    private int matches = 0;
+
+
+    @Option(
+      names = "--rounds",
+      description = "Number of rounds to play."
+    )
+    private int rounds = 1;
 
 
     /**
@@ -116,17 +123,24 @@ public class BattleCommand implements Callable<Integer> {
         Object position = board.position();
         int turn = board.turn();
 
+        if (matches <= 0 && rounds >= 1) {
+            int length = players.length;
+            int size = length + length % 2;
+            int tables = length / 2;
+            matches = Math.max(1, rounds * tables * (size - 1));
+        }
+
         System.out.format("%s%n", formatSetup());
         System.out.format("%s%n", formatPlayers());
         System.out.println("Playing tournament");
         System.out.println(horizontalRule('-'));
 
-        for (int round = 1; round <= matches; round++) {
+        for (int match = 1; match <= matches; match++) {
             BenchPlayer south = pairer.next();
             BenchPlayer north = pairer.next();
             BenchPlayer player = north;
 
-            System.out.format("%3d. %2d-%-2d ", round,
+            System.out.format("%3d. %2d-%-2d ", match,
                 south.identifier(), north.identifier());
 
             // Play a match till its completion
@@ -195,11 +209,13 @@ public class BattleCommand implements Callable<Integer> {
             "%s%n" +
             "Players:       %,37d players%n" +
             "Matches:       %,37d matches%n" +
+            "Rounds:        %,37d rounds%n" +
             "Depth limit:   %,37d plies%n" +
             "Time per move: %,37d ms%n",
             horizontalRule('-'),
             players.length,
             matches,
+            rounds,
             depth,
             moveTime
         );
