@@ -36,7 +36,8 @@ import picocli.CommandLine.*;
       MatchCommand.class,
       PerftCommand.class,
       ServiceCommand.class,
-      ShellCommand.class
+      ShellCommand.class,
+      TrainCommand.class
   }
 )
 public final class MainCommand {

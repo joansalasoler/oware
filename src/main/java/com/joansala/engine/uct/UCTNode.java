@@ -61,6 +61,42 @@ class UCTNode {
 
 
     /**
+     * Create a new node.
+     *
+     * @param game      Game state
+     * @param move      Performed move
+     */
+    UCTNode(Game game, int move) {
+        hash = game.hash();
+        cursor = game.getCursor();
+        terminal = game.hasEnded();
+        this.reset = cursor;
+        this.move = move;
+    }
+
+
+    /**
+     * Advance to the next move and return it.
+     *
+     * @param game      State of this node
+     */
+    int nextMove(Game game) {
+        final int move;
+
+        if (expanded) {
+            move = Game.NULL_MOVE;
+        } else {
+            game.setCursor(cursor);
+            move = game.nextMove();
+            cursor = game.getCursor();
+            expanded = (move == Game.NULL_MOVE);
+        }
+
+        return move;
+    }
+
+
+    /**
      * Adds a new child node to this parent.
      *
      * @param node      Child node
@@ -69,21 +105,6 @@ class UCTNode {
         node.parent = this;
         node.sibling = child;
         child = node;
-    }
-
-
-    /**
-     * Set the initial state of this node.
-     *
-     * @param game      Game state
-     * @param move      Performed move
-     */
-    void setState(Game game, int move) {
-        hash = game.hash();
-        cursor = game.getCursor();
-        terminal = game.hasEnded();
-        this.reset = cursor;
-        this.move = move;
     }
 
 

@@ -57,7 +57,7 @@ public class UCT implements Engine, HasLeaves {
     private final Timer timer;
 
     /** Current computation root node */
-    protected UCTNode root = new UCTNode();
+    protected UCTNode root;
 
     /** References the {@code Game} to search */
     protected Game game = null;
@@ -248,7 +248,7 @@ public class UCT implements Engine, HasLeaves {
      * {@inheritDoc}
      */
     public synchronized void newMatch() {
-        root = new UCTNode();
+        root = null;
         timer.purge();
         System.gc();
     }
@@ -293,7 +293,7 @@ public class UCT implements Engine, HasLeaves {
 
         game.ensureCapacity(MAX_DEPTH + game.length());
         timer.schedule(countDown, moveTime);
-        root = findRootNode(game);
+        root = rootNode(game);
 
         UCTNode bestChild = null;
         double bestScore = Game.DRAW_SCORE;
@@ -306,7 +306,7 @@ public class UCT implements Engine, HasLeaves {
         }
 
         while (!aborted || root.count < MIN_PROBES) {
-            search(root, maxDepth);
+            expand(root, maxDepth);
             pruneGarbage(root);
 
             if (reportCount-- > 0) {
@@ -445,20 +445,21 @@ public class UCT implements Engine, HasLeaves {
      * @param game      Game state
      * @return          A root node
      */
-    private UCTNode findRootNode(Game game) {
+    private UCTNode rootNode(Game game) {
         final long hash = game.hash();
         UCTNode node = root;
 
-        if (node != null && node.parent != null) {
-            node = node.parent;
+        if (node != null) {
+            if (node.parent != null) {
+                node = node.parent;
+            }
+
+            if ((node = findNode(node, hash, 2)) != null) {
+                return node;
+            }
         }
 
-        if ((node = findNode(node, hash, 2)) != null) {
-            return node;
-        }
-
-        UCTNode root = new UCTNode();
-        root.setState(game, Game.NULL_MOVE);
+        UCTNode root = new UCTNode(game, Game.NULL_MOVE);
         root.initScore(0.0);
 
         return root;
@@ -490,30 +491,6 @@ public class UCT implements Engine, HasLeaves {
         }
 
         return match;
-    }
-
-
-    /**
-     * Obtain the next move to expand for a node.
-     *
-     * @param game      Game state
-     * @param node      Node to expand
-     *
-     * @return          Next move or {@code NULL_MOVE}
-     */
-    private int getNextMove(Game game, UCTNode node) {
-        final int move;
-
-        if (node.expanded) {
-            move = Game.NULL_MOVE;
-        } else {
-            game.setCursor(node.cursor);
-            move = game.nextMove();
-            node.cursor = game.getCursor();
-            node.expanded = (move == Game.NULL_MOVE);
-        }
-
-        return move;
     }
 
 
@@ -579,11 +556,9 @@ public class UCT implements Engine, HasLeaves {
      *
      * @return          New child node
      */
-    private UCTNode expandChild(UCTNode parent, int move) {
-        final UCTNode node = new UCTNode();
-
+    private UCTNode appendChild(UCTNode parent, int move) {
+        final UCTNode node = new UCTNode(game, move);
         parent.pushChild(node);
-        node.setState(game, move);
 
         return node;
     }
@@ -595,7 +570,7 @@ public class UCT implements Engine, HasLeaves {
      * @param game      Game
      * @param node      Root node
      */
-    private double search(UCTNode node, int depth) {
+    private double expand(UCTNode node, int depth) {
         final int move;
         final UCTNode child;
         final double score;
@@ -607,17 +582,17 @@ public class UCT implements Engine, HasLeaves {
             return score;
         }
 
-        move = getNextMove(game, node);
+        move = node.nextMove(game);
 
         if (move != Game.NULL_MOVE) {
             game.makeMove(move);
-            child = expandChild(node, move);
+            child = appendChild(node, move);
             score = -evaluate(child, depth - 1);
             game.unmakeMove();
         } else {
             child = pickLeadChild(node);
             game.makeMove(child.move);
-            score = -search(child, depth - 1);
+            score = -expand(child, depth - 1);
             game.unmakeMove();
         }
 
