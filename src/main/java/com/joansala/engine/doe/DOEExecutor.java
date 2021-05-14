@@ -40,7 +40,7 @@ public class DOEExecutor {
      * Create a new executor instance.
      */
     public DOEExecutor() {
-        this(Runtime.getRuntime().availableProcessors());
+        this(2 * Runtime.getRuntime().availableProcessors());
     }
 
 

@@ -34,8 +34,12 @@ public class DOENode implements Serializable {
     /** Serialization version */
     static final long serialVersionUID = 1L;
 
-    /** Unique hash code of the node */
-    @PrimaryKey long hash = 0x00;
+    /** Unique identifier of the node */
+    @PrimaryKey(sequence="ID")
+    long id;
+
+    /** Hash code of the node */
+    long hash = 0x00;
 
     /** Parent of this node */
     Long parent = null;
@@ -114,9 +118,9 @@ public class DOENode implements Serializable {
      * @param node      Child node
      */
     void pushChild(DOENode node) {
-        node.parent = this.hash;
+        node.parent = this.id;
         node.sibling = child;
-        child = node.hash;
+        child = node.id;
     }
 
 

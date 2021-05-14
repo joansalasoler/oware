@@ -31,7 +31,7 @@ import com.joansala.engine.*;
 public class DOE implements Engine {
 
     /** Factors the amount of exploration of the tree */
-    public static final double DEFAULT_BIAS = 1.414;
+    public static final double DEFAULT_BIAS = 0.353;
 
     /** Maximum depth allowed for a search */
     public static final int MAX_DEPTH = 254;
@@ -250,6 +250,7 @@ public class DOE implements Engine {
     public synchronized void trainEngine(Game game, DOEScorer scorer) {
         this.game = game;
 
+        int counter = 0;
         game.ensureCapacity(MAX_DEPTH + game.length());
         root = rootNode(game);
 
@@ -273,7 +274,10 @@ public class DOE implements Engine {
                 });
             }
 
-            invokeConsumers(game);
+            if (root.expanded && ++counter >= 10) {
+                invokeConsumers(game);
+                counter = 0;
+            }
         }
     }
 
@@ -365,12 +369,23 @@ public class DOE implements Engine {
      * @return          A root node
      */
     private DOENode rootNode(Game game) {
-        DOENode root = null;
+        DOENode root = store.read(1L);
 
-        if ((root = store.read(game.hash())) == null) {
+        // Create a new node if root doesn't exist
+
+        if (root == null) {
             root = new DOENode(game, Game.NULL_MOVE);
             root.updateScore(0.0);
             store.write(root);
+            store.commit();
+        }
+
+        // Check that the stored root is valid for the training
+        // state. Each database must contain exactly one root.
+
+        if (root.hash != game.hash()) {
+            throw new RuntimeException(
+                "Root state is not valid");
         }
 
         return root;
@@ -410,9 +425,9 @@ public class DOE implements Engine {
         final double score = -score(node);
 
         node.updateScore(score);
+        store.write(node);
         parent.pushChild(node);
         store.write(parent);
-        store.write(node);
 
         return node;
     }

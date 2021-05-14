@@ -108,12 +108,26 @@ public class DOEStore implements AutoCloseable {
 
 
     /**
+     * Check if the store contains a node.
+     */
+    public boolean contains(Long id) {
+        try {
+            return nodes.contains(id);
+        } catch (DatabaseException e) {
+            handleException(e);
+        }
+
+        return false;
+    }
+
+
+    /**
      * Get a node from the store.
      */
-    public DOENode read(Long hash) {
+    public DOENode read(Long id) {
         try {
-            if (hash != null) {
-                return nodes.get(hash);
+            if (id != null) {
+                return nodes.get(id);
             }
         } catch (DatabaseException e) {
             handleException(e);

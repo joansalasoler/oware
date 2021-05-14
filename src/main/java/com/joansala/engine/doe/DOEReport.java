@@ -49,7 +49,7 @@ public class DOEReport implements Report {
      * @param root      Root node
      */
     public DOEReport(DOE engine, Game game, DOENode root) {
-        if (root != null) {
+        if (root != null && root.child != null) {
             collectReport(engine, game, root);
         }
     }

@@ -79,14 +79,14 @@ public class TrainCommand implements Callable<Integer> {
 
         trainer.setContempt(root.contempt());
         trainer.setInfinity(root.infinity());
-        trainer.setExplorationBias(1.414);
+        trainer.setExplorationBias(0.353);
 
         // Report search information
 
         trainer.attachConsumer(report -> {
             int[] moves = report.getVariation();
             String notation = parser.toAlgebraic(moves);
-            System.out.format("%d %s%n", store.count(), notation);
+            System.out.format("= %d %s%n", store.count(), notation);
         });
 
         // Evaluate postions as they arrive
@@ -102,6 +102,9 @@ public class TrainCommand implements Callable<Integer> {
             for (int move : moves) {
                 game.makeMove(move);
             }
+
+            String notation = parser.toAlgebraic(moves);
+            System.out.format("- %d %s%n", store.count(), notation);
 
             return engine.computeBestScore(game);
         });
