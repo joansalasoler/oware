@@ -65,6 +65,9 @@ public class DOENode implements Serializable {
     /** Whether it is an endgame position */
     boolean terminal = false;
 
+    /** Whether this node was evaluated */
+    boolean evaluated = false;
+
     /** Number of played simulations */
     long count = 0;
 

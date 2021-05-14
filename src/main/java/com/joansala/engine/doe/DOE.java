@@ -264,23 +264,32 @@ public class DOE implements Engine {
         game.ensureCapacity(MAX_DEPTH + game.length());
         root = rootNode(game);
 
+        // There may be unevaluated nodes if the executor was shutdown
+        // before all tasks were completed. Enqueue them now.
+
+        store.values().forEach(node -> {
+            if (node.evaluated == false) {
+                executor.submit(() -> {
+                    evaluate(node, scorer);
+                });
+            }
+        });
+
+        // Expand the UCT tree and enqueue the expanded nodes for
+        // its asynchronous evaluation.
+
         while (aborted == false) {
-            final DOENode leaf;
+            final DOENode node;
 
             synchronized (lock) {
-                leaf = expand(root, maxDepth);
-                backpropagate(leaf, leaf.score);
+                node = expand(root, maxDepth);
+                backpropagate(node, node.score);
                 store.commit();
             }
 
-            if (leaf.terminal == false) {
+            if (node.evaluated == false) {
                 executor.submit(() -> {
-                    int score = scorer.apply(leaf.moves);
-
-                    synchronized (lock) {
-                        backpropagate(leaf, score);
-                        store.commit();
-                    }
+                    evaluate(node, scorer);
                 });
             }
 
@@ -289,6 +298,8 @@ public class DOE implements Engine {
                 counter = 0;
             }
         }
+
+        executor.shutdown();
     }
 
 
@@ -385,6 +396,7 @@ public class DOE implements Engine {
 
         if (root == null) {
             root = new DOENode(game, Game.NULL_MOVE);
+            root.evaluated = true;
             root.updateScore(0.0);
             store.write(root);
             store.commit();
@@ -399,6 +411,23 @@ public class DOE implements Engine {
         }
 
         return root;
+    }
+
+
+    /**
+     * Evaluates a node with an evaluation function.
+     *
+     * @param node      Node to evaluate
+     * @param scorer    Evaluation function
+     */
+    private void evaluate(DOENode node, DOEScorer scorer) {
+        int score = scorer.apply(node.moves);
+
+        synchronized (lock) {
+            node.evaluated = true;
+            backpropagate(node, score);
+            store.commit();
+        }
     }
 
 
@@ -434,6 +463,7 @@ public class DOE implements Engine {
         final DOENode node = new DOENode(game, move);
         final double score = -score(node);
 
+        node.evaluated = node.terminal;
         node.updateScore(score);
         store.write(node);
         parent.pushChild(node);

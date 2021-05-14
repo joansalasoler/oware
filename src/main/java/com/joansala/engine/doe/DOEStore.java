@@ -19,6 +19,7 @@ package com.joansala.engine.doe;
 
 
 import java.io.File;
+import java.util.Collection;
 import com.sleepycat.je.*;
 import com.sleepycat.persist.*;
 
@@ -104,6 +105,14 @@ public class DOEStore implements AutoCloseable {
      */
     private void handleException(DatabaseException e) {
         throw new RuntimeException(e);
+    }
+
+
+    /**
+     * Collection view of the nodes on this store.
+     */
+    public Collection<DOENode> values() {
+        return nodes.map().values();
     }
 
 
