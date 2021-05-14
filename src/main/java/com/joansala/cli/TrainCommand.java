@@ -57,6 +57,12 @@ public class TrainCommand implements Callable<Integer> {
     private double bias = DOE.DEFAULT_BIAS;
 
     @Option(
+      names = "--depth",
+      description = "Expansion depth limit (plies)"
+    )
+    private int depth = Engine.DEFAULT_DEPTH;
+
+    @Option(
       names = "--movetime",
       description = "Time limit per move (ms)"
     )
@@ -89,6 +95,7 @@ public class TrainCommand implements Callable<Integer> {
         final Object position = root.position();
         final int turn = root.turn();
 
+        trainer.setDepth(depth);
         trainer.setContempt(root.contempt());
         trainer.setInfinity(root.infinity());
         trainer.setExplorationBias(bias);
