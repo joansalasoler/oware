@@ -87,6 +87,16 @@ public class DOE implements Engine {
 
 
     /**
+     * Create a new search engine.
+     */
+    public DOE(DOEStore store, int poolSize) {
+        this.store = store;
+        this.executor = new DOEExecutor(poolSize);
+        setExplorationBias(DEFAULT_BIAS);
+    }
+
+
+    /**
      * Returns the maximum depth allowed for the search
      *
      * @return   The depth value

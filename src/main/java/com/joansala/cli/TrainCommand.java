@@ -51,10 +51,22 @@ public class TrainCommand implements Callable<Integer> {
     private String path = "book.db";
 
     @Option(
+      names = "--bias",
+      description = "Exploration bias factor"
+    )
+    private double bias = DOE.DEFAULT_BIAS;
+
+    @Option(
       names = "--movetime",
       description = "Time limit per move (ms)"
     )
     private long moveTime = Engine.DEFAULT_MOVETIME;
+
+    @Option(
+      names = "--threads",
+      description = "Size of the evaluation thread pool"
+    )
+    private int poolSize = Runtime.getRuntime().availableProcessors();
 
 
     /**
@@ -70,7 +82,7 @@ public class TrainCommand implements Callable<Integer> {
      */
     @Override public Integer call() throws Exception {
         final DOEStore store = new DOEStore(path);
-        final DOE trainer = new DOE(store);
+        final DOE trainer = new DOE(store, poolSize);
 
         final Game root = injector.getInstance(Game.class);
         final Board parser = injector.getInstance(Board.class);
@@ -79,7 +91,7 @@ public class TrainCommand implements Callable<Integer> {
 
         trainer.setContempt(root.contempt());
         trainer.setInfinity(root.infinity());
-        trainer.setExplorationBias(0.353);
+        trainer.setExplorationBias(bias);
 
         // Report search information
 
