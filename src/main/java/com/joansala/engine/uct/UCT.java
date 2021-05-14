@@ -19,12 +19,10 @@ package com.joansala.engine.uct;
 
 import com.google.inject.Inject;
 import java.util.function.Consumer;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Timer;
 import java.util.TimerTask;
 
 import com.joansala.engine.*;
+import com.joansala.engine.base.*;
 
 
 /**
@@ -33,13 +31,10 @@ import com.joansala.engine.*;
  * @author    Joan Sala Soler
  * @version   1.0.0
  */
-public class UCT implements Engine, HasLeaves {
+public class UCT extends BaseEngine implements HasLeaves {
 
     /** Factors the amount of exploration of the tree */
     public static final double DEFAULT_BIAS = 0.353;
-
-    /** Maximum depth allowed for a search */
-    public static final int MAX_DEPTH = 254;
 
     /** Minimum number of node expansions */
     private static final int MIN_PROBES = 1000;
@@ -53,8 +48,8 @@ public class UCT implements Engine, HasLeaves {
     /** Number of pruning iterations to run at once */
     private static final int PRUNE_ITERATIONS = 20;
 
-    /** Search timer */
-    private final Timer timer;
+    /** Fallback empty endgames instance */
+    private final Leaves baseLeaves = new BaseLeaves();
 
     /** Current computation root node */
     protected UCTNode root;
@@ -65,29 +60,11 @@ public class UCT implements Engine, HasLeaves {
     /** Endgame database */
     protected Leaves leaves = null;
 
-    /** Consumer of best moves */
-    protected Set<Consumer<Report>> consumers = new HashSet<>();
-
-    /** The maximum depth allowed for the current search */
-    private int maxDepth = MAX_DEPTH;
-
-    /** The maximum time allowed for the current search */
-    private long moveTime = DEFAULT_MOVETIME;
-
-    /** The maximum possible score value */
-    private int maxScore = Integer.MAX_VALUE;
-
-    /** Contempt factor used to evaluaty draws */
-    private int contempt = Game.DRAW_SCORE;
-
     /** Exploration bias parameter */
     public double biasFactor = DEFAULT_BIAS;
 
     /** Exploration priority multiplier */
     private double bias = DEFAULT_BIAS * maxScore;
-
-    /** This flag is set to true to abort a computation */
-    private volatile boolean aborted = false;
 
 
     /**
@@ -102,46 +79,9 @@ public class UCT implements Engine, HasLeaves {
      * Create a new search engine.
      */
     protected UCT(double biasFactor) {
-        leaves = dummyLeaves;
-        timer = new Timer(true);
+        super();
+        leaves = baseLeaves;
         setExplorationBias(biasFactor);
-    }
-
-
-    /**
-     * Returns the maximum depth allowed for the search
-     *
-     * @return   The depth value
-     */
-    public int getDepth() {
-        return maxDepth;
-    }
-
-
-    /**
-     * Returns the maximum time allowed for a move computation
-     * in milliseconds
-     *
-     * @return   The new search time in milliseconds
-     */
-    public long getMoveTime() {
-        return moveTime;
-    }
-
-
-    /**
-     * Returns current the comptempt factor of the engine.
-     */
-    public int getContempt() {
-        return contempt;
-    }
-
-
-    /**
-     * Returns the current infinity score of the engine.
-     */
-    public int getInfinity() {
-        return maxScore;
     }
 
 
@@ -165,44 +105,12 @@ public class UCT implements Engine, HasLeaves {
 
 
     /**
-     * Sets the maximum depth for subsequent computations.
-     *
-     * @param depth  Requested maximum depth
-     */
-    public synchronized void setDepth(int depth) {
-        maxDepth = Math.min(depth, MAX_DEPTH);
-    }
-
-
-    /**
-     * Sets the maximum time allowed for subsequent computations
-     *
-     * @param delay    The new time value in milliseconds as a
-     *                 positive number greater than zero
-     */
-    public synchronized void setMoveTime(long delay) {
-        moveTime = Math.max(delay, 1);
-    }
-
-
-    /**
-     * Sets the contempt factor. That is the score to which end game
-     * positions that are draw will be evaluated.
-     *
-     * @param score     Score for draw positions
-     */
-    public synchronized void setContempt(int score) {
-        contempt = score;
-    }
-
-
-    /**
      * Sets the maximum score a position can obtain.
      *
      * @param score     Infinite value as a positive integer
      */
     public synchronized void setInfinity(int score) {
-        maxScore = Math.max(score, 1);
+        super.setInfinity(score);
         bias = biasFactor * maxScore;
     }
 
@@ -224,23 +132,7 @@ public class UCT implements Engine, HasLeaves {
      * @param leaves    Leaves instance or {@code null}
      */
     @Inject public synchronized void setLeaves(Leaves leaves) {
-        this.leaves = (leaves != null) ? leaves : dummyLeaves;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    public synchronized void attachConsumer(Consumer<Report> consumer) {
-        consumers.add(consumer);
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    public synchronized void detachConsumer(Consumer<Report> consumer) {
-        consumers.remove(consumer);
+        this.leaves = (leaves != null) ? leaves : baseLeaves;
     }
 
 
@@ -248,21 +140,9 @@ public class UCT implements Engine, HasLeaves {
      * {@inheritDoc}
      */
     public synchronized void newMatch() {
+        super.newMatch();
         root = null;
-        timer.purge();
         System.gc();
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    public void abortComputation() {
-        aborted = true;
-
-        synchronized (this) {
-            aborted = false;
-        }
     }
 
 
@@ -285,14 +165,8 @@ public class UCT implements Engine, HasLeaves {
             return Game.NULL_MOVE;
         }
 
-        final TimerTask countDown = new TimerTask() {
-            public void run() {
-                aborted = true;
-            }
-        };
-
+        final TimerTask countDown = scheduleCountDown();
         game.ensureCapacity(MAX_DEPTH + game.length());
-        timer.schedule(countDown, moveTime);
         root = rootNode(game);
 
         UCTNode bestChild = null;
@@ -305,7 +179,7 @@ public class UCT implements Engine, HasLeaves {
             System.gc();
         }
 
-        while (!aborted || root.count < MIN_PROBES) {
+        while (!aborted() || root.count < MIN_PROBES) {
             expand(root, maxDepth);
             pruneGarbage(root);
 
@@ -331,7 +205,6 @@ public class UCT implements Engine, HasLeaves {
         bestChild = pickBestChild(root);
         invokeConsumers(game);
         countDown.cancel();
-        aborted = false;
 
         return bestChild.move;
     }
@@ -667,14 +540,4 @@ public class UCT implements Engine, HasLeaves {
             }
         } while ((node = node.sibling) != null);
     }
-
-
-    /**
-     * Empty endgames database implementation.
-     */
-    private final Leaves dummyLeaves = new Leaves() {
-        public int getScore() { return 0; }
-        public int getFlag() { return Flag.EMPTY; }
-        public boolean find(Game g) { return false; }
-    };
 }

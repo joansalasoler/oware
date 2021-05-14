@@ -24,15 +24,15 @@ import java.io.RandomAccessFile;
 import java.util.Arrays;
 import java.util.Random;
 
-import com.joansala.engine.Book;
 import com.joansala.engine.Game;
 import com.joansala.engine.Roots;
+import com.joansala.engine.base.BaseBook;
 
 
 /**
  * Opening book implementation for oware.
  */
-public class OwareRoots extends Book implements Roots {
+public class OwareRoots extends BaseBook implements Roots {
 
     /** Header signature for the book format */
     public static final String SIGNATURE = "Oware Opening Book ";

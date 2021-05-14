@@ -18,23 +18,19 @@ package com.joansala.engine.doe;
  */
 
 import java.util.function.Consumer;
-import java.util.HashSet;
-import java.util.Set;
 
 import com.joansala.engine.*;
+import com.joansala.engine.base.*;
 
 
 /**
  * A multithreaded UCT engine wich reads from and stores nodes on a
  * key/value database. It can be used to build opening books for a game.
  */
-public class DOE implements Engine {
+public class DOE extends BaseEngine {
 
     /** Factors the amount of exploration of the tree */
     public static final double DEFAULT_BIAS = 0.353;
-
-    /** Maximum depth allowed for a search */
-    public static final int MAX_DEPTH = 254;
 
     /** Executes evaluations on a thread pool */
     private final DOEExecutor executor;
@@ -48,29 +44,11 @@ public class DOE implements Engine {
     /** References the {@code Game} to search */
     private Game game;
 
-    /** Consumer of best moves */
-    private Set<Consumer<Report>> consumers = new HashSet<>();
-
-    /** Maximum expansion depth */
-    private int maxDepth = MAX_DEPTH;
-
-    /** Maximum time allowed for the current search */
-    private long moveTime = DEFAULT_MOVETIME;
-
-    /** The maximum possible score value */
-    private int maxScore = Integer.MAX_VALUE;
-
-    /** Contempt factor used to evaluaty draws */
-    private int contempt = Game.DRAW_SCORE;
-
     /** Exploration bias parameter */
     public double biasFactor = DEFAULT_BIAS;
 
     /** Exploration priority multiplier */
     private double bias = DEFAULT_BIAS * maxScore;
-
-    /** This flag is set to true to abort a computation */
-    private volatile boolean aborted = false;
 
     /** Task synchronization lock */
     private final Object lock = new Object();
@@ -80,6 +58,7 @@ public class DOE implements Engine {
      * Create a new search engine.
      */
     public DOE(DOEStore store) {
+        super();
         this.store = store;
         this.executor = new DOEExecutor();
         setExplorationBias(DEFAULT_BIAS);
@@ -90,6 +69,7 @@ public class DOE implements Engine {
      * Create a new search engine.
      */
     public DOE(DOEStore store, int poolSize) {
+        super();
         this.store = store;
         this.executor = new DOEExecutor(poolSize);
         setExplorationBias(DEFAULT_BIAS);
@@ -97,89 +77,10 @@ public class DOE implements Engine {
 
 
     /**
-     * Returns the maximum depth allowed for the search
-     *
-     * @return   The depth value
-     */
-    public int getDepth() {
-        return maxDepth;
-    }
-
-
-    /**
-     * Returns the maximum time allowed for a move computation
-     * in milliseconds
-     *
-     * @return   The new search time in milliseconds
-     */
-    public long getMoveTime() {
-        return moveTime;
-    }
-
-
-    /**
-     * Returns current the comptempt factor of the engine.
-     */
-    public int getContempt() {
-        return contempt;
-    }
-
-
-    /**
-     * Returns the current infinity score of the engine.
-     */
-    public int getInfinity() {
-        return maxScore;
-    }
-
-
-    /**
      * {@inheritDoc}
      */
-    public int getPonderMove(Game game) {
-        return Game.NULL_MOVE;
-    }
-
-
-    /**
-     * Sets the maximum depth for subsequent computations.
-     *
-     * @param depth  Requested maximum depth
-     */
-    public synchronized void setDepth(int depth) {
-        maxDepth = Math.min(depth, MAX_DEPTH);
-    }
-
-
-    /**
-     * Sets the maximum time allowed for subsequent computations
-     *
-     * @param delay    The new time value in milliseconds as a
-     *                 positive number greater than zero
-     */
-    public synchronized void setMoveTime(long delay) {
-        moveTime = Math.max(delay, 1);
-    }
-
-
-    /**
-     * Sets the contempt factor. That is the score to which end game
-     * positions that are draw will be evaluated.
-     *
-     * @param score     Score for draw positions
-     */
-    public synchronized void setContempt(int score) {
-        contempt = score;
-    }
-
-
-    /**
-     * Sets the maximum score a position can obtain.
-     *
-     * @param score     Infinite value as a positive integer
-     */
     public synchronized void setInfinity(int score) {
-        maxScore = Math.max(score, 1);
+        super.setInfinity(score);
         bias = biasFactor * maxScore;
     }
 
@@ -192,40 +93,6 @@ public class DOE implements Engine {
     public synchronized void setExplorationBias(double factor) {
         biasFactor = factor;
         bias = biasFactor * maxScore;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    public synchronized void attachConsumer(Consumer<Report> consumer) {
-        consumers.add(consumer);
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    public synchronized void detachConsumer(Consumer<Report> consumer) {
-        consumers.remove(consumer);
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    public synchronized void newMatch() {}
-
-
-    /**
-     * {@inheritDoc}
-     */
-    public void abortComputation() {
-        aborted = true;
-
-        synchronized (this) {
-            aborted = false;
-        }
     }
 
 
@@ -278,7 +145,7 @@ public class DOE implements Engine {
         // Expand the UCT tree and enqueue the expanded nodes for
         // its asynchronous evaluation.
 
-        while (aborted == false) {
+        while (aborted() == false) {
             final DOENode node;
 
             synchronized (lock) {

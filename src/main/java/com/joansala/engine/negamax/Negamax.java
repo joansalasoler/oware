@@ -19,12 +19,10 @@ package com.joansala.engine.negamax;
 
 import com.google.inject.Inject;
 import java.util.function.Consumer;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Timer;
 import java.util.TimerTask;
 
 import com.joansala.engine.*;
+import com.joansala.engine.base.*;
 
 
 /**
@@ -33,10 +31,7 @@ import com.joansala.engine.*;
  * @author    Joan Sala Soler
  * @version   1.1.0
  */
-public class Negamax implements Engine, HasLeaves, HasCache {
-
-    /** The maximum depth allowed for a search */
-    public static final int MAX_DEPTH = 254;
+public class Negamax extends BaseEngine implements HasLeaves, HasCache {
 
     /** The minimum depth allowed for a search */
     public static final int MIN_DEPTH = 2;
@@ -47,35 +42,23 @@ public class Negamax implements Engine, HasLeaves, HasCache {
     /** An heuristic score may have been returned */
     public static final int FUZZY = 1;
 
-    /** Search timer */
-    private final Timer timer;
+    /** Fallback empty cache instance */
+    private final Cache baseCache = new BaseCache();
+
+    /** Fallback empty endgames instance */
+    private final Leaves baseLeaves = new BaseLeaves();
 
     /** References the {@code Game} to search */
-    private Game game = null;
+    protected Game game = null;
 
     /** The transpositions table */
-    private Cache cache = null;
+    protected Cache cache = null;
 
     /** Endgame database */
-    private Leaves leaves = null;
-
-    /** Consumer of best moves */
-    private Set<Consumer<Report>> consumers = new HashSet<>();
-
-    /** The maximum depth allowed for the current search */
-    private int maxDepth = MAX_DEPTH;
-
-    /** The maximum time allowed for the current search */
-    private long moveTime = DEFAULT_MOVETIME;
-
-    /** The maximum possible score value */
-    private int maxScore = Integer.MAX_VALUE;
+    protected Leaves leaves = null;
 
     /** The minimum possible score value */
     private int minScore = -Integer.MAX_VALUE;
-
-    /** Contempt factor used to evaluaty draws */
-    private int contempt = Game.DRAW_SCORE;
 
     /** Holds the best score found so far */
     private int bestScore = Integer.MAX_VALUE;
@@ -83,69 +66,21 @@ public class Negamax implements Engine, HasLeaves, HasCache {
     /** Depth of the last completed search */
     private int scoreDepth = 0;
 
-    /** This flag is set to true to abort a computation */
-    private volatile boolean aborted = false;
-
 
     /**
      * Initializes a new {@code Negamax} object.
      */
     public Negamax() {
-        this.timer = new Timer(true);
-        this.cache = dummyCache;
-        this.leaves = dummyLeaves;
-    }
-
-
-    /**
-     * Returns the maximum depth allowed for the search
-     *
-     * @return   The depth value
-     */
-    public int getDepth() {
-        return maxDepth;
-    }
-
-
-    /**
-     * Returns the maximum time allowed for a move computation
-     * in milliseconds
-     *
-     * @return   The new search time in milliseconds
-     */
-    public long getMoveTime() {
-        return moveTime;
-    }
-
-
-    /**
-     * Returns current the comptempt factor of the engine.
-     */
-    public int getContempt() {
-        return contempt;
-    }
-
-
-    /**
-     * Returns the current infinity score of the engine.
-     */
-    public int getInfinity() {
-        return maxScore;
-    }
-
-
-    /**
-     * Depth of the last completed search iteration.
-     */
-    public int getScoreDepth() {
-        return scoreDepth;
+        super();
+        this.cache = baseCache;
+        this.leaves = baseLeaves;
     }
 
 
     /**
      * {@inheritDoc}
      */
-    public int getPonderMove(Game game) {
+    public synchronized int getPonderMove(Game game) {
         int move = Game.NULL_MOVE;
 
         if (cache != null && cache.find(game)) {
@@ -159,48 +94,18 @@ public class Negamax implements Engine, HasLeaves, HasCache {
 
 
     /**
-     * Sets the maximum depth for subsequent computations
-     *
-     * @param depth  The new depth value as an even number lower
-     *               or equal to {@code Negamax.MAX_DEPTH}
+     * Depth of the last completed search iteration.
+     */
+    public synchronized int getScoreDepth() {
+        return scoreDepth;
+    }
+
+
+    /**
+     * {@inheritDoc}
      */
     public synchronized void setDepth(int depth) {
-        // Set new depth as an even value
-
-        if (depth > MAX_DEPTH) {
-            this.maxDepth = MAX_DEPTH;
-        } else if (depth < MIN_DEPTH) {
-            this.maxDepth = MIN_DEPTH;
-        } else {
-            this.maxDepth = depth + depth % 2;
-        }
-    }
-
-
-    /**
-     * Sets the maximum time allowed for subsequent computations
-     *
-     * @param delay    The new time value in milliseconds as a
-     *                 positive number greater than zero
-     */
-    public synchronized void setMoveTime(long delay) {
-        if (delay > 0) {
-            this.moveTime = delay;
-        } else {
-            throw new IllegalArgumentException(
-                "Move time must be a positive number");
-        }
-    }
-
-
-    /**
-     * Sets the contempt factor. That is the score to which end game
-     * positions that are draw will be evaluated.
-     *
-     * @param score     Score for draw positions
-     */
-    public synchronized void setContempt(int score) {
-        this.contempt = score;
+        super.setDepth(depth + depth % 2);
     }
 
 
@@ -212,13 +117,8 @@ public class Negamax implements Engine, HasLeaves, HasCache {
      * @param score     Infinite value as apositive integer
      */
     public synchronized void setInfinity(int score) {
-        if (score > 0) {
-            this.maxScore = score;
-            this.minScore = -score;
-        } else {
-            throw new IllegalArgumentException(
-                "Infinity must be a positive number");
-        }
+        super.setInfinity(score);
+        minScore = -maxScore;
     }
 
 
@@ -230,7 +130,7 @@ public class Negamax implements Engine, HasLeaves, HasCache {
      */
     @Inject(optional=true)
     public synchronized void setCache(Cache cache) {
-        this.cache = (cache != null) ? cache : dummyCache;
+        this.cache = (cache != null) ? cache : baseCache;
     }
 
 
@@ -242,44 +142,16 @@ public class Negamax implements Engine, HasLeaves, HasCache {
      */
     @Inject(optional=true)
     public synchronized void setLeaves(Leaves leaves) {
-        this.leaves = (leaves != null) ? leaves : dummyLeaves;
+        this.leaves = (leaves != null) ? leaves : baseLeaves;
     }
 
 
     /**
      * {@inheritDoc}
-     */
-    public synchronized void attachConsumer(Consumer<Report> consumer) {
-        consumers.add(consumer);
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    public synchronized void detachConsumer(Consumer<Report> consumer) {
-        consumers.remove(consumer);
-    }
-
-
-    /**
-     * Tells the engine that the next positions are going to be from
-     * a different match.
      */
     public synchronized void newMatch() {
+        super.newMatch();
         cache.clear();
-        timer.purge();
-    }
-
-
-    /**
-     * Aborts the current search
-     */
-    public void abortComputation() {
-        aborted = true;
-        synchronized (this) {
-            aborted = false;
-        }
     }
 
 
@@ -320,18 +192,9 @@ public class Negamax implements Engine, HasLeaves, HasCache {
             return Game.NULL_MOVE;
         }
 
-        // Start countdown
-
-        final TimerTask countDown = new TimerTask() {
-            public void run() {
-                aborted = true;
-            }
-        };
-
-        timer.schedule(countDown, moveTime);
-
         // Get ready for the move computation
 
+        final TimerTask countDown = scheduleCountDown();
         game.ensureCapacity(MAX_DEPTH + game.length());
         cache.discharge();
 
@@ -356,8 +219,8 @@ public class Negamax implements Engine, HasLeaves, HasCache {
         // Iterative deepening search for a best move
 
         int score;
-        int beta = maxScore;
         int depth = MIN_DEPTH;
+        int beta = maxScore;
         int lastScore = maxScore;
         int lastMove = Game.NULL_MOVE;
         int bestMove = rootMoves[0];
@@ -365,13 +228,13 @@ public class Negamax implements Engine, HasLeaves, HasCache {
         bestScore = Game.DRAW_SCORE;
         scoreDepth = 0;
 
-        while (!aborted || depth == MIN_DEPTH) {
+        while (!aborted() || depth == MIN_DEPTH) {
             for (int move : rootMoves) {
                 game.makeMove(move);
                 score = search(minScore, beta, depth);
                 game.unmakeMove();
 
-                if (aborted && depth > MIN_DEPTH) {
+                if (aborted() && depth > MIN_DEPTH) {
                     bestMove = lastMove;
                     bestScore = lastScore;
                     break;
@@ -388,7 +251,7 @@ public class Negamax implements Engine, HasLeaves, HasCache {
 
             // Stop if an exact score was found
 
-            if (!aborted || depth == MIN_DEPTH) {
+            if (!aborted() || depth == MIN_DEPTH) {
                 scoreDepth = depth;
             }
 
@@ -398,7 +261,7 @@ public class Negamax implements Engine, HasLeaves, HasCache {
 
             // Stop on timeout elaspe or maximum recursion
 
-            if (aborted || depth >= maxDepth) {
+            if (aborted() || depth >= maxDepth) {
                 break;
             }
 
@@ -420,7 +283,6 @@ public class Negamax implements Engine, HasLeaves, HasCache {
 
         invokeConsumers(game, bestMove);
         countDown.cancel();
-        aborted = false;
 
         return bestMove;
     }
@@ -435,7 +297,7 @@ public class Negamax implements Engine, HasLeaves, HasCache {
      *               of recursive calls that could be made for the node
      */
     private int search(int alpha, int beta, int depth) {
-        if (aborted && depth > MIN_DEPTH) {
+        if (aborted() && depth > MIN_DEPTH) {
             return minScore;
         }
 
@@ -502,7 +364,7 @@ public class Negamax implements Engine, HasLeaves, HasCache {
             score = -search(-beta, -alpha, depth - 1);
             game.unmakeMove();
 
-            if (score >= beta && aborted == false) {
+            if (score >= beta && aborted() == false) {
                 cache.store(game, score, hashMove, depth, Flag.UPPER);
                 return beta;
             }
@@ -541,7 +403,7 @@ public class Negamax implements Engine, HasLeaves, HasCache {
 
         // Store the transposition ignoring pre-frontier subtrees
 
-        if (depth > 2 && aborted == false) {
+        if (depth > 2 && aborted() == false) {
             cache.store(game, alpha, hashMove, depth, flag);
         }
 
@@ -564,33 +426,4 @@ public class Negamax implements Engine, HasLeaves, HasCache {
             consumer.accept(report);
         }
     }
-
-
-    /**
-     * Implements a dummy cache that does not store or return any entries.
-     * This is implemented for efficiency to allow games without a cache
-     * to use this engine.
-     */
-    private final Cache dummyCache = new Cache() {
-        public long size() { return 0L; }
-        public int getScore() { return 0; }
-        public int getMove() { return Game.NULL_MOVE; }
-        public int getDepth() { return 0; }
-        public int getFlag() { return Flag.EMPTY; }
-        public boolean find(Game g) { return false; }
-        public void store(Game g, int s, int m, int d, int f) { }
-        public void discharge() { }
-        public void resize(long m) { }
-        public void clear() { }
-    };
-
-
-    /**
-     * Implements a dummy endgames database that does not contain entries.
-     */
-    private final Leaves dummyLeaves = new Leaves() {
-        public int getScore() { return 0; }
-        public int getFlag() { return Flag.EMPTY; }
-        public boolean find(Game g) { return false; }
-    };
 }

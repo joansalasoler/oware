@@ -1,4 +1,4 @@
-package com.joansala.engine;
+package com.joansala.engine.base;
 
 /*
  * Copyright (c) 2014-2021 Joan Sala Soler <contact@joansala.com>
@@ -25,8 +25,8 @@ import java.util.TreeMap;
 
 
 /**
- * Abstract book implementation. Initializes a book from a file and
- * provides methods for reading its information.
+ * Base book implementation. Initializes a book from a file and provides
+ * methods for reading its information.
  *
  * <p>This book implementation skeleton reads the book headers from a file
  * stored on disk after verifying that the book format is correct. Therefore,
@@ -47,7 +47,7 @@ import java.util.TreeMap;
  * @author    Joan Sala Soler
  * @version   1.0.0
  */
-public class Book {
+public class BaseBook {
 
     /** Book version, as provided by the database headers */
     private String version = null;
@@ -71,7 +71,7 @@ public class Book {
      * @throws FileNotFoundException  If the file could not be opened
      * @throws IOException  If an I/O exception occurred
      */
-    public Book(File file, String signature) throws IOException {
+    public BaseBook(File file, String signature) throws IOException {
         this.signature = signature;
         this.database = new RandomAccessFile(file, "r");
         this.headers = readHeaders();
@@ -142,7 +142,7 @@ public class Book {
      * @return          New file instance
      */
     protected static File getResourceFile(String path) {
-        return new File(Book.class.getResource(path).getFile());
+        return new File(BaseBook.class.getResource(path).getFile());
     }
 
 

@@ -22,10 +22,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-import com.joansala.engine.Book;
 import com.joansala.engine.Flag;
 import com.joansala.engine.Game;
 import com.joansala.engine.Leaves;
+import com.joansala.engine.base.BaseBook;
 import static com.joansala.oware.Oware.*;
 import static com.joansala.oware.OwareGame.*;
 
@@ -37,7 +37,7 @@ import static com.joansala.oware.OwareGame.*;
  * seeds are kept on main memory. To obtain the score of a position a
  * search must be performed first with the method {@code find}.</p>
  */
-public class OwareLeaves extends Book implements Leaves {
+public class OwareLeaves extends BaseBook implements Leaves {
 
     /** Header signature for the book format */
     public static final String SIGNATURE = "Oware Endgames ";

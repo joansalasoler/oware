@@ -114,9 +114,9 @@ public class TrainCommand implements Callable<Integer> {
             Negamax engine = injector.getInstance(Negamax.class);
             Game game = injector.getInstance(Game.class);
 
-            engine.setMoveTime(moveTime);
             game.setStart(position, turn);
             game.ensureCapacity(moves.length);
+            engine.setMoveTime(moveTime);
 
             for (int move : moves) {
                 game.makeMove(move);
