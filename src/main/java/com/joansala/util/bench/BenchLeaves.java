@@ -49,19 +49,19 @@ public final class BenchLeaves implements Leaves {
 
 
     /** {@inheritDoc} */
-    public int getFlag() {
+    @Override public int getFlag() {
         return leaves.getFlag();
     }
 
 
     /** {@inheritDoc} */
-    public int getScore() {
+    @Override public int getScore() {
         return leaves.getScore();
     }
 
 
     /** {@inheritDoc} */
-    public boolean find(Game game) {
+    @Override public boolean find(Game game) {
         return stats.leaves.test(leaves.find(game));
     }
 }

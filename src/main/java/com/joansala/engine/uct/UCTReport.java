@@ -58,6 +58,7 @@ public class UCTReport implements Report {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getDepth() {
         return depth;
     }
@@ -66,6 +67,7 @@ public class UCTReport implements Report {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getFlag() {
         return flag;
     }
@@ -74,6 +76,7 @@ public class UCTReport implements Report {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getScore() {
         return score;
     }
@@ -82,6 +85,7 @@ public class UCTReport implements Report {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int[] getVariation() {
         return variation;
     }

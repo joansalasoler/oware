@@ -107,6 +107,7 @@ public class OwareLeaves extends BaseBook implements Leaves {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getFlag() {
         return flag;
     }
@@ -115,6 +116,7 @@ public class OwareLeaves extends BaseBook implements Leaves {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getScore() {
         return score;
     }
@@ -131,6 +133,7 @@ public class OwareLeaves extends BaseBook implements Leaves {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean find(Game game) {
         return find((OwareGame) game.cast());
     }

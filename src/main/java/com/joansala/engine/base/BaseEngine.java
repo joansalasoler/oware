@@ -75,6 +75,7 @@ public class BaseEngine implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getDepth() {
         return maxDepth;
     }
@@ -83,6 +84,7 @@ public class BaseEngine implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public long getMoveTime() {
         return moveTime;
     }
@@ -91,6 +93,7 @@ public class BaseEngine implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getContempt() {
         return contempt;
     }
@@ -99,6 +102,7 @@ public class BaseEngine implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getInfinity() {
         return maxScore;
     }
@@ -107,6 +111,7 @@ public class BaseEngine implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized int getPonderMove(Game game) {
         return Game.NULL_MOVE;
     }
@@ -115,6 +120,7 @@ public class BaseEngine implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void setDepth(int depth) {
         maxDepth = Math.min(depth, MAX_DEPTH);
     }
@@ -123,6 +129,7 @@ public class BaseEngine implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void setMoveTime(long delay) {
         moveTime = Math.max(delay, 1);
     }
@@ -131,6 +138,7 @@ public class BaseEngine implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void setContempt(int score) {
         contempt = score;
     }
@@ -139,6 +147,7 @@ public class BaseEngine implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void setInfinity(int score) {
         maxScore = Math.max(score, 1);
     }
@@ -147,6 +156,7 @@ public class BaseEngine implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void attachConsumer(Consumer<Report> consumer) {
         consumers.add(consumer);
     }
@@ -155,6 +165,7 @@ public class BaseEngine implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void detachConsumer(Consumer<Report> consumer) {
         consumers.remove(consumer);
     }
@@ -163,6 +174,7 @@ public class BaseEngine implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void newMatch() {
         timer.purge();
     }
@@ -171,6 +183,7 @@ public class BaseEngine implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void abortComputation() {
         aborted = true;
 
@@ -183,6 +196,7 @@ public class BaseEngine implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized int computeBestMove(Game game) {
         return Game.NULL_MOVE;
     }
@@ -194,7 +208,7 @@ public class BaseEngine implements Engine {
      */
     protected TimerTask scheduleCountDown() {
         TimerTask countDown = new TimerTask() {
-            public void run() {
+            @Override public void run() {
                 aborted = true;
             }
         };

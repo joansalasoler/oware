@@ -120,6 +120,7 @@ public class OwareGame extends BaseGame {
     /**
      * {@inheritDoc}
      */
+    @Override
     protected Object startPosition() {
         return START_POSITION;
     }
@@ -128,6 +129,7 @@ public class OwareGame extends BaseGame {
     /**
      * {@inheritDoc}
      */
+    @Override
     protected void resetState(Object position, int turn) {
         index = -1;
         capture = -1;
@@ -150,6 +152,7 @@ public class OwareGame extends BaseGame {
      * @param position  An array representation of a position
      * @return          {@code true} if position is valid
      */
+    @Override
     protected boolean isPosition(Object position) {
         final int[] positionArray = (int[]) position;
 
@@ -234,6 +237,7 @@ public class OwareGame extends BaseGame {
      *
      * @return      A new position array
      */
+    @Override
     public int[] position() {
         return Arrays.copyOf(state, 2 + BOARD_SIZE);
     }
@@ -252,6 +256,7 @@ public class OwareGame extends BaseGame {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int contempt() {
         return CONTEMPT_SCORE;
     }
@@ -260,6 +265,7 @@ public class OwareGame extends BaseGame {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int toCentiPawns(int score) {
         return (int) (2.5 * score);
     }
@@ -268,6 +274,7 @@ public class OwareGame extends BaseGame {
     /**
      * Sets the internal state to an endgame position.
      */
+    @Override
     public void endMatch() {
         if (!hasLegalMoves() || isRepetition()) {
             pushState();
@@ -283,6 +290,7 @@ public class OwareGame extends BaseGame {
      *
      * @return  {@code true} if the game ended
      */
+    @Override
     public boolean hasEnded() {
         return state[SOUTH_STORE] > SEED_GOAL ||
                state[NORTH_STORE] > SEED_GOAL ||
@@ -295,6 +303,7 @@ public class OwareGame extends BaseGame {
      *
      * @return  {@code SOUTH}, {@code NORTH} or {@code DRAW}
      */
+    @Override
     public int winner() {
         final int score = outcome();
 
@@ -319,6 +328,7 @@ public class OwareGame extends BaseGame {
      *
      * @return  Exact score value
      */
+    @Override
     public int outcome() {
         // The game ended because of captured seeds
 
@@ -358,6 +368,7 @@ public class OwareGame extends BaseGame {
      * @return  The heuristic evaluation as a value between
      *          {@code -MAX_SCORE} and {@code MAX_SCORE}
      */
+    @Override
     public int score() {
         int score = 25 * (state[SOUTH_STORE] - state[NORTH_STORE]);
 
@@ -398,6 +409,7 @@ public class OwareGame extends BaseGame {
      *
      * @return      Unique hash code
      */
+    @Override
     protected long computeHash() {
         long hash = (turn == SOUTH) ? SOUTH_SIGN : NORTH_SIGN;
         int n = state[NORTH_STORE];
@@ -435,6 +447,7 @@ public class OwareGame extends BaseGame {
      *
      * @return  Cursor value
      */
+    @Override
     public int getCursor() {
         return ((next << 2) | stage);
     }
@@ -445,6 +458,7 @@ public class OwareGame extends BaseGame {
      *
      * @param   New cursor
      */
+    @Override
     public void setCursor(int cursor) {
         stage = (cursor & 0x03);
         next = (cursor >> 2);
@@ -454,6 +468,7 @@ public class OwareGame extends BaseGame {
     /**
      * Resets the move generation cursor.
      */
+    @Override
     public void resetCursor() {
         stage = ATTACKING_MOVES;
         next = 1 + right;
@@ -577,6 +592,7 @@ public class OwareGame extends BaseGame {
      * @param move      A move indentifier
      * @throws IndexOutOfBoundsException
      */
+    @Override
     public void makeMove(int move) {
         pushState();
 
@@ -594,6 +610,7 @@ public class OwareGame extends BaseGame {
     /**
      * Undoes the last performed move.
      */
+    @Override
     public void unmakeMove() {
         setTurn(-turn);
         popState();
@@ -733,6 +750,7 @@ public class OwareGame extends BaseGame {
      *
      * @return  A move identifier or {@code NULL_MOVE}
      */
+    @Override
     public int nextMove() {
         // Captures are disruptive moves that cause many cutouts,
         // thus we want to iterate them first.
@@ -795,6 +813,7 @@ public class OwareGame extends BaseGame {
      * @param size      Number of moves
      * @throws IllegalStateException
      */
+    @Override
     public void ensureCapacity(int size) {
         if (size <= capacity) {
             return;

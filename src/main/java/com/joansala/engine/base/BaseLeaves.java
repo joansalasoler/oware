@@ -28,11 +28,11 @@ import com.joansala.engine.Leaves;
 public class BaseLeaves implements Leaves {
 
     /** {@inheritDoc} */
-    public int getScore() { return 0; }
+    @Override public int getScore() { return 0; }
 
     /** {@inheritDoc} */
-    public int getFlag() { return Flag.EMPTY; }
+    @Override public int getFlag() { return Flag.EMPTY; }
 
     /** {@inheritDoc} */
-    public boolean find(Game game) { return false; }
+    @Override public boolean find(Game game) { return false; }
 }

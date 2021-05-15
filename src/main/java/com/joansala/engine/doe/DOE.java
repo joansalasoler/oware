@@ -79,6 +79,7 @@ public class DOE extends BaseEngine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void setInfinity(int score) {
         super.setInfinity(score);
         bias = biasFactor * maxScore;
@@ -99,6 +100,7 @@ public class DOE extends BaseEngine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized int computeBestMove(Game game) {
         this.game = game;
 

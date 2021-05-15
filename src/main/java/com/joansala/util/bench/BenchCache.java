@@ -48,61 +48,62 @@ public final class BenchCache implements Cache {
 
 
     /** {@inheritDoc} */
-    public boolean find(Game game) {
+    @Override public boolean find(Game game) {
         return stats.cache.test(cache.find(game));
     }
 
 
     /** {@inheritDoc} */
-    public int getScore() {
+    @Override public int getScore() {
         return cache.getScore();
     }
 
 
     /** {@inheritDoc} */
-    public int getMove() {
+    @Override public int getMove() {
         return cache.getMove();
     }
 
 
     /** {@inheritDoc} */
-    public int getDepth() {
+    @Override public int getDepth() {
         return cache.getDepth();
     }
 
 
     /** {@inheritDoc} */
-    public int getFlag() {
+    @Override public int getFlag() {
         return cache.getFlag();
     }
 
 
     /** {@inheritDoc} */
+    @Override
     public void store(Game game, int score, int move, int depth, int flag) {
         cache.store(game, score, move, depth, flag);
     }
 
 
     /** {@inheritDoc} */
-    public void discharge() {
+    @Override public void discharge() {
         cache.discharge();
     }
 
 
     /** {@inheritDoc} */
-    public void resize(long memory) {
+    @Override public void resize(long memory) {
         cache.resize(memory);
     }
 
 
     /** {@inheritDoc} */
-    public void clear() {
+    @Override public void clear() {
         cache.clear();
     }
 
 
     /** {@inheritDoc} */
-    public long size() {
+    @Override public long size() {
         return cache.size();
     }
 }

@@ -28,32 +28,32 @@ import com.joansala.engine.Cache;
 public class BaseCache implements Cache {
 
     /** {@inheritDoc} */
-    public long size() { return 0L; }
+    @Override public long size() { return 0L; }
 
     /** {@inheritDoc} */
-    public int getScore() { return 0; }
+    @Override public int getScore() { return 0; }
 
     /** {@inheritDoc} */
-    public int getMove() { return Game.NULL_MOVE; }
+    @Override public int getMove() { return Game.NULL_MOVE; }
 
     /** {@inheritDoc} */
-    public int getDepth() { return 0; }
+    @Override public int getDepth() { return 0; }
 
     /** {@inheritDoc} */
-    public int getFlag() { return Flag.EMPTY; }
+    @Override public int getFlag() { return Flag.EMPTY; }
 
     /** {@inheritDoc} */
-    public boolean find(Game g) { return false; }
+    @Override public boolean find(Game g) { return false; }
 
     /** {@inheritDoc} */
-    public void store(Game game, int score, int move, int depth, int flag) {}
+    @Override public void store(Game game, int score, int move, int depth, int flag) {}
 
     /** {@inheritDoc} */
-    public void resize(long memory) {}
+    @Override public void resize(long memory) {}
 
     /** {@inheritDoc} */
-    public void discharge() {}
+    @Override public void discharge() {}
 
     /** {@inheritDoc} */
-    public void clear() {}
+    @Override public void clear() {}
 }

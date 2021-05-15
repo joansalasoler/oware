@@ -88,6 +88,7 @@ public class UCT extends BaseEngine implements HasLeaves {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getPonderMove(Game game) {
         long hash = game.hash();
         UCTNode node = null;
@@ -109,6 +110,7 @@ public class UCT extends BaseEngine implements HasLeaves {
      *
      * @param score     Infinite value as a positive integer
      */
+    @Override
     public synchronized void setInfinity(int score) {
         super.setInfinity(score);
         bias = biasFactor * maxScore;
@@ -131,6 +133,7 @@ public class UCT extends BaseEngine implements HasLeaves {
      *
      * @param leaves    Leaves instance or {@code null}
      */
+    @Override
     @Inject public synchronized void setLeaves(Leaves leaves) {
         this.leaves = (leaves != null) ? leaves : baseLeaves;
     }
@@ -139,6 +142,7 @@ public class UCT extends BaseEngine implements HasLeaves {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void newMatch() {
         super.newMatch();
         root = null;
@@ -158,6 +162,7 @@ public class UCT extends BaseEngine implements HasLeaves {
      * @return      The best move found for the current game position
      *              or {@code Game.NULL_MOVE} if the game already ended
      */
+    @Override
     public synchronized int computeBestMove(Game game) {
         this.game = game;
 

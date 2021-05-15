@@ -105,6 +105,9 @@ public final class MatchCommand implements Callable<Integer> {
         try {
             player.startEngine();
             player.startNewGame();
+            player.setDepth(depth);
+            player.setMoveTime(moveTime);
+
             printWelcome(writer);
             printBoard(writer);
 

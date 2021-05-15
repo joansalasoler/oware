@@ -42,20 +42,20 @@ public final class BenchGame implements Game {
 
 
     /** {@inheritDoc} */
-    public Game cast() {
+    @Override public Game cast() {
         return game;
     }
 
 
     /** {@inheritDoc} */
-    public void makeMove(int move) {
+    @Override public void makeMove(int move) {
         stats.visits.increment();
         game.makeMove(move);
     }
 
 
     /** {@inheritDoc} */
-    public int score() {
+    @Override public int score() {
         stats.heuristic.increment();
         stats.depth.aggregate(game.length());
         return game.score();
@@ -63,7 +63,7 @@ public final class BenchGame implements Game {
 
 
     /** {@inheritDoc} */
-    public int outcome() {
+    @Override public int outcome() {
         stats.terminal.increment();
         stats.depth.aggregate(game.length());
         return game.outcome();
@@ -71,115 +71,115 @@ public final class BenchGame implements Game {
 
 
     /** {@inheritDoc} */
-    public int length() {
+    @Override public int length() {
         return game.length();
     }
 
 
     /** {@inheritDoc} */
-    public int[] moves() {
+    @Override public int[] moves() {
         return game.moves();
     }
 
 
     /** {@inheritDoc} */
-    public int turn() {
+    @Override public int turn() {
         return game.turn();
     }
 
 
     /** {@inheritDoc} */
-    public Object position() {
+    @Override public Object position() {
         return game.position();
     }
 
 
     /** {@inheritDoc} */
-    public void setStart(Object position, int turn) {
+    @Override public void setStart(Object position, int turn) {
         game.setStart(position, turn);
     }
 
 
     /** {@inheritDoc} */
-    public void endMatch() {
+    @Override public void endMatch() {
         game.endMatch();
     }
 
 
     /** {@inheritDoc} */
-    public boolean hasEnded() {
+    @Override public boolean hasEnded() {
         return game.hasEnded();
     }
 
 
     /** {@inheritDoc} */
-    public int winner() {
+    @Override public int winner() {
         return game.winner();
     }
 
 
     /** {@inheritDoc} */
-    public int contempt() {
+    @Override public int contempt() {
         return game.contempt();
     }
 
 
     /** {@inheritDoc} */
-    public int infinity() {
+    @Override public int infinity() {
         return game.infinity();
     }
 
 
     /** {@inheritDoc} */
-    public long hash() {
+    @Override public long hash() {
         return game.hash();
     }
 
 
     /** {@inheritDoc} */
-    public boolean isLegal(int move) {
+    @Override public boolean isLegal(int move) {
         return game.isLegal(move);
     }
 
 
     /** {@inheritDoc} */
-    public void unmakeMove() {
+    @Override public void unmakeMove() {
         game.unmakeMove();
     }
 
 
     /** {@inheritDoc} */
-    public int nextMove() {
+    @Override public int nextMove() {
         return game.nextMove();
     }
 
 
     /** {@inheritDoc} */
-    public int[] legalMoves() {
+    @Override public int[] legalMoves() {
         return game.legalMoves();
     }
 
 
     /** {@inheritDoc} */
-    public int toCentiPawns(int score) {
+    @Override public int toCentiPawns(int score) {
         return game.toCentiPawns(score);
     }
 
 
     /** {@inheritDoc} */
-    public void ensureCapacity(int minCapacity) {
+    @Override public void ensureCapacity(int minCapacity) {
         game.ensureCapacity(minCapacity);
     }
 
 
     /** {@inheritDoc} */
-    public int getCursor() {
+    @Override public int getCursor() {
         return game.getCursor();
     }
 
 
     /** {@inheritDoc} */
-    public void setCursor(int cursor) {
+    @Override public void setCursor(int cursor) {
         game.setCursor(cursor);
     }
 }

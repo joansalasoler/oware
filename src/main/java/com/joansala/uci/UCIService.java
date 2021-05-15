@@ -245,7 +245,7 @@ public class UCIService {
         /**
          * The main bucle for the brain.
          */
-        public void run() {
+        @Override public void run() {
             final Consumer<Report> consumer = createSearchConsumer();
             engine.attachConsumer(consumer);
 

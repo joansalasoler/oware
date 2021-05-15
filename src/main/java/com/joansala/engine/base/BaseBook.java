@@ -119,14 +119,17 @@ public class BaseBook {
 
         return new Iterator<String>() {
 
+            @Override
             public void remove() {
                 throw new UnsupportedOperationException();
             }
 
+            @Override
             public boolean hasNext() {
                 return iter.hasNext();
             }
 
+            @Override
             public String next() {
                 return iter.next();
             }

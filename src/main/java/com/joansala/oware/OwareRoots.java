@@ -110,6 +110,7 @@ public class OwareRoots extends BaseBook implements Roots {
      * Notifies the book intance that the next positions are going to
      * be from a different match.
      */
+    @Override
     public void newMatch() {
         this.outOfBook = false;
     }
@@ -126,6 +127,7 @@ public class OwareRoots extends BaseBook implements Roots {
      *
      * @throws IOException  If an I/O exception occurred
      */
+    @Override
     public int pickBestMove(Game game) throws IOException {
         if (outOfBook == true)
             return Game.NULL_MOVE;

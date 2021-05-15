@@ -55,6 +55,7 @@ public class Erratic implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getDepth() {
         return maxDepth;
     }
@@ -63,6 +64,7 @@ public class Erratic implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public long getMoveTime() {
         return moveTime;
     }
@@ -71,6 +73,7 @@ public class Erratic implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getContempt() {
         return contempt;
     }
@@ -79,6 +82,7 @@ public class Erratic implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getInfinity() {
         return maxScore;
     }
@@ -87,6 +91,7 @@ public class Erratic implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getPonderMove(Game game) {
         return Game.NULL_MOVE;
     }
@@ -95,6 +100,7 @@ public class Erratic implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void setDepth(int depth) {
         maxDepth = Math.min(depth, MAX_DEPTH);
     }
@@ -103,6 +109,7 @@ public class Erratic implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void setMoveTime(long delay) {
         moveTime = Math.max(delay, 1);
     }
@@ -111,6 +118,7 @@ public class Erratic implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void setContempt(int score) {
         this.contempt = score;
     }
@@ -119,6 +127,7 @@ public class Erratic implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void setInfinity(int score) {
         maxScore = Math.max(score, 1);
     }
@@ -127,6 +136,7 @@ public class Erratic implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void attachConsumer(Consumer<Report> consumer) {
         consumers.add(consumer);
     }
@@ -135,6 +145,7 @@ public class Erratic implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void detachConsumer(Consumer<Report> consumer) {
         consumers.remove(consumer);
     }
@@ -143,18 +154,21 @@ public class Erratic implements Engine {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void newMatch() {}
 
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void abortComputation() {}
 
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized int computeBestMove(Game game) {
         if (game.hasEnded()) {
             return Game.NULL_MOVE;

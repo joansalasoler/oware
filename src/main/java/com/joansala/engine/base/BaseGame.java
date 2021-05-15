@@ -116,42 +116,49 @@ public abstract class BaseGame implements Game {
     /**
      * {@inheritDoc}
      */
+    @Override
     public abstract Object position();
 
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public abstract boolean hasEnded();
 
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public abstract int winner();
 
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public abstract int outcome();
 
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public abstract int score();
 
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public abstract int getCursor();
 
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public abstract void setCursor(int cursor);
 
 
@@ -164,30 +171,35 @@ public abstract class BaseGame implements Game {
     /**
      * {@inheritDoc}
      */
+    @Override
     public abstract void makeMove(int move);
 
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public abstract void unmakeMove();
 
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public abstract int nextMove();
 
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public abstract void ensureCapacity(int size);
 
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void endMatch() {
         // Does nothing
     }
@@ -196,6 +208,7 @@ public abstract class BaseGame implements Game {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int length() {
         return 1 + index;
     }
@@ -204,6 +217,7 @@ public abstract class BaseGame implements Game {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int turn() {
         return turn;
     }
@@ -212,6 +226,7 @@ public abstract class BaseGame implements Game {
     /**
      * {@inheritDoc}
      */
+    @Override
     public long hash() {
         return hash;
     }
@@ -220,6 +235,7 @@ public abstract class BaseGame implements Game {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int contempt() {
         return CONTEMPT_SCORE;
     }
@@ -228,6 +244,7 @@ public abstract class BaseGame implements Game {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int infinity() {
         return MAX_SCORE;
     }
@@ -236,6 +253,7 @@ public abstract class BaseGame implements Game {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setStart(Object position, int turn) {
         validateTurn(turn);
         validatePosition(position);
@@ -246,6 +264,7 @@ public abstract class BaseGame implements Game {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int[] moves() {
         int[] moves = new int[length()];
 
@@ -261,6 +280,7 @@ public abstract class BaseGame implements Game {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isLegal(int move) {
         for (int house : legalMoves()) {
             if (house == move) {
@@ -275,6 +295,7 @@ public abstract class BaseGame implements Game {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int[] legalMoves() {
         int length = 0;
         int move = NULL_MOVE;
@@ -297,6 +318,7 @@ public abstract class BaseGame implements Game {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int toCentiPawns(int score) {
         return score;
     }
@@ -305,6 +327,7 @@ public abstract class BaseGame implements Game {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Game cast() {
         return this;
     }

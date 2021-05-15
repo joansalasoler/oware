@@ -117,6 +117,7 @@ public class OwareBoard implements Board {
      *
      * @return   The position array
      */
+    @Override
     public int[] position() {
         return Arrays.copyOf(position, position.length);
     }
@@ -127,6 +128,7 @@ public class OwareBoard implements Board {
      *
      * @return   The player to move
      */
+    @Override
     public int turn() {
         return this.turn;
     }
@@ -259,6 +261,7 @@ public class OwareBoard implements Board {
      * @param game  A game object
      * @throws IllegalArgumentException If the game is not valid
      */
+    @Override
     public OwareBoard toBoard(Game game) {
         if (!(game instanceof OwareGame)) {
             throw new IllegalArgumentException(
@@ -282,6 +285,7 @@ public class OwareBoard implements Board {
      * @param notation  A valid board notation
      * @throws IllegalArgumentException If the board notation is not valid
      */
+    @Override
     public OwareBoard toBoard(String notation) {
         Matcher matcher = boardPattern.matcher(notation);
 
@@ -312,6 +316,7 @@ public class OwareBoard implements Board {
      *
      * @return      String representation of this board
      */
+    @Override
     public String toNotation() {
         StringBuilder sb = new StringBuilder();
 
@@ -334,6 +339,7 @@ public class OwareBoard implements Board {
      * @return      Moves notation
      * @throws IllegalArgumentException if a move is not valid
      */
+    @Override
     public String toAlgebraic(int[] moves) {
         StringBuilder sb = new StringBuilder();
 
@@ -353,6 +359,7 @@ public class OwareBoard implements Board {
      * @return      A move notation
      * @throws IllegalArgumentException if the move is not valid
      */
+    @Override
     public String toAlgebraic(int move) {
         return String.valueOf(toCharacter(move));
     }
@@ -388,6 +395,7 @@ public class OwareBoard implements Board {
      * @throws IllegalArgumentException If the notation does not
      *                  represent a valid move sequence
      */
+    @Override
     public int[] toMoves(String notation) {
         Matcher matcher = movesPattern.matcher(notation);
 
@@ -415,6 +423,7 @@ public class OwareBoard implements Board {
      * @return          Numeric representation of the move
      * @throws IllegalArgumentException  If the notation is not valid
      */
+    @Override
     public int toMove(String notation) {
         if (notation.length() != 1) {
             throw new IllegalArgumentException(

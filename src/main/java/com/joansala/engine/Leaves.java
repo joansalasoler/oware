@@ -54,5 +54,5 @@ public interface Leaves {
      * @return      {@code true} if an exact score for the position
      *              could be found; {@code false} otherwise
      */
-    public boolean find(Game game);
+    boolean find(Game game);
 }

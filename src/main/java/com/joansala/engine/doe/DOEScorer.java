@@ -26,6 +26,6 @@ import java.util.function.Function;
 public interface DOEScorer extends Function<int[], Integer> {
 
     /** {@inheritDoc} */
-    Integer apply(int[] moves);
+    @Override Integer apply(int[] moves);
 
 }

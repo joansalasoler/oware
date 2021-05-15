@@ -47,6 +47,7 @@ public abstract class BaseBoard implements Board {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int turn() {
         return turn;
     }
@@ -55,6 +56,7 @@ public abstract class BaseBoard implements Board {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object position() {
         return position;
     }
@@ -63,6 +65,7 @@ public abstract class BaseBoard implements Board {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toAlgebraic(int[] moves) {
         StringJoiner joiner = new StringJoiner(" ");
 
@@ -77,6 +80,7 @@ public abstract class BaseBoard implements Board {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int[] toMoves(String notation) {
         String[] notations = notation.split(" ");
         int[] moves = new int[notations.length];
@@ -92,29 +96,34 @@ public abstract class BaseBoard implements Board {
     /**
      * {@inheritDoc}
      */
+    @Override
     public abstract int toMove(String notation);
 
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public abstract String toAlgebraic(int move);
 
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public abstract Board toBoard(String notation);
 
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public abstract Board toBoard(Game game);
 
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public abstract String toNotation();
 }

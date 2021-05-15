@@ -187,6 +187,7 @@ public class DOEStore implements AutoCloseable {
     /**
      * Close this store.
      */
+    @Override
     public void close() {
         try {
             transaction.abort();

@@ -80,6 +80,7 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized int getPonderMove(Game game) {
         int move = Game.NULL_MOVE;
 
@@ -104,6 +105,7 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void setDepth(int depth) {
         super.setDepth(depth + depth % 2);
     }
@@ -116,6 +118,7 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
      *
      * @param score     Infinite value as apositive integer
      */
+    @Override
     public synchronized void setInfinity(int score) {
         super.setInfinity(score);
         minScore = -maxScore;
@@ -128,6 +131,7 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
      * @param cache     A cache object or {@code null} to disable
      *                  the transposition table
      */
+    @Override
     @Inject(optional=true)
     public synchronized void setCache(Cache cache) {
         this.cache = (cache != null) ? cache : baseCache;
@@ -140,6 +144,7 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
      * @param leaves    A leaves object or {@code null} to disable
      *                  the use of precomputed endgames
      */
+    @Override
     @Inject(optional=true)
     public synchronized void setLeaves(Leaves leaves) {
         this.leaves = (leaves != null) ? leaves : baseLeaves;
@@ -149,6 +154,7 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void newMatch() {
         super.newMatch();
         cache.clear();
@@ -181,6 +187,7 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
      * @return      The best move found for the current game position
      *              or {@code Game.NULL_MOVE} if the game already ended
      */
+    @Override
     public synchronized int computeBestMove(Game game) {
         this.game = game;
 
