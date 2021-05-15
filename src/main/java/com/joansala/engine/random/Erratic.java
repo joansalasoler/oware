@@ -17,152 +17,18 @@ package com.joansala.engine.random;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.util.function.Consumer;
-import java.util.HashSet;
 import java.util.Random;
-import java.util.Set;
-
-import com.joansala.engine.*;
+import com.joansala.engine.Game;
+import com.joansala.engine.base.BaseEngine;
 
 
 /**
  * An engine that plays randomly.
  */
-public class Erratic implements Engine {
-
-    /** Maximum depth allowed for a search */
-    public static final int MAX_DEPTH = 1;
-
-    /** Consumer of best moves */
-    private Set<Consumer<Report>> consumers = new HashSet<>();
+public class Erratic extends BaseEngine {
 
     /** Random number generator */
     private Random random = new Random();
-
-    /** The maximum depth allowed for the current search */
-    private int maxDepth = MAX_DEPTH;
-
-    /** The maximum time allowed for the current search */
-    private long moveTime = 0;
-
-    /** The maximum possible score value */
-    private int maxScore = Integer.MAX_VALUE;
-
-    /** Contempt factor used to evaluaty draws */
-    private int contempt = Game.DRAW_SCORE;
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getDepth() {
-        return maxDepth;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public long getMoveTime() {
-        return moveTime;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getContempt() {
-        return contempt;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getInfinity() {
-        return maxScore;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getPonderMove(Game game) {
-        return Game.NULL_MOVE;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public synchronized void setDepth(int depth) {
-        maxDepth = Math.min(depth, MAX_DEPTH);
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public synchronized void setMoveTime(long delay) {
-        moveTime = Math.max(delay, 1);
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public synchronized void setContempt(int score) {
-        this.contempt = score;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public synchronized void setInfinity(int score) {
-        maxScore = Math.max(score, 1);
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public synchronized void attachConsumer(Consumer<Report> consumer) {
-        consumers.add(consumer);
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public synchronized void detachConsumer(Consumer<Report> consumer) {
-        consumers.remove(consumer);
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public synchronized void newMatch() {}
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void abortComputation() {}
 
 
     /**
