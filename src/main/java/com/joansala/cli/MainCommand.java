@@ -20,6 +20,7 @@ package com.joansala.cli;
 
 import picocli.CommandLine;
 import picocli.CommandLine.*;
+import com.joansala.cli.util.CommandFactory;
 
 
 /**

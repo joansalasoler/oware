@@ -28,6 +28,7 @@ import picocli.CommandLine.*;
 import com.joansala.engine.Board;
 import com.joansala.engine.Engine;
 import com.joansala.engine.Game;
+import com.joansala.cli.util.ProcessConverter;
 import com.joansala.util.bench.BenchPlayer;
 import com.joansala.util.RoundRobin;
 import static com.joansala.engine.Game.*;

@@ -1,4 +1,4 @@
-package com.joansala.cli;
+package com.joansala.cli.util;
 
 /*
  * Aalina oware engine.
@@ -20,6 +20,7 @@ package com.joansala.cli;
 
 import java.nio.file.Paths;
 import picocli.CommandLine.ITypeConverter;
+import com.joansala.cli.MainCommand;
 
 
 /**
