@@ -19,8 +19,7 @@ package com.joansala.oware;
  */
 
 import java.util.Arrays;
-
-import com.joansala.engine.Game;
+import com.joansala.engine.base.BaseGame;
 import static com.joansala.oware.Oware.*;
 
 
@@ -30,19 +29,13 @@ import static com.joansala.oware.Oware.*;
  * @author    Joan Sala Soler
  * @version   2.0.0
  */
-public class OwareGame implements Game {
-
-    /** Maximum score to which positions are evaluated */
-    public static final int MAX_SCORE = 1000;
+public class OwareGame extends BaseGame {
 
     /** Recommended score to evaluate draws */
     public static final int CONTEMPT_SCORE = -9;
 
     /** The maximum number of moves this object can store */
     public static final int MAX_CAPACITY = Integer.MAX_VALUE >> 4;
-
-    /** Default capacity for this object */
-    private static final int DEFAULT_CAPACITY = 254;
 
     /** Capacity increases at least this value each time */
     private static final int CAPACITY_INCREMENT = 126;
@@ -58,18 +51,6 @@ public class OwareGame implements Game {
 
     /** Moves that are not attacks, defenses or mandatory */
     private static final int REMAINING_MOVES = 3;
-
-    /** Number of moves this game can store */
-    private int capacity;
-
-    /** Current state index */
-    private int index;
-
-    /** Player to move on the current position */
-    private int turn;
-
-    /** Performed move to reach current position */
-    private int move;
 
     /** Index of the last capture move */
     private int capture;
@@ -92,9 +73,6 @@ public class OwareGame implements Game {
     /** First house of the rival player */
     private int stop;
 
-    /** Current position hash code */
-    private long hash;
-
     /** Current move generation stage */
     private int stage;
 
@@ -103,9 +81,6 @@ public class OwareGame implements Game {
 
     /** Position and move generation state */
     private int[] state;
-
-    /** Performed moves history */
-    private int[] moves;
 
     /** Last capture move history */
     private int[] captures;
@@ -121,7 +96,7 @@ public class OwareGame implements Game {
 
 
     /**
-     * Creates a new {@code OwareGame} object.
+     * Instantiate a new game on the start state.
      */
     public OwareGame() {
         this(DEFAULT_CAPACITY);
@@ -129,57 +104,31 @@ public class OwareGame implements Game {
 
 
     /**
-     * Creates a new {@code OwareGame} object with the given capacity.
+     * Instantiate a new game on the start state.
      *
-     * @param size      Capacity as a number of moves
+     * @param capacity      Initial capacity
      */
-    public OwareGame(int size) {
-        capacity = size;
-        states = new int[capacity << 4];
-        moves = new int[capacity];
+    public OwareGame(int capacity) {
+        super(capacity);
         hashes = new long[capacity];
         captures = new int[capacity];
         empties = new int[capacity];
-        state = new int[4 + BOARD_SIZE];
-        setStart(START_POSITION, SOUTH);
+        states = new int[capacity << 4];
     }
 
 
     /**
-     * Sets a new position and turn as the initial board for the game.
-     *
-     * @param position  An array representation of a position
-     * @param turn      The player to move on the position. Must be
-     *                  either {@code SOUTH} or {@code NORTH}.
-     *
-     * @throws IllegalArgumentException  if {@code turn} is not valid or
-     *      {@code postion} is not a valid position representation
+     * {@inheritDoc}
      */
-    public void setStart(Object position, int turn) {
-        if (turn != SOUTH && turn != NORTH) {
-            throw new IllegalArgumentException(
-                "Game turn is not a valid");
-        }
-
-        int[] positionArray = (int[]) position;
-
-        if (isValidPosition(positionArray) == false) {
-            throw new IllegalArgumentException(
-                "Position representation is not valid");
-        }
-
-        setStart(positionArray, turn);
+    protected Object startPosition() {
+        return START_POSITION;
     }
 
 
     /**
-     * Sets a new initial game position and turn. Thus, discarding all
-     * the internally stored data.
-     *
-     * @param position  The new position as an array
-     * @param turn      The turn value for the player to move
+     * {@inheritDoc}
      */
-    private void setStart(int[] position, int turn) {
+    protected void resetState(Object position, int turn) {
         index = -1;
         capture = -1;
         move = NULL_MOVE;
@@ -187,7 +136,7 @@ public class OwareGame implements Game {
         setTurn(turn);
         resetCursor();
 
-        System.arraycopy(position, 0, state, 0, 2 + BOARD_SIZE);
+        state = Arrays.copyOf((int[]) position, 4 + BOARD_SIZE);
         empty = computeEmpty();
         hash = computeHash();
     }
@@ -201,21 +150,23 @@ public class OwareGame implements Game {
      * @param position  An array representation of a position
      * @return          {@code true} if position is valid
      */
-    private static boolean isValidPosition(int[] position) {
-        if (position == null) {
+    protected boolean isPosition(Object position) {
+        final int[] positionArray = (int[]) position;
+
+        if (positionArray == null) {
             return false;
         }
 
-        if (position.length != 2 + BOARD_SIZE) {
+        if (positionArray.length != 2 + BOARD_SIZE) {
             return false;
         }
 
         int seeds = 0;
 
         for (int i = 0; i < 2 + BOARD_SIZE; i++) {
-            seeds += position[i];
+            seeds += positionArray[i];
 
-            if (position[i] < 0) {
+            if (positionArray[i] < 0) {
                 return false;
             }
         }
@@ -229,7 +180,7 @@ public class OwareGame implements Game {
      *
      * @param turn      {@code SOUTH} or {@code NORTH}
      */
-    private void setTurn(int turn) {
+    protected void setTurn(int turn) {
         this.turn = turn;
 
         if (turn == SOUTH) {
@@ -279,36 +230,6 @@ public class OwareGame implements Game {
 
 
     /**
-     * Number of moves performed on this game.
-     *
-     * @return  Number of moves
-     */
-    public int length() {
-        return 1 + index;
-    }
-
-
-    /**
-     * Playing turn of the current game.
-     *
-     * @return  {@code SOUTH} or {@code NORTH}
-     */
-    public int turn() {
-        return turn;
-    }
-
-
-    /**
-     * Unique hash code of the current position.
-     *
-     * @return  A hash code
-     */
-    public long hash() {
-        return hash;
-    }
-
-
-    /**
      * Returns an array representation of the current position.
      *
      * @return      A new position array
@@ -319,29 +240,28 @@ public class OwareGame implements Game {
 
 
     /**
-     * Moves performed to reach the current position.
-     *
-     * @return      A new moves array
-     */
-    public int[] moves() {
-        int[] moves = new int[length()];
-
-        if (index >= 0) {
-            System.arraycopy(this.moves, 1, moves, 0, index);
-            moves[index] = this.move;
-        }
-
-        return moves;
-    }
-
-
-    /**
      * Returns the current game state.
      *
      * @return      Current game state reference
      */
     protected int[] state() {
         return state;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    public int contempt() {
+        return CONTEMPT_SCORE;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    public int toCentiPawns(int score) {
+        return (int) (2.5 * score);
     }
 
 
@@ -433,22 +353,6 @@ public class OwareGame implements Game {
 
 
     /**
-     * {@inheritDoc}
-     */
-    public int contempt() {
-        return CONTEMPT_SCORE;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    public int infinity() {
-        return MAX_SCORE;
-    }
-
-
-    /**
      * Returns the heuristic evaluation of the current position
      *
      * @return  The heuristic evaluation as a value between
@@ -494,7 +398,7 @@ public class OwareGame implements Game {
      *
      * @return      Unique hash code
      */
-    private long computeHash() {
+    protected long computeHash() {
         long hash = (turn == SOUTH) ? SOUTH_SIGN : NORTH_SIGN;
         int n = state[NORTH_STORE];
 
@@ -553,29 +457,6 @@ public class OwareGame implements Game {
     public void resetCursor() {
         stage = ATTACKING_MOVES;
         next = 1 + right;
-    }
-
-
-    /**
-     * Check if a move may be performed on the current position.
-     *
-     * <p>A move is legal if it sows seeds into the opponent houses,
-     * unless no such move could be performed, in which case all the
-     * moves that sow seeds are legal. Grand Slam moves are legal but
-     * they don't capture any seeds.</p>
-     *
-     * @see Game#makeMove(int)
-     * @param move  A move identifier
-     * @return      {@code true} if the move is legal
-     */
-    public boolean isLegal(int move) {
-        for (int house : legalMoves()) {
-            if (house == move) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
 
@@ -909,38 +790,6 @@ public class OwareGame implements Game {
 
 
     /**
-     * Obtain all the legal moves.
-     *
-     * @return      A new array with the moves
-     */
-    public int[] legalMoves() {
-        int length = 0;
-        int move = NULL_MOVE;
-
-        final int cursor = getCursor();
-        final int[] moves = new int[6];
-
-        resetCursor();
-
-        while ((move = nextMove()) != NULL_MOVE) {
-            moves[length++] = move;
-        }
-
-        setCursor(cursor);
-
-        return Arrays.copyOf(moves, length);
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    public int toCentiPawns(int score) {
-        return (int) (2.5 * score);
-    }
-
-
-    /**
      * Ensures this object can store at least the give number of moves.
      *
      * @param size      Number of moves
@@ -960,32 +809,12 @@ public class OwareGame implements Game {
         capacity = Math.max(size, capacity);
         capacity = Math.min(MAX_CAPACITY, capacity);
 
-        int[] states = new int[capacity << 4];
-        int[] moves = new int[capacity];
-        int[] captures = new int[capacity];
-        int[] empties = new int[capacity];
-        long[] hashes = new long[capacity];
-
-        System.arraycopy(this.states, 0, states, 0, (index + 1) << 4);
-        System.arraycopy(this.moves, 0, moves, 0, index + 1);
-        System.arraycopy(this.hashes, 0, hashes, 0, index + 1);
-        System.arraycopy(this.captures, 0, captures, 0, index + 1);
-        System.arraycopy(this.empties, 0, empties, 0, index + 1);
-
-        this.states = states;
-        this.moves = moves;
-        this.hashes = hashes;
-        this.captures = captures;
-        this.empties = empties;
+        states = Arrays.copyOf(states, capacity << 4);
+        moves = Arrays.copyOf(moves, capacity);
+        hashes = Arrays.copyOf(hashes, capacity);
+        captures = Arrays.copyOf(captures, capacity);
+        empties = Arrays.copyOf(empties, capacity);
 
         System.gc();
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    public OwareGame cast() {
-        return this;
     }
 }
