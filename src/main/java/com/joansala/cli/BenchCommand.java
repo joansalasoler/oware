@@ -18,6 +18,9 @@ package com.joansala.cli;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 import com.google.inject.Inject;
@@ -70,6 +73,12 @@ public final class BenchCommand implements Callable<Integer> {
     )
     private long moveTime = Engine.DEFAULT_MOVETIME;
 
+    @Option(
+      names = "--file",
+      description = "Benchmark suite file."
+    )
+    private File file;
+
 
     /**
      * Creates a new service.
@@ -100,8 +109,9 @@ public final class BenchCommand implements Callable<Integer> {
     public void runBenchmark() throws IOException {
         System.out.format("%s%n", formatSetup());
         System.out.format("Running tests%n%s%n", horizontalRule('-'));
+        InputStream input = getInputStream();
 
-        try (GameScanner scanner = new GameScanner(parser)) {
+        try (GameScanner scanner = new GameScanner(parser, input)) {
             scanner.forEachRemaining((suite) -> {
                 System.out.format("Game: %s%n", ellipsis(suite, 53));
 
@@ -191,6 +201,21 @@ public final class BenchCommand implements Callable<Integer> {
         } catch (ConfigurationException e) {}
 
         return null;
+    }
+
+
+    /**
+     * Obtain the input stream from which to read positions. That is,
+     * either from standard input or the specified file.
+     */
+    private InputStream getInputStream() throws IOException {
+        InputStream input = System.in;
+
+        if (file instanceof File) {
+            input = new FileInputStream(file);
+        }
+
+        return input;
     }
 
 
