@@ -20,6 +20,8 @@ package com.joansala.oware;
 
 import java.util.Arrays;
 import com.joansala.engine.base.BaseGame;
+import com.joansala.util.hash.HashFunction;
+import com.joansala.util.hash.BinomialHash;
 import static com.joansala.oware.Oware.*;
 
 
@@ -51,6 +53,9 @@ public class OwareGame extends BaseGame {
 
     /** Moves that are not attacks, defenses or mandatory */
     private static final int REMAINING_MOVES = 3;
+
+    /** Hash code generator */
+    private static final HashFunction hasher = hashFunction();
 
     /** Index of the last capture move */
     private int capture;
@@ -114,6 +119,14 @@ public class OwareGame extends BaseGame {
         captures = new int[capacity];
         empties = new int[capacity];
         states = new int[capacity << 4];
+    }
+
+
+    /**
+     * Initialize the hash code generator.
+     */
+    private static HashFunction hashFunction() {
+        return new BinomialHash(SEED_COUNT, 2 + BOARD_SIZE);
     }
 
 
@@ -411,13 +424,8 @@ public class OwareGame extends BaseGame {
      */
     @Override
     protected long computeHash() {
-        long hash = (turn == SOUTH) ? SOUTH_SIGN : NORTH_SIGN;
-        int n = state[NORTH_STORE];
-
-        for (int i = SOUTH_STORE; n < SEED_COUNT && i >= 0; i--) {
-            hash += COEFFICIENTS[n][i];
-            n += state[i];
-        }
+        final long sign = (turn == SOUTH) ? SOUTH_SIGN : NORTH_SIGN;
+        final long hash = sign + hasher.hash(state);
 
         return hash;
     }
