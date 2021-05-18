@@ -19,15 +19,34 @@ package com.joansala.oware;
  */
 
 
+import com.google.inject.Module;
+import com.google.inject.AbstractModule;
+import picocli.CommandLine.Command;
+
+import com.joansala.cli.*;
 import com.joansala.engine.*;
 import com.joansala.engine.negamax.Negamax;
-import com.google.inject.AbstractModule;
 
 
 /**
  * Binds together the components of the Oware engine.
  */
 public class OwareModule extends AbstractModule {
+
+    /**
+     * Command line interface.
+     */
+    @Command(
+      name = "aalina",
+      version = "2.0.0",
+      description = "Aalina is an Oware game engine"
+    )
+    private static class OwareCommand extends MainCommand {}
+
+
+    /**
+     * Game module configuration.
+     */
     @Override protected void configure() {
         bind(Game.class).to(OwareGame.class);
         bind(Board.class).to(OwareBoard.class);
@@ -35,5 +54,17 @@ public class OwareModule extends AbstractModule {
         bind(Cache.class).to(OwareCache.class);
         bind(Leaves.class).to(OwareLeaves.class);
         bind(Roots.class).to(OwareRoots.class);
+    }
+
+
+    /**
+     * Exectues the command line interface.
+     *
+     * @param args      Command line parameters
+     */
+    public static void main(String[] args) throws Exception {
+        Module module = new OwareModule();
+        OwareCommand main = new OwareCommand();
+        System.exit(main.execute(module, args));
     }
 }

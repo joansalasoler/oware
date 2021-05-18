@@ -36,7 +36,6 @@ import com.joansala.engine.doe.*;
  */
 @Command(
   name = "train",
-  version = "1.2.1",
   description = "Automatic opening book builder",
   mixinStandardHelpOptions = true
 )

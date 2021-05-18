@@ -37,11 +37,10 @@ import com.joansala.uci.UCIPlayer;
  */
 @Command(
   name = "match",
-  version = "1.2.1",
   description = "Play a match against the engine",
   mixinStandardHelpOptions = true
 )
-public final class MatchCommand implements Callable<Integer> {
+public class MatchCommand implements Callable<Integer> {
 
     /** UCI player instance */
     private UCIPlayer player;

@@ -20,7 +20,6 @@ package com.joansala.cli.util;
 
 import java.nio.file.Paths;
 import picocli.CommandLine.ITypeConverter;
-import com.joansala.cli.MainCommand;
 
 
 /**
@@ -38,11 +37,10 @@ public class ProcessConverter implements ITypeConverter<Process> {
      * @return          Command descriptor
      */
     private String[] getDefaultCommand() {
-        String name = MainCommand.class.getName();
         String home = System.getProperty("java.home");
         String path = System.getProperty("java.class.path");
         String bin = Paths.get(home, "/bin", "/java").toString();
-        String[] command = { bin, "-cp", path, name, "service" };
+        String[] command = { bin, "-jar", path, "service" };
 
         return command;
     }

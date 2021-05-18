@@ -21,18 +21,14 @@ package com.joansala.cli;
 import com.google.inject.Module;
 import picocli.CommandLine;
 import picocli.CommandLine.*;
-
 import com.joansala.cli.util.CommandFactory;
-import com.joansala.oware.OwareModule;
 
 
 /**
  * Parent of all the command line tools.
  */
 @Command(
-  name = "aalina",
-  version = "1.2.1",
-  description = "Aalina is an Oware game engine",
+  name = "main",
   mixinStandardHelpOptions = true,
   subcommands = {
       BattleCommand.class,
@@ -44,11 +40,18 @@ import com.joansala.oware.OwareModule;
       TrainCommand.class
   }
 )
-public final class MainCommand {
-    public static void main(String[] args) throws Exception {
-        Module module = new OwareModule();
+public class MainCommand {
+
+    /**
+     * Execute a command line interface for a module.
+     *
+     * @param module        Game module
+     * @param args          Command line arguments
+     * @return              Exit code
+     */
+    public int execute(Module module, String[] args) {
         CommandFactory factory = new CommandFactory(module);
-        CommandLine c = new CommandLine(MainCommand.class, factory);
-        System.exit(c.execute(args));
+        CommandLine main = new CommandLine(this, factory);
+        return main.execute(args);
     }
 }

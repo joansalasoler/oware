@@ -37,11 +37,10 @@ import com.joansala.util.GameScanner;
  */
 @Command(
   name = "bench",
-  version = "1.2.1",
   description = "Runs an engine benchmark",
   mixinStandardHelpOptions = true
 )
-public final class BenchCommand implements Callable<Integer> {
+public class BenchCommand implements Callable<Integer> {
 
     /** Statistics accumulator */
     private BenchStats stats;

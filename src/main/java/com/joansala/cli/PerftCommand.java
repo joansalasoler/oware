@@ -37,11 +37,10 @@ import static com.joansala.engine.Game.NULL_MOVE;
  */
 @Command(
   name = "perft",
-  version = "1.2.1",
   description = "Count leaf nodes of a certain depth",
   mixinStandardHelpOptions = true
 )
-public final class PerftCommand implements Callable<Integer> {
+public class PerftCommand implements Callable<Integer> {
 
     /** Statistics accumulator */
     private BenchStats stats;
