@@ -29,7 +29,7 @@ import com.joansala.engine.Game;
  * A game state on a search tree.
  */
 @Entity
-public class DOENode implements Serializable {
+public class DOENode implements Comparable<DOENode>, Serializable {
 
     /** Serialization version */
     static final long serialVersionUID = 1L;
@@ -134,5 +134,13 @@ public class DOENode implements Serializable {
      */
     void updateScore(double value) {
         score += (value - score) / ++count;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    public int compareTo(DOENode o) {
+        return Long.compare(hash, o.hash);
     }
 }
