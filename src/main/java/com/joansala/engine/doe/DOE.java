@@ -353,6 +353,7 @@ public class DOE extends BaseEngine {
 
         if (!node.terminal && depth > 0) {
             int move = node.nextMove(game);
+            store.write(node);
 
             if (move != Game.NULL_MOVE) {
                 game.makeMove(move);
