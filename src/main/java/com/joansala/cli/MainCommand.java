@@ -18,9 +18,12 @@ package com.joansala.cli;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import com.google.inject.Module;
 import picocli.CommandLine;
 import picocli.CommandLine.*;
+
 import com.joansala.cli.util.CommandFactory;
+import com.joansala.oware.OwareModule;
 
 
 /**
@@ -43,7 +46,8 @@ import com.joansala.cli.util.CommandFactory;
 )
 public final class MainCommand {
     public static void main(String[] args) throws Exception {
-        CommandFactory factory = new CommandFactory();
+        Module module = new OwareModule();
+        CommandFactory factory = new CommandFactory(module);
         CommandLine c = new CommandLine(MainCommand.class, factory);
         System.exit(c.execute(args));
     }
