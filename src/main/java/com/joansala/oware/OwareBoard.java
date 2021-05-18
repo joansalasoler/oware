@@ -66,21 +66,6 @@ public class OwareBoard implements Board {
 
     /**
      * Instantiates a new {@code OwareBoard} object containing the specified
-     * position and turn identified by a hash code. The unique hash
-     * identifier for a board object can be obtained with the method
-     * {@code uniqueHash()}.
-     *
-     * @throws IllegalArgumentException  if the hash code does not
-     *      represent a valid position and turn
-     */
-    public OwareBoard(long hash) {
-        this.turn = (hash & SOUTH_SIGN) != 0 ? SOUTH : NORTH;
-        this.position = unrankPosition(hash & 0x7FFFFFFFFFFL);
-    }
-
-
-    /**
-     * Instantiates a new {@code OwareBoard} object containing the specified
      * position and turn.
      *
      * <p>Turn must be either {@code Game.SOUTH} or {@code Game.NORTH}.
@@ -185,72 +170,7 @@ public class OwareBoard implements Board {
      * @return  Array representation of the position
      */
     private static int[] startPosition() {
-        int[] position = new int[2 + BOARD_SIZE];
-        System.arraycopy(START_POSITION, 0, position, 0, 2 + BOARD_SIZE);
-
-        return position;
-    }
-
-
-    /**
-     * Given a valid position representation array returns an unique
-     * 43 bits identifier for the position.
-     *
-     * @param position  An array representation of a position
-     * @throws IllegalArgumentException  if postion is not valid
-     */
-    public static long rankPosition(int[] position) {
-        // Check for a valid position representation
-
-        if (isValidPosition(position) == false)
-            throw new IllegalArgumentException(
-                "Position representation is not valid");
-
-        // Rank the position array
-
-        long rank = 0x00L;
-        int n = position[NORTH_STORE];
-
-        for (int i = SOUTH_STORE; n < SEED_COUNT && i >= 0; i--) {
-            rank += COEFFICIENTS[n][i];
-            n += position[i];
-        }
-
-        return rank;
-    }
-
-
-    /**
-     * Returns a position array parsed from the unique binomial rank
-     * number of the position. The rank number can be obtained with the
-     * method {@code rankPosition}.
-     *
-     * @return  A valid position representation array
-     */
-    public static int[] unrankPosition(long rank) {
-        int[] position = new int[2 + BOARD_SIZE];
-
-        int n = 0;
-        int seeds = 0;
-        int i = BOARD_SIZE;
-
-        while (i >= 0 && n < SEED_COUNT) {
-            long value = COEFFICIENTS[n][i];
-
-            if (rank >= value) {
-                rank -= value;
-                position[i + 1] = seeds;
-                seeds = 0;
-                i--;
-            } else {
-                seeds++;
-                n++;
-            }
-        }
-
-        position[i + 1] = SEED_COUNT - n + seeds;
-
-        return position;
+        return Arrays.copyOf(START_POSITION, 2 + BOARD_SIZE);
     }
 
 
@@ -455,26 +375,6 @@ public class OwareBoard implements Board {
         }
 
         return move;
-    }
-
-
-    /**
-     * Returns an unique hash identifier for the current board. The
-     * produced hash code is a 44 bit number which uniquely identifies
-     * a position and turn.
-     *
-     * @return  The hash code value for this object
-     */
-    public long hash() {
-        long hash = (turn == SOUTH) ? SOUTH_SIGN : NORTH_SIGN;
-        int n = position[NORTH_STORE];
-
-        for (int i = SOUTH_STORE; n < SEED_COUNT && i >= 0; i--) {
-            hash += COEFFICIENTS[n][i];
-            n += position[i];
-        }
-
-        return hash;
     }
 
 
