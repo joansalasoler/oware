@@ -33,13 +33,13 @@ package com.joansala.util.hash;
 public class BinomialHash implements HashFunction {
 
     /** Binomial coefficients */
-    private final long[][] binomials;
+    protected final long[][] binomials;
 
     /** Length of the integer array */
-    private final int length;
+    protected final int length;
 
     /** Maximum sum of the array */
-    private final int count;
+    protected final int count;
 
 
     /**
