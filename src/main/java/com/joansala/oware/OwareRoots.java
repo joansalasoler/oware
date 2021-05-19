@@ -27,6 +27,8 @@ import java.util.Random;
 import com.joansala.engine.Game;
 import com.joansala.engine.Roots;
 import com.joansala.engine.base.BaseBook;
+import static com.joansala.engine.Game.*;
+import static com.joansala.oware.Oware.*;
 
 
 /**
@@ -53,10 +55,10 @@ public class OwareRoots extends BaseBook implements Roots {
     private final RandomAccessFile database;
 
     /** Random number generator */
-    private final Random generator;
+    private final Random random;
 
     /** Increases variety by playing weaker moves */
-    private int scoreMargin = 10;
+    private int margin = 10;
 
     /** True if no more moves can be returned for the current match */
     private boolean outOfBook = false;
@@ -82,11 +84,21 @@ public class OwareRoots extends BaseBook implements Roots {
     public OwareRoots(File file) throws IOException {
         super(file, SIGNATURE);
 
-        generator = new Random();
+        random = new Random();
         database = getDatabase();
         OFFSET = database.getFilePointer();
         MAX_POSITION = (int) ((database.length() - OFFSET) / ENTRY_SIZE);
         outOfBook = false;
+    }
+
+
+    /**
+     * Notifies the book intance that the next positions are going to
+     * be from a different match.
+     */
+    @Override
+    public void newMatch() {
+        this.outOfBook = false;
     }
 
 
@@ -98,21 +110,7 @@ public class OwareRoots extends BaseBook implements Roots {
      * @param margin    an integer value greater or equal to zero
      */
     public void setScoreMargin(int margin) {
-        if (margin < 0)
-            throw new IllegalArgumentException(
-                "Margin must be greater or equal to zero");
-
-        this.scoreMargin = margin;
-    }
-
-
-    /**
-     * Notifies the book intance that the next positions are going to
-     * be from a different match.
-     */
-    @Override
-    public void newMatch() {
-        this.outOfBook = false;
+        this.margin = Math.max(0, margin);
     }
 
 
@@ -129,19 +127,21 @@ public class OwareRoots extends BaseBook implements Roots {
      */
     @Override
     public int pickBestMove(Game game) throws IOException {
-        if (outOfBook == true)
-            return Game.NULL_MOVE;
-
-        int[] moves = findBestMoves(game);
-
-        if (moves == null) {
-            outOfBook = true;
-            return Game.NULL_MOVE;
+        if (outOfBook == true) {
+            return NULL_MOVE;
         }
 
-        int index = generator.nextInt(moves.length);
+        int move = NULL_MOVE;
+        int[] moves = findBestMoves(game);
 
-        return moves[index];
+        if (moves.length > 0) {
+            int choice = random.nextInt(moves.length);
+            move = moves[choice];
+        } else {
+            outOfBook = true;
+        }
+
+        return move;
     }
 
 
@@ -155,75 +155,74 @@ public class OwareRoots extends BaseBook implements Roots {
      * @throws IOException  If an I/O exception occurred
      */
     public int[] findBestMoves(Game game) throws IOException {
-        // Perform a binary search on the database
+        final int size = BOARD_SIZE / 2;
+        final int[] moves = new int[size];
+        final short[] scores = readScores(game);
 
-        int min = 0;
-        int max = MAX_POSITION;
-        long hash = game.hash();
+        final int turn = game.turn();
+        final int left = (turn == SOUTH) ? SOUTH_LEFT : NORTH_LEFT;
 
-        while (min <= max) {
-            // Seek the position on the database
+        short bestScore = Short.MIN_VALUE;
 
-            int middle = (min + max) >>> 1;
-            database.seek(OFFSET + middle * ENTRY_SIZE);
-
-            long chash = database.readLong();
-
-            if (chash < hash) {
-                min = middle + 1;
-                continue;
+        for (int i = 0; i < size; i++) {
+            if (scores[i] > bestScore) {
+                bestScore = scores[i];
             }
-
-            if (chash > hash) {
-                max = middle - 1;
-                continue;
-            }
-
-            // We found the position, read the scores
-
-            short[] scores = new short[6];
-            short bestScore = Short.MIN_VALUE;
-
-            for (int i = 0; i < 6; i++) {
-                scores[i] = database.readShort();
-
-                if (scores[i] > bestScore)
-                    bestScore = scores[i];
-            }
-
-            // If no best move exists, return null
-
-            if (bestScore == Short.MIN_VALUE)
-                return null;
-
-            // Select the moves that can be played
-
-            int[] moves = new int[6];
-            int increment = (game.turn() == Game.SOUTH) ? 0 : 6;
-            int length = 0;
-
-            for (int i = 0; i < 6; i++) {
-                if (bestScore >= -scoreMargin) {
-                    int allowedScore = Math.max(
-                        bestScore - scoreMargin,
-                        -scoreMargin
-                    );
-
-                    if (scores[i] < allowedScore)
-                        continue;
-                } else if (scores[i] != bestScore) {
-                    continue;
-                }
-
-                moves[length++] = (byte) (i + increment);
-            }
-
-            // Copy the moves into a new array and return it
-
-            return Arrays.copyOf(moves, length);
         }
 
-        return null;
+        int length = 0;
+        int minScore = Math.max(bestScore - margin, -margin);
+
+        if (bestScore > Short.MIN_VALUE) {
+            for (int i = 0; i < size; i++) {
+                final short score = scores[i];
+
+                if (score == bestScore || score >= minScore) {
+                    moves[length++] = i + left;
+                }
+            }
+        }
+
+        return Arrays.copyOf(moves, length);
     }
 
+
+    /**
+     * Performs a binary search on the openings book file to find a position
+     * and returns the scores of its moves.
+     *
+     * @param game      Game state to read
+     * @return          New move scores array
+     */
+    private short[] readScores(Game game) throws IOException {
+        final int size = BOARD_SIZE / 2;
+        final long gameHash = game.hash();
+        final short[] scores = new short[size];
+        Arrays.fill(scores, Short.MIN_VALUE);
+
+        int first = 0;
+        int middle = 0;
+        int last = MAX_POSITION;
+        long hash = -1;
+
+        while (hash != gameHash && first <= last) {
+            middle = (first + last) / 2;
+            database.seek(OFFSET + middle * ENTRY_SIZE);
+            hash = database.readLong();
+
+            if (hash < gameHash) {
+                first = middle + 1;
+            } else if (hash > gameHash) {
+                last = middle - 1;
+            }
+        }
+
+        if (hash == gameHash) {
+            for (int i = 0; i < size; i++) {
+                scores[i] = database.readShort();
+            }
+        }
+
+        return scores;
+    }
 }
