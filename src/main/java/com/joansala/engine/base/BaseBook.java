@@ -1,7 +1,7 @@
 package com.joansala.engine.base;
 
 /*
- * Copyright (c) 2014-2021 Joan Sala Soler <contact@joansala.com>
+ * Copyright (c) 2021 Joan Sala Soler <contact@joansala.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,192 +17,94 @@ package com.joansala.engine.base;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.Iterator;
-import java.util.TreeMap;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
- * Base book implementation. Initializes a book from a file and provides
- * methods for reading its information.
- *
- * <p>This book implementation skeleton reads the book headers from a file
- * stored on disk after verifying that the book format is correct. Therefore,
- * after initialising the book using the default constructor the database
- * offset is positioned just after the last header read</p>
- *
- * <p>The database header must have the following format:</p>
- *
- * <pre>
- * signature version\n
- * field_name_1: field_value_1\n
- * field_name_2: field_value_2\n
- * ...
- * field_name_N: field_value_N\n
- * \n
- * </pre>
- *
- * @author    Joan Sala Soler
- * @version   1.0.0
+ * Base book implementation.
  */
-public class BaseBook {
+public class BaseBook implements AutoCloseable {
 
-    /** Book version, as provided by the database headers */
-    private String version = null;
+    /** Book format signature */
+    private final String signature;
 
-    private String signature = null;
+    /** Additional book information */
+    private final Map<String, String> headers;
 
-    /** Contains descriptive information of the database */
-    private final TreeMap<String, String> headers;
+    /** File from where the book is read */
+    protected final RandomAccessFile file;
 
-    /** The database file */
-    private final RandomAccessFile database;
+    /** File offset of the book entries */
+    protected final long offset;
 
 
     /**
-     * Initializes a new {@code Book} object wich will read entries from
-     * a file stored on disk.
-     *
-     * @param file      The database file for the book
-     * @param signature Signature that identifies the book format
-     *
-     * @throws FileNotFoundException  If the file could not be opened
-     * @throws IOException  If an I/O exception occurred
+     * Open a book for the given file path.
      */
-    public BaseBook(File file, String signature) throws IOException {
-        this.signature = signature;
-        this.database = new RandomAccessFile(file, "r");
-        this.headers = readHeaders();
+     public BaseBook(String path) throws IOException {
+         file = new RandomAccessFile(path, "rw");
+         signature = readSignature();
+         headers = readHeaders();
+         offset = file.getFilePointer();
+     }
+
+
+    /**
+     * Book format signature identifier.
+     *
+     * @return          Signature string
+     */
+    public String getSignature() {
+        return signature;
     }
 
 
     /**
-     * Returns the value for the database book format version.
+     * Map view of the book headers.
      *
-     * @return  Version of the book format or {@code null}
+     * @return          Headers map
      */
-    public String getVersion() {
-        return version;
+    public Map<String, String> getHeaders() {
+        return headers;
     }
 
 
     /**
-     * Returns the random access file object associated with this book.
+     * Reads the book signature and returns it.
+     *
+     * @return          Signature string
      */
-    public RandomAccessFile getDatabase() {
-        return database;
+    protected String readSignature() throws IOException {
+        return file.readLine();
     }
 
 
     /**
-     * Returns the value of the specified header field.
+     * Reads the book headers and returns them.
      *
-     * @param name  Field name
-     * @return      Value associated to the field name or {@code null}
-     *              if the field doesn't exist
+     * @return          New book headers map
      */
-    public String getField(String name) {
-        return headers.get(name);
-    }
+    protected Map<String, String> readHeaders() throws IOException {
+        Map<String, String> headers = new HashMap<>();
+        String line = file.readLine();
 
-
-    /**
-     * Returns an iterator over the field names found in the book's
-     * header information.
-     *
-     * @return  An iterator over the header fields
-     */
-    public Iterator<String> fields() {
-        final Iterator<String> iter = headers.keySet().iterator();
-
-        return new Iterator<String>() {
-
-            @Override
-            public void remove() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public boolean hasNext() {
-                return iter.hasNext();
-            }
-
-            @Override
-            public String next() {
-                return iter.next();
-            }
-
-        };
-    }
-
-
-    /**
-     * Open a new file for the given resource.
-     *
-     * @param path      Resource path
-     * @return          New file instance
-     */
-    protected static File getResourceFile(String path) {
-        return new File(BaseBook.class.getResource(path).getFile());
-    }
-
-
-    /**
-     * Reads the header information of the database.
-     *
-     * @return  Set containing all the header fields
-     * @throws IOException  If the header is not valid
-     */
-    private TreeMap<String, String> readHeaders() throws IOException {
-        TreeMap<String, String> headers = new TreeMap<String, String>();
-
-        // Read header signature for the book
-
-        for (int i = 0; i < signature.length(); i++) {
-            if (database.readChar() != signature.charAt(i))
-                throw new IOException("Invalid header signature");
+        while (line != null && !line.trim().isEmpty()) {
+            String[] parts = line.split("[:]", 2);
+            headers.put(parts[0], parts[1]);
+            line = file.readLine();
         }
-
-        // Read book format version information
-
-        StringBuilder version = new StringBuilder();
-        char character = database.readChar();
-
-        while (character != '\n') {
-            version.append(character);
-            character = database.readChar();
-        }
-
-        if (version.length() > 0)
-            this.version = version.toString();
-
-        // Read all header fields until an empty line is found
-
-        StringBuilder field = null;
-
-        do {
-            field = new StringBuilder();
-            character = database.readChar();
-
-            while (character != '\n') {
-                field.append(character);
-                character = database.readChar();
-            }
-
-            if (field.length() > 0) {
-                int index = field.indexOf(":");
-
-                if (index != -1) {
-                    String name = field.substring(0, index).trim();
-                    String value = field.substring(
-                        index + 1, field.length()).trim();
-                    headers.put(name, value);
-                }
-            }
-        } while (field.length() > 0);
 
         return headers;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override public void close() throws IOException {
+        file.close();
     }
 }

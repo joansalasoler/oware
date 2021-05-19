@@ -18,9 +18,7 @@ package com.joansala.oware;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -36,39 +34,30 @@ import static com.joansala.oware.Oware.*;
  */
 public class OwareRoots extends BaseBook implements Roots {
 
-    /** Header signature for the book format */
-    public static final String SIGNATURE = "Oware Opening Book ";
-
     /** Default path to the openings book binary file */
     public static final String ROOTS_PATH = "/oware-book.bin";
 
     /** Size in bytes of a database entry */
     public static final int ENTRY_SIZE = 20;
 
-    /** Start offset for the the database entries */
-    private final long OFFSET;
-
-    /** Position of the last entry on the database */
-    private final int MAX_POSITION;
-
-    /** The database file */
-    private final RandomAccessFile database;
+    /** Number of entries on the database */
+    private final long ENTRY_COUNT;
 
     /** Random number generator */
     private final Random random;
 
-    /** Increases variety by playing weaker moves */
-    private int margin = 10;
-
     /** True if no more moves can be returned for the current match */
     private boolean outOfBook = false;
+
+    /** Increases variety by playing weaker moves */
+    private int margin = 10;
 
 
     /**
      * Create a new endgames book instance.
      */
     public OwareRoots() throws IOException {
-        this(getResourceFile(ROOTS_PATH));
+        this(getResourcePath(ROOTS_PATH));
     }
 
 
@@ -81,14 +70,18 @@ public class OwareRoots extends BaseBook implements Roots {
      * @throws FileNotFoundException  If the file could not be opened
      * @throws IOException  If an I/O exception occurred
      */
-    public OwareRoots(File file) throws IOException {
-        super(file, SIGNATURE);
-
+    public OwareRoots(String path) throws IOException {
+        super(path);
         random = new Random();
-        database = getDatabase();
-        OFFSET = database.getFilePointer();
-        MAX_POSITION = (int) ((database.length() - OFFSET) / ENTRY_SIZE);
-        outOfBook = false;
+        ENTRY_COUNT = (file.length() - offset) / ENTRY_SIZE;
+    }
+
+
+    /**
+     * Obtain a path to the given resource file.
+     */
+    private static String getResourcePath(String path) {
+        return BaseBook.class.getResource(path).getFile();
     }
 
 
@@ -200,15 +193,15 @@ public class OwareRoots extends BaseBook implements Roots {
         final short[] scores = new short[size];
         Arrays.fill(scores, Short.MIN_VALUE);
 
-        int first = 0;
-        int middle = 0;
-        int last = MAX_POSITION;
         long hash = -1;
+        long first = 0;
+        long middle = 0;
+        long last = ENTRY_COUNT;
 
         while (hash != gameHash && first <= last) {
             middle = (first + last) / 2;
-            database.seek(OFFSET + middle * ENTRY_SIZE);
-            hash = database.readLong();
+            file.seek(offset + middle * ENTRY_SIZE);
+            hash = file.readLong();
 
             if (hash < gameHash) {
                 first = middle + 1;
@@ -219,7 +212,7 @@ public class OwareRoots extends BaseBook implements Roots {
 
         if (hash == gameHash) {
             for (int i = 0; i < size; i++) {
-                scores[i] = database.readShort();
+                scores[i] = file.readShort();
             }
         }
 

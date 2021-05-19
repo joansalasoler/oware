@@ -18,9 +18,7 @@ package com.joansala.oware;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 
 import com.joansala.engine.Flag;
 import com.joansala.engine.Game;
@@ -38,9 +36,6 @@ import static com.joansala.oware.OwareGame.*;
  * search must be performed first with the method {@code find}.</p>
  */
 public class OwareLeaves extends BaseBook implements Leaves {
-
-    /** Header signature for the book format */
-    public static final String SIGNATURE = "Oware Endgames ";
 
     /** Default path to the endgames book binary file */
     public static final String LEAVES_PATH = "/oware-leaves.bin";
@@ -77,7 +72,7 @@ public class OwareLeaves extends BaseBook implements Leaves {
      * Create a new endgames book instance.
      */
     public OwareLeaves() throws IOException {
-        this(getResourceFile(LEAVES_PATH), DEFAULT_SEEDS);
+        this(getResourcePath(LEAVES_PATH), DEFAULT_SEEDS);
     }
 
 
@@ -87,8 +82,8 @@ public class OwareLeaves extends BaseBook implements Leaves {
      * @param file      book file
      * @param seeds     maximum number of seeds
      */
-    public OwareLeaves(File file, int seeds) throws IOException {
-        super(file, SIGNATURE);
+    public OwareLeaves(String path, int seeds) throws IOException {
+        super(path);
 
         if (seeds < 1 || seeds > MAX_SEEDS) {
             throw new IllegalArgumentException(
@@ -97,10 +92,16 @@ public class OwareLeaves extends BaseBook implements Leaves {
 
         data = new byte[1 + OFFSETS[seeds]];
         minStoreSeeds = SEED_COUNT - seeds;
+        file.readFully(data);
+        file.close();
+    }
 
-        RandomAccessFile database = getDatabase();
-        database.readFully(data);
-        database.close();
+
+    /**
+     * Obtain a path to the given resource file.
+     */
+    private static String getResourcePath(String path) {
+        return BaseBook.class.getResource(path).getFile();
     }
 
 
