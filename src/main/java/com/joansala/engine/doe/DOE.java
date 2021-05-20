@@ -190,20 +190,6 @@ public class DOE extends BaseEngine {
 
 
     /**
-     * Compute the selection score of a node.
-     *
-     * @param node      A node
-     * @return          Score of the node
-     */
-    private double computeScore(DOENode node) {
-        final double reward = maxScore / Math.sqrt(node.count);
-        final double score = node.score + reward;
-
-        return score;
-    }
-
-
-    /**
      * Best child found so far for the given node.
      *
      * @param node      Parent node
@@ -212,10 +198,10 @@ public class DOE extends BaseEngine {
     protected DOENode pickBestChild(DOENode node) {
         DOENode child = store.read(node.child);
         DOENode bestChild = store.read(node.child);
-        double bestScore = computeScore(bestChild);
+        double bestScore = bestChild.score;
 
         while ((child = store.read(child.sibling)) != null) {
-            double score = computeScore(child);
+            double score = child.score;
 
             if (score >= bestScore) {
                 bestScore = score;
