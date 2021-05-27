@@ -29,7 +29,7 @@ import com.joansala.engine.Game;
 public abstract class BaseBoard implements Board {
 
     /** State configuration */
-    protected Object position;
+    protected int[] position;
 
     /** Player to move */
     protected int turn;
@@ -38,7 +38,7 @@ public abstract class BaseBoard implements Board {
     /**
      * Instantiates a new board.
      */
-    public BaseBoard(Object position, int turn) {
+    public BaseBoard(int[] position, int turn) {
         this.position = position;
         this.turn = turn;
     }
@@ -57,7 +57,7 @@ public abstract class BaseBoard implements Board {
      * {@inheritDoc}
      */
     @Override
-    public Object position() {
+    public int[] position() {
         return position;
     }
 
