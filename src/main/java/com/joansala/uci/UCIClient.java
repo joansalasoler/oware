@@ -902,8 +902,10 @@ public class UCIClient {
 
         if (input.hasNextLine()) {
             message = input.nextLine();
-            if (!message.isEmpty())
+
+            if (!message.isEmpty()) {
                 evaluateInput(message);
+            }
         } else {
             throw new IllegalStateException(
                 "Engine process is not responding");

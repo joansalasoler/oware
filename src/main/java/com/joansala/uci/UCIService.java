@@ -17,7 +17,6 @@ package com.joansala.uci;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.io.IOException;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 import java.util.function.Consumer;
@@ -412,14 +411,20 @@ public class UCIService {
          * @return      A move or {@code Game.NULL_MOVE}
          */
         private int getBookMove(Game game) {
-            try {
-                if (roots != null)
-                    return roots.pickBestMove(game);
-            } catch (IOException e) {
-                showError("Cannot select book move");
+            int move = Game.NULL_MOVE;
+
+            if (roots instanceof Roots == false) {
+                return move;
             }
 
-            return Game.NULL_MOVE;
+            try {
+                move = roots.pickBestMove(game);
+            } catch (Exception e) {
+                showError("Cannot select book move");
+                showError(e.getMessage());
+            }
+
+            return move;
         }
 
 
