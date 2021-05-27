@@ -18,6 +18,8 @@ package com.joansala.cli;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import java.util.Queue;
+import java.util.ArrayDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.Callable;
 import com.google.inject.Inject;
@@ -124,6 +126,23 @@ public class TrainCommand implements Callable<Integer> {
             System.out.format("= %s%n", fromatResult(moves, centis, count));
         });
 
+        // Initialize the engine and game pools
+
+        Queue<Negamax> engines = new ArrayDeque<>(poolSize);
+        Queue<Game> games = new ArrayDeque<>(poolSize);
+
+        for (int i = 0; i < poolSize; i++) {
+            Game game = injector.getInstance(Game.class);
+            Negamax engine = injector.getInstance(Negamax.class);
+
+            engine.setMoveTime(moveTime);
+            engine.setContempt(game.contempt());
+            engine.setInfinity(game.infinity());
+
+            games.add(game);
+            engines.add(engine);
+        }
+
         // Evaluate postions as they arrive
 
         AtomicInteger nodeCount = new AtomicInteger();
@@ -133,12 +152,11 @@ public class TrainCommand implements Callable<Integer> {
                 trainer.abortComputation();
             }
 
-            Negamax engine = injector.getInstance(Negamax.class);
-            Game game = injector.getInstance(Game.class);
+            Game game = games.poll();
+            Negamax engine = engines.poll();
 
             game.setStart(position, turn);
             game.ensureCapacity(moves.length);
-            engine.setMoveTime(moveTime);
 
             for (int move : moves) {
                 game.makeMove(move);
@@ -148,6 +166,9 @@ public class TrainCommand implements Callable<Integer> {
             final int score = engine.computeBestScore(game);
             final int centis = game.toCentiPawns(score);
             System.out.format("- %s%n", fromatResult(moves, centis, count));
+
+            engines.offer(engine);
+            games.offer(game);
 
             return score;
         });
