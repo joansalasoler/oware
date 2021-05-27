@@ -82,12 +82,12 @@ public class OwareBoard implements Board {
      *      {@code turn} parameters are not valid
      */
     public OwareBoard(int[] position, int turn) {
-        if (isValidTurn(turn) == false) {
+        if (isTurn(turn) == false) {
             throw new IllegalArgumentException(
                 "Game turn is not a valid");
         }
 
-        if (isValidPosition(position) == false) {
+        if (isPosition(position) == false) {
             throw new IllegalArgumentException(
                 "Position representation is not valid");
         }
@@ -127,7 +127,7 @@ public class OwareBoard implements Board {
      * @param turn  A player identifier
      * @return      {@code true} if turn is valid
      */
-    private static boolean isValidTurn(int turn) {
+    private static boolean isTurn(int turn) {
         return turn == SOUTH || turn == NORTH;
     }
 
@@ -140,7 +140,7 @@ public class OwareBoard implements Board {
      * @param position  An array representation of a position
      * @return          {@code true} if position is valid
      */
-    private static boolean isValidPosition(int[] position) {
+    private static boolean isPosition(int[] position) {
         if (position == null) {
             return false;
         }
@@ -379,67 +379,23 @@ public class OwareBoard implements Board {
 
 
     /**
-     * Returns a hash code for this board. The hash produced is not
-     * unique.
-     *
-     * @return   a hash code value for this object
-     */
-    @Override
-    public int hashCode() {
-        return Arrays.hashCode(position) * turn;
-    }
-
-
-    /**
-     * Compares this {@code OwareBoard} to the specified object. The result
-     * is {@code true} if the argument is not {@code null} and is a
-     * {@code OwareBoard} object that represents the same position and turn
-     * as this object.
-     *
-     * @param obj  The object to compare with this <code>OwareBoard</code>
-     * @return     {@code null} if the object represents the same board
-     *             as this {@code OwareBoard} object. {@code false} otherwise
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof OwareBoard)) {
-            return false;
-        }
-
-        final OwareBoard board = (OwareBoard) obj;
-
-        if (board.turn != this.turn) {
-            return false;
-        }
-
-        return Arrays.equals(board.position, this.position);
-    }
-
-
-    /**
-     * Returns an human readable string representation of this object.
-     *
-     * @return   A formatted string
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
-        return String.format(
+        return String.format((
+            "============( %turn to move )============%n" +
+            "        f    e    d    c    b    a%n" +
             "+----+----+----+----+----+----+----+----+%n" +
-            "|    | %2d | %2d | %2d | %2d | %2d | %2d |    |%n" +
-            "| %2d +----+----+----+----+----+----+ %2d +%n" +
-            "|    | %2d | %2d | %2d | %2d | %2d | %2d |    |%n" +
+            "|    | 12 | 11 | 10 | #9 | #8 | #7 |    |%n" +
+            "| 14 +----+----+----+----+----+----+ 13 |%n" +
+            "|    | #1 | #2 | #3 | #4 | #5 | #6 |    |%n" +
             "+----+----+----+----+----+----+----+----+%n" +
-            "%s to move",
-            position[11], position[10], position[9], position[8],
-            position[7], position[6], position[13], position[12],
-            position[0], position[1], position[2], position[3],
-            position[4], position[5],
-            turn == SOUTH ? "South" : "North"
-        );
+            "        A    B    C    D    E    F%n" +
+            "=========================================").
+            replaceAll("#?(\\d+)", "%$1\\$2d").
+            replace("%turn", turn == SOUTH ? "South" : "North"),
+            Arrays.stream(position).boxed().toArray(Object[]::new)
+        ).replaceAll("\\s0", "  ");
     }
-
 }
