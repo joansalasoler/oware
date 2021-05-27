@@ -26,7 +26,7 @@ import java.io.IOException;
  * @author    Joan Sala Soler
  * @version   1.1.0
  */
-public interface Roots {
+public interface Roots<G extends Game> {
 
     /**
      * Notifies the book intance that the next positions are going to
@@ -47,5 +47,5 @@ public interface Roots {
      *
      * @throws IOException  If an I/O exception occurred
      */
-    int pickBestMove(Game game) throws IOException;
+    int pickBestMove(G game) throws IOException;
 }

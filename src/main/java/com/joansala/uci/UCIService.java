@@ -43,12 +43,6 @@ public class UCIService {
     /** Performs move computations for a game */
     private Engine engine = null;
 
-    /** Opening book */
-    private Roots roots = null;
-
-    /** Transposition table */
-    private Cache cache = null;
-
     /** Game where the computations are performed */
     private Game game = null;
 
@@ -56,7 +50,13 @@ public class UCIService {
     private Board board = null;
 
     /** Contains the initial board of the game */
-    private Board start = null;
+    private Board rootBoard = null;
+
+    /** Opening book */
+    private Roots<Game> roots = null;
+
+    /** Transposition table */
+    private Cache<Game> cache = null;
 
     /** Last info shown for the current computation */
     private String lastInfo = null;
@@ -100,15 +100,14 @@ public class UCIService {
      * engine will be used to perform move computations. The provided
      * board is the initial position for the game.
      *
-     * @param start     Start board position
      * @param game      A game object
      * @param engine    An engine object
      */
-    @Inject public UCIService(Board start, Game game, Engine engine) {
+    @Inject public UCIService(Game game, Engine engine) {
         this.board = null;
-        this.start = start;
         this.game = game;
         this.engine = engine;
+        this.rootBoard = game.rootBoard();
     }
 
 
@@ -144,7 +143,7 @@ public class UCIService {
      *                  the transposition table
      */
     @Inject(optional=true)
-    public synchronized void setCache(Cache cache) {
+    public synchronized void setCache(Cache<Game> cache) {
         this.cache = cache;
     }
 
@@ -156,7 +155,7 @@ public class UCIService {
      *                  the use of an opening book
      */
     @Inject(optional=true)
-    public synchronized void setRoots(Roots roots) {
+    public synchronized void setRoots(Roots<Game> roots) {
         this.roots = roots;
     }
 
@@ -330,14 +329,14 @@ public class UCIService {
             StringBuilder response = new StringBuilder();
 
             response.append("bestmove ");
-            response.append(start.toAlgebraic(bestMove));
+            response.append(rootBoard.toAlgebraic(bestMove));
 
             performMove(game, bestMove);
             int ponderMove = getPonderMove(game);
 
             if (ponderMove != Game.NULL_MOVE) {
                 response.append(" ponder ");
-                response.append(start.toAlgebraic(ponderMove));
+                response.append(rootBoard.toAlgebraic(ponderMove));
             }
 
             output(response.toString());
@@ -378,7 +377,7 @@ public class UCIService {
 
             if (variation.length > 0) {
                 response.append(" pv ");
-                response.append(start.toAlgebraic(variation));
+                response.append(rootBoard.toAlgebraic(variation));
             }
 
             return response.toString();
@@ -635,17 +634,7 @@ public class UCIService {
 
         // Set the board position
 
-        if (board == null) {
-            game.setStart(
-                start.position(),
-                start.turn()
-            );
-        } else {
-            game.setStart(
-                board.position(),
-                board.turn()
-            );
-        }
+        game.setStart(board == null ? rootBoard : board);
 
         // Perform the moves on the board
 
@@ -828,7 +817,7 @@ public class UCIService {
 
         if (boardNotation != null) {
             try {
-                board = start.toBoard(boardNotation);
+                board = rootBoard.toBoard(boardNotation);
             } catch (Exception e) {
                 showError(e.getMessage());
                 return;
@@ -839,7 +828,7 @@ public class UCIService {
 
         if (movesNotation != null) {
             try {
-                moves = start.toMoves(movesNotation);
+                moves = rootBoard.toMoves(movesNotation);
             } catch (Exception e) {
                 showError(e.getMessage());
                 return;
@@ -899,6 +888,4 @@ public class UCIService {
 
         return sb.toString();
     }
-
-
 }

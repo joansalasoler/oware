@@ -26,5 +26,5 @@ public interface HasLeaves {
     /**
      * Sets the endgames database to use.
      */
-    void setLeaves(Leaves leaves);
+    void setLeaves(Leaves<Game> leaves);
 }

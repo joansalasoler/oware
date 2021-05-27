@@ -23,8 +23,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.joansala.engine.Board;
-import com.joansala.engine.Game;
-
 import static com.joansala.oware.OwareGame.*;
 import static com.joansala.oware.Oware.*;
 
@@ -171,24 +169,6 @@ public class OwareBoard implements Board {
      */
     private static int[] startPosition() {
         return Arrays.copyOf(START_POSITION, 2 + BOARD_SIZE);
-    }
-
-
-    /**
-     * Converts the current state of an oware game object to a board
-     * representation.
-     *
-     * @param game  A game object
-     * @throws IllegalArgumentException If the game is not valid
-     */
-    @Override
-    public OwareBoard toBoard(Game game) {
-        if (!(game instanceof OwareGame)) {
-            throw new IllegalArgumentException(
-                "Not a valid game object");
-        }
-
-        return new OwareBoard((int[]) game.position(), game.turn());
     }
 
 

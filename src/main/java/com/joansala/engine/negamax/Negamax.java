@@ -43,19 +43,19 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
     public static final int FUZZY = 1;
 
     /** Fallback empty cache instance */
-    private final Cache baseCache = new BaseCache();
+    private final Cache<Game> baseCache = new BaseCache();
 
     /** Fallback empty endgames instance */
-    private final Leaves baseLeaves = new BaseLeaves();
+    private final Leaves<Game> baseLeaves = new BaseLeaves();
 
     /** References the {@code Game} to search */
     protected Game game = null;
 
     /** The transpositions table */
-    protected Cache cache = null;
+    protected Cache<Game> cache = null;
 
     /** Endgame database */
-    protected Leaves leaves = null;
+    protected Leaves<Game> leaves = null;
 
     /** The minimum possible score value */
     private int minScore = -Integer.MAX_VALUE;
@@ -133,7 +133,7 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
      */
     @Override
     @Inject(optional=true)
-    public synchronized void setCache(Cache cache) {
+    public synchronized void setCache(Cache<Game> cache) {
         this.cache = (cache != null) ? cache : baseCache;
     }
 
@@ -146,7 +146,7 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
      */
     @Override
     @Inject(optional=true)
-    public synchronized void setLeaves(Leaves leaves) {
+    public synchronized void setLeaves(Leaves<Game> leaves) {
         this.leaves = (leaves != null) ? leaves : baseLeaves;
     }
 

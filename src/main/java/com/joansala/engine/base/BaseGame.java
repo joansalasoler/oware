@@ -19,6 +19,7 @@ package com.joansala.engine.base;
  */
 
 import java.util.Arrays;
+import com.joansala.engine.Board;
 import com.joansala.engine.Game;
 
 
@@ -117,7 +118,7 @@ public abstract class BaseGame implements Game {
      * {@inheritDoc}
      */
     @Override
-    public abstract Object position();
+    public abstract Board board();
 
 
     /**
@@ -254,7 +255,15 @@ public abstract class BaseGame implements Game {
      * {@inheritDoc}
      */
     @Override
-    public void setStart(Object position, int turn) {
+    public void setStart(Board board) {
+        setStart(board.position(), board.turn());
+    }
+
+
+    /**
+     * Sets the start position and turn.
+     */
+    protected void setStart(Object position, int turn) {
         validateTurn(turn);
         validatePosition(position);
         resetState(position, turn);

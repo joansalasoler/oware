@@ -25,7 +25,7 @@ import com.joansala.engine.Leaves;
 /**
  * An endgames database that does not contain any entries.
  */
-public class BaseLeaves implements Leaves {
+public class BaseLeaves implements Leaves<Game> {
 
     /** {@inheritDoc} */
     @Override public int getScore() { return 0; }

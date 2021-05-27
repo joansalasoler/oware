@@ -228,7 +228,7 @@ public class MatchCommand implements Callable<Integer> {
      * @param writer    Terminal writer
      */
     private void printBoard(PrintWriter writer) {
-        writer.format("%n%s%n%n", parser.toBoard(game));
+        writer.format("%n%s%n%n", game.board());
         writer.flush();
     }
 

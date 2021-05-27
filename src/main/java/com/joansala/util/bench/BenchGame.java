@@ -17,6 +17,7 @@ package com.joansala.util.bench;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import com.joansala.engine.Board;
 import com.joansala.engine.Game;
 
 
@@ -89,14 +90,20 @@ public final class BenchGame implements Game {
 
 
     /** {@inheritDoc} */
-    @Override public Object position() {
-        return game.position();
+    @Override public Board board() {
+        return game.board();
     }
 
 
     /** {@inheritDoc} */
-    @Override public void setStart(Object position, int turn) {
-        game.setStart(position, turn);
+    @Override public Board rootBoard() {
+        return game.rootBoard();
+    }
+
+
+    /** {@inheritDoc} */
+    @Override public void setStart(Board board) {
+        game.setStart(board);
     }
 
 

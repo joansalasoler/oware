@@ -134,7 +134,7 @@ public class OwareGame extends BaseGame {
      * {@inheritDoc}
      */
     @Override
-    protected Object startPosition() {
+    protected int[] startPosition() {
         return START_POSITION;
     }
 
@@ -246,13 +246,21 @@ public class OwareGame extends BaseGame {
 
 
     /**
-     * Returns an array representation of the current position.
-     *
-     * @return      A new position array
+     * {@inheritDoc}
      */
     @Override
-    public int[] position() {
-        return Arrays.copyOf(state, 2 + BOARD_SIZE);
+    public OwareBoard board() {
+        int[] position = Arrays.copyOf(state, 2 + BOARD_SIZE);
+        return new OwareBoard(position, turn);
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OwareBoard rootBoard() {
+        return new OwareBoard();
     }
 
 

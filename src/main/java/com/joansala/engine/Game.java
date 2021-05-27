@@ -62,7 +62,7 @@ public interface Game {
      *
      * @return  The number of moves performed
      */
-     int length();
+    int length();
 
 
     /**
@@ -83,11 +83,19 @@ public interface Game {
 
 
     /**
-     * Returns a representation of the current position.
+     * Board representation of the current game state.
      *
-     * @return  Representation of the position
+     * @return      A board instance
      */
-    Object position();
+    Board board();
+
+
+    /**
+     * Start board of a game.
+     *
+     * @return      A board instance
+     */
+    Board rootBoard();
 
 
     /**
@@ -95,13 +103,11 @@ public interface Game {
      * position resets all the game state information, including the
      * performed moves.
      *
-     * @param position  A representation of a position
-     * @param turn      The player to move on the position. Must be
-     *                  either {@code Game.SOUTH} or {@code Game.NORTH}.
+     * @param board     Start board
      * @throws IllegalArgumentException  if {@code turn} is not valid or
      *      {@code postion} is not a valid position representation
      */
-    void setStart(Object position, int turn);
+    void setStart(Board board);
 
 
     /**

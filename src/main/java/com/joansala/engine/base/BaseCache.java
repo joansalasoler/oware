@@ -25,7 +25,7 @@ import com.joansala.engine.Cache;
 /**
  * A cache that does not store or return any entries.
  */
-public class BaseCache implements Cache {
+public class BaseCache implements Cache<Game> {
 
     /** {@inheritDoc} */
     @Override public long size() { return 0L; }

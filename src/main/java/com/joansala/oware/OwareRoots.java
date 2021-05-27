@@ -22,9 +22,9 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
 
-import com.joansala.engine.Game;
 import com.joansala.engine.Roots;
 import com.joansala.engine.base.BaseBook;
+import com.joansala.oware.OwareGame;
 import static com.joansala.engine.Game.*;
 import static com.joansala.oware.Oware.*;
 
@@ -32,7 +32,7 @@ import static com.joansala.oware.Oware.*;
 /**
  * Opening book implementation for oware.
  */
-public class OwareRoots extends BaseBook implements Roots {
+public class OwareRoots extends BaseBook implements Roots<OwareGame> {
 
     /** Default path to the openings book binary file */
     public static final String ROOTS_PATH = "/oware-book.bin";
@@ -119,7 +119,7 @@ public class OwareRoots extends BaseBook implements Roots {
      * @throws IOException  If an I/O exception occurred
      */
     @Override
-    public int pickBestMove(Game game) throws IOException {
+    public int pickBestMove(OwareGame game) throws IOException {
         if (outOfBook == true) {
             return NULL_MOVE;
         }
@@ -147,7 +147,7 @@ public class OwareRoots extends BaseBook implements Roots {
      *
      * @throws IOException  If an I/O exception occurred
      */
-    public int[] findBestMoves(Game game) throws IOException {
+    public int[] findBestMoves(OwareGame game) throws IOException {
         final int size = BOARD_SIZE / 2;
         final int[] moves = new int[size];
         final short[] scores = readScores(game);
@@ -187,7 +187,7 @@ public class OwareRoots extends BaseBook implements Roots {
      * @param game      Game state to read
      * @return          New move scores array
      */
-    private short[] readScores(Game game) throws IOException {
+    private short[] readScores(OwareGame game) throws IOException {
         final int size = BOARD_SIZE / 2;
         final long gameHash = game.hash();
         final short[] scores = new short[size];

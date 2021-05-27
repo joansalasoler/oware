@@ -47,10 +47,10 @@ public class TrainCommand implements Callable<Integer> {
     private final Injector injector;
 
     /** Game board instance */
-    private final Board parser;
+    private final Board rootBoard;
 
     /** Root game state */
-    private final Game root;
+    private final Game rootGame;
 
     @Option(
       names = "--path",
@@ -95,8 +95,8 @@ public class TrainCommand implements Callable<Integer> {
      */
     @Inject public TrainCommand(Injector injector) {
         this.injector = injector;
-        this.root = injector.getInstance(Game.class);
-        this.parser = injector.getInstance(Board.class);
+        this.rootGame = injector.getInstance(Game.class);
+        this.rootBoard = rootGame.rootBoard();
     }
 
 
@@ -106,12 +106,10 @@ public class TrainCommand implements Callable<Integer> {
     @Override public Integer call() throws Exception {
         final DOEStore store = new DOEStore(path);
         final DOE trainer = new DOE(store, poolSize);
-        final Object position = root.position();
-        final int turn = root.turn();
 
         trainer.setDepth(depth);
-        trainer.setContempt(root.contempt());
-        trainer.setInfinity(root.infinity());
+        trainer.setContempt(rootGame.contempt());
+        trainer.setInfinity(rootGame.infinity());
         trainer.setExplorationBias(bias);
 
         System.out.format("%s%n", formatSetup());
@@ -147,7 +145,7 @@ public class TrainCommand implements Callable<Integer> {
 
         AtomicInteger nodeCount = new AtomicInteger();
 
-        trainer.trainEngine(root, (moves) -> {
+        trainer.trainEngine(rootGame, (moves) -> {
             if (nodeSize < nodeCount.incrementAndGet()) {
                 trainer.abortComputation();
             }
@@ -155,8 +153,8 @@ public class TrainCommand implements Callable<Integer> {
             Game game = games.poll();
             Negamax engine = engines.poll();
 
-            game.setStart(position, turn);
             game.ensureCapacity(moves.length);
+            game.setStart(game.rootBoard());
 
             for (int move : moves) {
                 game.makeMove(move);
@@ -198,7 +196,7 @@ public class TrainCommand implements Callable<Integer> {
             moveTime,
             depth,
             poolSize,
-            ellipsis(className(root), 44)
+            ellipsis(className(rootGame), 44)
         );
     }
 
@@ -209,7 +207,7 @@ public class TrainCommand implements Callable<Integer> {
      * @retun       A string
      */
     private String fromatResult(int[] moves, int score, long count) {
-        String notation = parser.toAlgebraic(moves);
+        String notation = rootBoard.toAlgebraic(moves);
         String result = String.format("%d %6d %s", count, score, notation);
         return ellipsis(result, 57);
     }

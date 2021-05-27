@@ -26,7 +26,7 @@ import com.joansala.engine.Game;
 /**
  * Implements a transposition table for an oware game.
  */
-public class OwareCache implements Cache {
+public class OwareCache implements Cache<OwareGame> {
 
     /** Default size of the cache in bytes */
     public static final long CACHE_SIZE = 32 << 20;
@@ -159,7 +159,7 @@ public class OwareCache implements Cache {
      *          could be found; {@code false} otherwise.
      */
     @Override
-    public synchronized boolean find(Game game) {
+    public synchronized boolean find(OwareGame game) {
         final long mask = 0x00FFFFFFFFL;
         final long hash = game.hash();
         final long id = (hash >>> 12);
@@ -202,7 +202,7 @@ public class OwareCache implements Cache {
      * @param move   The best move found so far for the position
      */
     @Override
-    public synchronized void store(Game game, int score, int move, int depth, int flag) {
+    public synchronized void store(OwareGame game, int score, int move, int depth, int flag) {
         final long mask = 0x300000000L;
         final long hash = game.hash();
 

@@ -20,16 +20,15 @@ package com.joansala.engine.base;
 
 import java.util.StringJoiner;
 import com.joansala.engine.Board;
-import com.joansala.engine.Game;
 
 
 /**
  * Abstract board implementation.
  */
-public abstract class BaseBoard implements Board {
+public abstract class BaseBoard<P> implements Board {
 
     /** State configuration */
-    protected int[] position;
+    protected P position;
 
     /** Player to move */
     protected int turn;
@@ -38,7 +37,7 @@ public abstract class BaseBoard implements Board {
     /**
      * Instantiates a new board.
      */
-    public BaseBoard(int[] position, int turn) {
+    public BaseBoard(P position, int turn) {
         this.position = position;
         this.turn = turn;
     }
@@ -57,7 +56,7 @@ public abstract class BaseBoard implements Board {
      * {@inheritDoc}
      */
     @Override
-    public int[] position() {
+    public P position() {
         return position;
     }
 
@@ -112,13 +111,6 @@ public abstract class BaseBoard implements Board {
      */
     @Override
     public abstract Board toBoard(String notation);
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public abstract Board toBoard(Game game);
 
 
     /**

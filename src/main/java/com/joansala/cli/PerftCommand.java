@@ -46,7 +46,7 @@ public class PerftCommand implements Callable<Integer> {
     private BenchStats stats;
 
     /** Game board instance */
-    private Board parser;
+    private Board rootBoard;
 
     /** Game instance */
     private Game game;
@@ -68,10 +68,10 @@ public class PerftCommand implements Callable<Integer> {
     /**
      * Creates a new service.
      */
-    @Inject public PerftCommand(Board board, Game game) {
-        this.stats = new BenchStats();
-        this.parser = board;
+    @Inject public PerftCommand(Game game) {
         this.game = game;
+        this.stats = new BenchStats();
+        this.rootBoard = game.rootBoard();
     }
 
 
@@ -91,7 +91,7 @@ public class PerftCommand implements Callable<Integer> {
         System.out.format("%s", formatSetup());
         InputStream input = getInputStream();
 
-        try (GameScanner scanner = new GameScanner(parser, input)) {
+        try (GameScanner scanner = new GameScanner(rootBoard, input)) {
             scanner.forEachRemaining((suite) -> {
                 System.out.format("%nGame: %s%n", ellipsis(suite, 53));
                 System.out.format("%s%n", horizontalRule('-'));
@@ -100,7 +100,7 @@ public class PerftCommand implements Callable<Integer> {
                 final int[] moves = suite.moves();
 
                 game.ensureCapacity(moves.length);
-                game.setStart(board.position(), board.turn());
+                game.setStart(board);
 
                 for (int move : moves) {
                     if (game.hasEnded() == false) {

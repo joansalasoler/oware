@@ -121,8 +121,6 @@ public class BattleCommand implements Callable<Integer> {
      */
     public void runTournament() throws Exception {
         RoundRobin<BenchPlayer> pairer = new RoundRobin<>(players);
-        Object position = board.position();
-        int turn = board.turn();
 
         if (matches <= 0 && rounds >= 1) {
             int length = players.length;
@@ -148,7 +146,7 @@ public class BattleCommand implements Callable<Integer> {
 
             south.startNewGame();
             north.startNewGame();
-            game.setStart(position, turn);
+            game.setStart(board);
 
             while (!game.hasEnded()) {
                 player.startPondering(game);

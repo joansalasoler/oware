@@ -24,10 +24,10 @@ import com.joansala.engine.Leaves;
 /**
  * A decorated endgames book that accumulates statistics.
  */
-public final class BenchLeaves implements Leaves {
+public final class BenchLeaves implements Leaves<Game> {
 
     /** Decorated leaves instance */
-    private Leaves leaves;
+    private Leaves<Game> leaves;
 
     /** Statistics accumulator */
     private BenchStats stats;
@@ -36,14 +36,14 @@ public final class BenchLeaves implements Leaves {
     /**
      * Decorates an engames book object.
      */
-    public BenchLeaves(BenchStats stats, Leaves leaves) {
+    public BenchLeaves(BenchStats stats, Leaves<Game> leaves) {
         this.stats = stats;
         this.leaves = leaves;
     }
 
 
     /** {@inheritDoc} */
-    public Leaves cast() {
+    public Leaves<Game> cast() {
         return leaves;
     }
 

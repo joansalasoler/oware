@@ -118,7 +118,7 @@ public class BenchCommand implements Callable<Integer> {
                 int[] moves = suite.moves();
 
                 game.ensureCapacity(moves.length);
-                game.setStart(board.position(), board.turn());
+                game.setStart(board);
 
                 engine.newMatch();
                 benchmark(engine, game);
@@ -176,9 +176,10 @@ public class BenchCommand implements Callable<Integer> {
      * @param inject    Class injector
      * @return          Decorated cache or {@code null}
      */
+    @SuppressWarnings("unchecked")
     private BenchCache createCache(BenchStats stats, Injector injector) {
         try {
-            Cache cache = injector.getInstance(Cache.class);
+            Cache<Game> cache = injector.getInstance(Cache.class);
             return new BenchCache(stats, cache);
         } catch (ConfigurationException e) {}
 
@@ -193,9 +194,10 @@ public class BenchCommand implements Callable<Integer> {
      * @param inject    Class injector
      * @return          Decorated leaves or {@code null}
      */
+    @SuppressWarnings("unchecked")
     private BenchLeaves createLeaves(BenchStats stats, Injector injector) {
         try {
-            Leaves leaves = injector.getInstance(Leaves.class);
+            Leaves<Game> leaves = injector.getInstance(Leaves.class);
             return new BenchLeaves(stats, leaves);
         } catch (ConfigurationException e) {}
 
@@ -241,8 +243,8 @@ public class BenchCommand implements Callable<Integer> {
      */
     private String formatSetup() {
         Game game = this.game;
-        Cache cache = this.cache;
-        Leaves leaves = this.leaves;
+        Cache<Game> cache = this.cache;
+        Leaves<Game> leaves = this.leaves;
 
         if (game instanceof BenchGame) {
             game = this.game.cast();

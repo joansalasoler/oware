@@ -30,7 +30,7 @@ import com.joansala.engine.base.*;
 public class DOE extends BaseEngine {
 
     /** Factors the amount of exploration of the tree */
-    public static final double DEFAULT_BIAS = 0.353;
+    public static final double DEFAULT_BIAS = 0.707;
 
     /** Executes evaluations on a thread pool */
     private final DOEExecutor executor;

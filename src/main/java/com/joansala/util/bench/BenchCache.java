@@ -23,10 +23,10 @@ import com.joansala.engine.Game;
 /**
  * A decorated cache that accumulates statistics.
  */
-public final class BenchCache implements Cache {
+public final class BenchCache implements Cache<Game> {
 
     /** Decorated cache instance */
-    private Cache cache;
+    private Cache<Game> cache;
 
     /** Statistics accumulator */
     private BenchStats stats;
@@ -35,14 +35,14 @@ public final class BenchCache implements Cache {
     /**
      * Decorates a cache object.
      */
-    public BenchCache(BenchStats stats, Cache cache) {
+    public BenchCache(BenchStats stats, Cache<Game> cache) {
         this.stats = stats;
         this.cache = cache;
     }
 
 
     /** {@inheritDoc} */
-    public Cache cast() {
+    public Cache<Game> cast() {
         return cache;
     }
 

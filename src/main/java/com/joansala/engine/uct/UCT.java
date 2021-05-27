@@ -49,7 +49,7 @@ public class UCT extends BaseEngine implements HasLeaves {
     private static final int PRUNE_ITERATIONS = 20;
 
     /** Fallback empty endgames instance */
-    private final Leaves baseLeaves = new BaseLeaves();
+    private final Leaves<Game> baseLeaves = new BaseLeaves();
 
     /** Current computation root node */
     protected UCTNode root;
@@ -58,7 +58,7 @@ public class UCT extends BaseEngine implements HasLeaves {
     protected Game game = null;
 
     /** Endgame database */
-    protected Leaves leaves = null;
+    protected Leaves<Game> leaves = null;
 
     /** Exploration bias parameter */
     public double biasFactor = DEFAULT_BIAS;
@@ -134,7 +134,7 @@ public class UCT extends BaseEngine implements HasLeaves {
      * @param leaves    Leaves instance or {@code null}
      */
     @Override
-    @Inject public synchronized void setLeaves(Leaves leaves) {
+    @Inject public synchronized void setLeaves(Leaves<Game> leaves) {
         this.leaves = (leaves != null) ? leaves : baseLeaves;
     }
 

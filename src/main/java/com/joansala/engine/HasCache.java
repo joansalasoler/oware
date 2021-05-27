@@ -26,5 +26,5 @@ public interface HasCache {
     /**
      * Sets the cache to use.
      */
-    void setCache(Cache cache);
+    void setCache(Cache<Game> cache);
 }

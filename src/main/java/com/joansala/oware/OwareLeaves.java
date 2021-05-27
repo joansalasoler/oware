@@ -35,7 +35,7 @@ import static com.joansala.oware.OwareGame.*;
  * seeds are kept on main memory. To obtain the score of a position a
  * search must be performed first with the method {@code find}.</p>
  */
-public class OwareLeaves extends BaseBook implements Leaves {
+public class OwareLeaves extends BaseBook implements Leaves<OwareGame> {
 
     /** Default path to the endgames book binary file */
     public static final String LEAVES_PATH = "/oware-leaves.bin";
@@ -132,15 +132,6 @@ public class OwareLeaves extends BaseBook implements Leaves {
 
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean find(Game game) {
-        return find((OwareGame) game.cast());
-    }
-
-
-    /**
      * Searches the given game state on this database.
      *
      * If the game state is found updates the values of this class,
@@ -158,6 +149,7 @@ public class OwareLeaves extends BaseBook implements Leaves {
      * @param game      A game object
      * @return          If a score can be computed
      */
+    @Override
     public boolean find(OwareGame game) {
         int[] state = game.state();
 

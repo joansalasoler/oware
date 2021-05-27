@@ -41,7 +41,7 @@ package com.joansala.engine;
  * @author    Joan Sala Soler
  * @version   1.0.0
  */
-public interface Cache {
+public interface Cache<G extends Game> {
 
     /**
      * Returns the stored score value for the last position found.
@@ -84,7 +84,7 @@ public interface Cache {
      * @return  {@code true} if valid information for the position
      *          could be found; {@code false} otherwise.
      */
-    boolean find(Game game);
+    boolean find(G game);
 
 
     /**
@@ -97,7 +97,7 @@ public interface Cache {
      * @param flag   Flag for the game state
      * @param move   The best move found for the game state
      */
-    void store(Game game, int score, int move, int depth, int flag);
+    void store(G game, int score, int move, int depth, int flag);
 
 
     /**
