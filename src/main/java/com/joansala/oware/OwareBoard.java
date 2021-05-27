@@ -80,18 +80,10 @@ public class OwareBoard implements Board {
      *      {@code turn} parameters are not valid
      */
     public OwareBoard(int[] position, int turn) {
-        if (isTurn(turn) == false) {
-            throw new IllegalArgumentException(
-                "Game turn is not a valid");
-        }
-
-        if (isPosition(position) == false) {
-            throw new IllegalArgumentException(
-                "Position representation is not valid");
-        }
-
+        validateTurn(turn);
+        validatePosition(position);
+        this.position = position.clone();
         this.turn = turn;
-        this.position = Arrays.copyOf(position, position.length);
     }
 
 
@@ -118,56 +110,12 @@ public class OwareBoard implements Board {
 
 
     /**
-     * Returns true if the turn parameter is a valid player identifier.
-     * A valid identifier must be either {@code Game.SOUTH} or
-     * {@code Game.NORTH}.
-     *
-     * @param turn  A player identifier
-     * @return      {@code true} if turn is valid
-     */
-    private static boolean isTurn(int turn) {
-        return turn == SOUTH || turn == NORTH;
-    }
-
-
-    /**
-     * Returns true if the array is a valid representation of a board
-     * position. A valid position contains exactly fourty eight seeds
-     * distributed in fourteen houses.
-     *
-     * @param position  An array representation of a position
-     * @return          {@code true} if position is valid
-     */
-    private static boolean isPosition(int[] position) {
-        if (position == null) {
-            return false;
-        }
-
-        if (position.length != 2 + BOARD_SIZE) {
-            return false;
-        }
-
-        int seeds = 0;
-
-        for (int i = 0; i < 2 + BOARD_SIZE; i++) {
-            seeds += position[i];
-
-            if (position[i] < 0) {
-                return false;
-            }
-        }
-
-        return (seeds == SEED_COUNT);
-    }
-
-
-    /**
      * Returns an array representation of the default start position
      * for an oware game.
      *
      * @return  Array representation of the position
      */
-    private static int[] startPosition() {
+    static int[] startPosition() {
         return Arrays.copyOf(START_POSITION, 2 + BOARD_SIZE);
     }
 
@@ -355,6 +303,68 @@ public class OwareBoard implements Board {
         }
 
         return move;
+    }
+
+
+    /**
+     * Returns true if the array is a valid representation of a board
+     * position. A valid position contains exactly fourty eight seeds
+     * distributed in fourteen houses.
+     *
+     * @param position  An array representation of a position
+     * @return          {@code true} if position is valid
+     */
+    private static boolean isPosition(int[] position) {
+        if (position == null) {
+            return false;
+        }
+
+        if (position.length != 2 + BOARD_SIZE) {
+            return false;
+        }
+
+        int seeds = 0;
+
+        for (int i = 0; i < 2 + BOARD_SIZE; i++) {
+            seeds += position[i];
+
+            if (position[i] < 0) {
+                return false;
+            }
+        }
+
+        return (seeds == SEED_COUNT);
+    }
+
+
+    /**
+     * Asserts a value represents a valid turn for this game.
+     *
+     * @throws IllegalArgumentException If not valid
+     */
+    private void validateTurn(int turn) {
+        if (turn != SOUTH && turn != NORTH) {
+            throw new IllegalArgumentException(
+                "Game turn is not a valid");
+        }
+    }
+
+
+    /**
+     * Asserts a value represents a valid position for this game.
+     *
+     * @throws IllegalArgumentException If not valid
+     */
+    private void validatePosition(Object position) {
+        if (position instanceof int[] == false) {
+            throw new IllegalArgumentException(
+                "Game position is not an array");
+        }
+
+        if (isPosition((int[]) position) == false) {
+            throw new IllegalArgumentException(
+                "Game position is not valid");
+        }
     }
 
 

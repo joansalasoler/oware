@@ -19,6 +19,7 @@ package com.joansala.oware;
  */
 
 import java.util.Arrays;
+import com.joansala.engine.Board;
 import com.joansala.engine.base.BaseGame;
 import com.joansala.util.hash.HashFunction;
 import com.joansala.util.hash.BinomialHash;
@@ -134,60 +135,26 @@ public class OwareGame extends BaseGame {
      * {@inheritDoc}
      */
     @Override
-    protected int[] startPosition() {
-        return START_POSITION;
+    public void setStart(Board board) {
+        setStart((OwareBoard) board);
     }
 
 
     /**
-     * {@inheritDoc}
+     * {@see #setStart(Board)}
      */
-    @Override
-    protected void resetState(Object position, int turn) {
+    public void setStart(OwareBoard board) {
         index = -1;
         capture = -1;
         move = NULL_MOVE;
 
-        setTurn(turn);
+        setTurn(board.turn());
         resetCursor();
 
-        state = Arrays.copyOf((int[]) position, 4 + BOARD_SIZE);
+        int[] position = board.position();
+        state = Arrays.copyOf(position, 4 + BOARD_SIZE);
         empty = computeEmpty();
         hash = computeHash();
-    }
-
-
-    /**
-     * Returns true if the array is a valid representation of a board
-     * position. A valid position contains exactly fourty eight seeds
-     * distributed in fourteen houses.
-     *
-     * @param position  An array representation of a position
-     * @return          {@code true} if position is valid
-     */
-    @Override
-    protected boolean isPosition(Object position) {
-        final int[] positionArray = (int[]) position;
-
-        if (positionArray == null) {
-            return false;
-        }
-
-        if (positionArray.length != 2 + BOARD_SIZE) {
-            return false;
-        }
-
-        int seeds = 0;
-
-        for (int i = 0; i < 2 + BOARD_SIZE; i++) {
-            seeds += positionArray[i];
-
-            if (positionArray[i] < 0) {
-                return false;
-            }
-        }
-
-        return (seeds == SEED_COUNT);
     }
 
 

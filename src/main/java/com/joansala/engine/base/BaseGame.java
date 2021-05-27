@@ -75,7 +75,7 @@ public abstract class BaseGame implements Game {
         this.move = Game.NULL_MOVE;
         this.moves = new int[capacity];
         this.capacity = capacity;
-        this.setStart(startPosition(), Game.SOUTH);
+        this.setStart(rootBoard());
         this.hash = computeHash();
     }
 
@@ -86,32 +86,6 @@ public abstract class BaseGame implements Game {
      * @return          Unique hash code
      */
     protected abstract long computeHash();
-
-
-    /**
-     * Sets a new initial position and turn for this game.
-     *
-     * @param position  Start position
-     * @param turn      Start turn
-     */
-    protected abstract void resetState(Object position, int turn);
-
-
-    /**
-     * Obtain the initial position of the game.
-     *
-     * @return          New position object
-     */
-    protected abstract Object startPosition();
-
-
-    /**
-     * Check if an object is a valid position for this game.
-     *
-     * @param position  Position instance
-     * @return          If position is valid
-     */
-    protected abstract boolean isPosition(Object position);
 
 
     /**
@@ -201,6 +175,13 @@ public abstract class BaseGame implements Game {
      * {@inheritDoc}
      */
     @Override
+    public abstract void setStart(Board board);
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void endMatch() {
         // Does nothing
     }
@@ -248,25 +229,6 @@ public abstract class BaseGame implements Game {
     @Override
     public int infinity() {
         return MAX_SCORE;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setStart(Board board) {
-        setStart(board.position(), board.turn());
-    }
-
-
-    /**
-     * Sets the start position and turn.
-     */
-    protected void setStart(Object position, int turn) {
-        validateTurn(turn);
-        validatePosition(position);
-        resetState(position, turn);
     }
 
 
@@ -339,31 +301,5 @@ public abstract class BaseGame implements Game {
     @Override
     public Game cast() {
         return this;
-    }
-
-
-    /**
-     * Asserts a value represents a valid turn for this game.
-     *
-     * @throws IllegalArgumentException If not valid
-     */
-    protected void validateTurn(int turn) {
-        if (turn != SOUTH && turn != NORTH) {
-            throw new IllegalArgumentException(
-                "Game turn is not a valid");
-        }
-    }
-
-
-    /**
-     * Asserts a value represents a valid position for this game.
-     *
-     * @throws IllegalArgumentException If not valid
-     */
-    protected void validatePosition(Object position) {
-        if (isPosition(position) == false) {
-            throw new IllegalArgumentException(
-                "Game position is not valid");
-        }
     }
 }
