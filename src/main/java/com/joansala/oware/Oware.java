@@ -71,6 +71,12 @@ final class Oware {
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0
     };
 
+    /** Indexed moves strings */
+    static final String[] MOVES = {
+        "A", "B", "C", "D", "E", "F",
+        "a", "b", "c", "d", "e", "f"
+    };
+
     /** Used to determine the pit where a seeding lands. Helps in
         determining when a move could be a capture */
     static final int[][] REAPER = {

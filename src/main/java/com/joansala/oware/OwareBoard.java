@@ -19,65 +19,43 @@ package com.joansala.oware;
  */
 
 import java.util.Arrays;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.joansala.engine.Board;
 import static com.joansala.oware.OwareGame.*;
 import static com.joansala.oware.Oware.*;
 
 
 /**
- * Represents a valid mancala board for an oware game. A valid position
- * contains a maximum of 48 seeds, distributed in 12 pits plus the
- * captured seeds by each of the two players.
+ * Oware board representation.
  *
- * @author    Joan Sala Soler
- * @version   1.0.0
+ * Encapsulates a game position and turn. It also provides methods to convert
+ * the board and the moves performed on it between its textual and numeric
+ * representations.
  */
 public class OwareBoard implements Board {
 
-    /** Position notation format pattern */
-    private static Pattern boardPattern = Pattern.compile(
-        "((?:[1-4]?[0-9]-){14})(S|N)");
-
-    /** Moves notation format pattern */
-    private static Pattern movesPattern = Pattern.compile(
-        "([A-F]([a-f][A-F])*[a-f]?)|([a-f]([A-F][a-f])*[A-F]?)");
-
-    /** Stores seeds distribution on the board and captured seeds */
-    private int[] position;
-
-    /** Indicates which player must move on the current position */
+    /** Player to move */
     private int turn;
+
+    /** Board position state */
+    private int[] position;
 
 
     /**
-     * Instantiates a new {@code OwareBoard} object with the default
-     * position and turn for an oware game.
+     * Creates a new board for the start position.
      */
     public OwareBoard() {
         this.turn = SOUTH;
-        this.position = startPosition();
+        this.position = rootPosition();
     }
 
 
     /**
-     * Instantiates a new {@code OwareBoard} object containing the specified
-     * position and turn.
+     * Creates a new board instance.
      *
-     * <p>Turn must be either {@code Game.SOUTH} or {@code Game.NORTH}.
-     * A position is represented by an int array where the array indices
-     * 0 to 5 represent the number of seeds on each of the south player
-     * pits, indices 6 to 11 the number of seeds on north player's pits
-     * and indices 12 and 13 are the number of seed captured by each
-     * player.</p>
+     * @param position      Position array
+     * @param turn          Player to move
      *
-     * @param position  The position of the board
-     * @param turn      The player that is to move
-     *
-     * @throws IllegalArgumentException  if the {@code postion} or
-     *      {@code turn} parameters are not valid
+     * @throws IllegalArgumentException
      */
     public OwareBoard(int[] position, int turn) {
         validateTurn(turn);
@@ -88,20 +66,16 @@ public class OwareBoard implements Board {
 
 
     /**
-     * Returns a copy of the position array stored on the current object
-     *
-     * @return   The position array
+     * {@inheritDoc}
      */
     @Override
     public int[] position() {
-        return Arrays.copyOf(position, position.length);
+        return position.clone();
     }
 
 
     /**
-     * Returns which player is to move for the board position
-     *
-     * @return   The player to move
+     * {@inheritDoc}
      */
     @Override
     public int turn() {
@@ -110,153 +84,51 @@ public class OwareBoard implements Board {
 
 
     /**
-     * Returns an array representation of the default start position
-     * for an oware game.
-     *
-     * @return  Array representation of the position
-     */
-    static int[] startPosition() {
-        return Arrays.copyOf(START_POSITION, 2 + BOARD_SIZE);
-    }
-
-
-    /**
-     * Converts a board notation to a board object.
-     *
-     * <p>A board notation is composed of 14 decimal numbers in the range
-     * [0-48] and a letter in the range (S|N) separated by minus signs. The
-     * first twelve bytes represent south and north houses from the left
-     * most house on south to the right most house on north. The next two
-     * bytes represent south and north stores respectively and the letter
-     * represents the player to move on the position.</p>
-     *
-     * @param notation  A valid board notation
-     * @throws IllegalArgumentException If the board notation is not valid
-     */
-    @Override
-    public OwareBoard toBoard(String notation) {
-        Matcher matcher = boardPattern.matcher(notation);
-
-        if (matcher.matches() == false) {
-            throw new IllegalArgumentException(
-                "Position notation is not valid");
-        }
-
-        int turn = SOUTH;
-        int[] position = new int[2 + BOARD_SIZE];
-
-        if ("N".equals(matcher.group(2))) {
-            turn = NORTH;
-        }
-
-        String[] houses = matcher.group(1).split("-");
-
-        for (int i = 0; i < 2 + BOARD_SIZE; i++) {
-            position[i] = Integer.parseInt(houses[i]);
-        }
-
-        return new OwareBoard(position, turn);
-    }
-
-
-    /**
-     * Converts this board object to its equivalent notation.
-     *
-     * @return      String representation of this board
-     */
-    @Override
-    public String toNotation() {
-        StringBuilder sb = new StringBuilder();
-
-        for (int house : position) {
-            sb.append(house);
-            sb.append('-');
-        }
-
-        sb.append((turn == SOUTH) ? 'S' : 'N');
-
-        return sb.toString();
-    }
-
-
-    /**
-     * Converts an integer representation of one or more moves to their
-     * algebraic representation.
-     *
-     * @param moves Moves array
-     * @return      Moves notation
-     * @throws IllegalArgumentException if a move is not valid
-     */
-    @Override
-    public String toAlgebraic(int[] moves) {
-        StringBuilder sb = new StringBuilder();
-
-        for (int move : moves) {
-            sb.append(toCharacter(move));
-        }
-
-        return sb.toString();
-    }
-
-
-    /**
-     * Converts an integer representation of a move to its algebraic
-     * representation.
-     *
-     * @param move  A move representation
-     * @return      A move notation
-     * @throws IllegalArgumentException if the move is not valid
+     * {@inheritDoc}
      */
     @Override
     public String toAlgebraic(int move) {
-        return String.valueOf(toCharacter(move));
+        validateMove(move);
+        return MOVES[move];
     }
 
 
     /**
-     * Converts an integer representation of a move to its algebraic
-     * representation.
-     *
-     * @param move  A move representation
-     * @return      A move notation
-     * @throws IllegalArgumentException if the move is not valid
+     * {@inheritDoc}
      */
-    private static char toCharacter(int move) {
-        if (move < 0 || move > BOARD_SIZE - 1) {
-            throw new IllegalArgumentException(
-                "Not a valid move representation");
+    @Override
+    public String toAlgebraic(int[] moves) {
+        StringBuilder builder = new StringBuilder();
+
+        for (int move : moves) {
+            builder.append(toAlgebraic(move));
         }
 
-        return (char) (move < NORTH_LEFT ?
-            move + 'A' : move + 'a' - NORTH_LEFT);
+        return builder.toString();
     }
 
 
     /**
-     * Converts an alphabetic move notation to its integer array moves
-     * representation. A move notation is a sequence of chars in the
-     * range [A-F] for south and [a-f] for north where each char
-     * represents the house from where the move is performed.
-     *
-     * @param notation  Move notation
-     * @return          Array representation of the moves
-     * @throws IllegalArgumentException If the notation does not
-     *                  represent a valid move sequence
+     * {@inheritDoc}
+     */
+    @Override
+    public int toMove(String notation) {
+        int move = Arrays.binarySearch(MOVES, notation);
+        validateMove(move);
+        return move;
+    }
+
+
+    /**
+     * {@inheritDoc}
      */
     @Override
     public int[] toMoves(String notation) {
-        Matcher matcher = movesPattern.matcher(notation);
+        String[] notations = notation.split("");
+        int[] moves = new int[notations.length];
 
-        if (matcher.matches() == false) {
-            throw new IllegalArgumentException(
-                "Moves notation is not valid");
-        }
-
-        int[] moves = new int[notation.length()];
-
-        for (int i = 0; i < notation.length(); i++) {
-            char move = notation.charAt(i);
-            moves[i] = toMove(move);
+        for (int i = 0; i < notations.length; i++) {
+            moves[i] = toMove(notations[i]);
         }
 
         return moves;
@@ -264,76 +136,86 @@ public class OwareBoard implements Board {
 
 
     /**
-     * Converts a move form its algebraic notation to a numeric
-     * representation.
-     *
-     * @param notation  Algebraic notation of the move
-     * @return          Numeric representation of the move
-     * @throws IllegalArgumentException  If the notation is not valid
+     * {@inheritDoc}
      */
     @Override
-    public int toMove(String notation) {
-        if (notation.length() != 1) {
-            throw new IllegalArgumentException(
-                "Not a valid move notation");
-        }
-
-        return toMove(notation.charAt(0));
-    }
-
-
-    /**
-     * Converts a move from its alphabetic notation to a numeric
-     * representation.
-     *
-     * @param notation  Algebraic notation of the move
-     * @return          Numeric representation of the move
-     * @throws IllegalArgumentException  If the notation is not valid
-     */
-    private static int toMove(char notation) {
-        int move = NULL_MOVE;
-
-        if (notation >= 'a' && notation <= 'f') {
-            move = notation - 'a' + NORTH_LEFT;
-        } else if (notation >= 'A' && notation <= 'F') {
-            move = notation - 'A';
-        } else {
-            throw new IllegalArgumentException(
-                "Not a valid move notation");
-        }
-
-        return move;
-    }
-
-
-    /**
-     * Returns true if the array is a valid representation of a board
-     * position. A valid position contains exactly fourty eight seeds
-     * distributed in fourteen houses.
-     *
-     * @param position  An array representation of a position
-     * @return          {@code true} if position is valid
-     */
-    private static boolean isPosition(int[] position) {
-        if (position == null) {
-            return false;
-        }
-
-        if (position.length != 2 + BOARD_SIZE) {
-            return false;
-        }
-
-        int seeds = 0;
+    public OwareBoard toBoard(String notation) {
+        String[] parts = notation.split("-");
+        int[] position = new int[2 + BOARD_SIZE];
+        int turn = "S".equals(parts[14]) ? SOUTH : NORTH;
 
         for (int i = 0; i < 2 + BOARD_SIZE; i++) {
-            seeds += position[i];
+            position[i] = Integer.parseInt(parts[i]);
+        }
 
-            if (position[i] < 0) {
-                return false;
+        return new OwareBoard(position, turn);
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toNotation() {
+        StringBuilder builder = new StringBuilder();
+
+        for (int seeds : position) {
+            builder.append(seeds);
+            builder.append('-');
+        }
+
+        char player = (turn == SOUTH) ? 'S' : 'N';
+        builder.append(player);
+
+        return builder.toString();
+    }
+
+
+    /**
+     * Array representation for the start position.
+     *
+     * @return      New position array
+     */
+    private static int[] rootPosition() {
+        final int length = 2 + BOARD_SIZE;
+        final int[] position = START_POSITION;
+        return Arrays.copyOf(position, length);
+    }
+
+
+    /**
+     * Check is an array represents a valid oware position.
+     *
+     * @param position      Position array
+     * @return              {@code true} if valid
+     */
+    private static boolean isPosition(int[] position) {
+        int count = 0;
+
+        if (position.length == 2 + BOARD_SIZE) {
+            for (int i = 0; i < 2 + BOARD_SIZE; i++) {
+                if (position[i] >= 0) {
+                    count += position[i];
+                } else {
+                    return false;
+                }
             }
         }
 
-        return (seeds == SEED_COUNT);
+        return (count == SEED_COUNT);
+    }
+
+
+    /**
+     * Asserts a value represents a valid move for this game.
+     *
+     * @throws IllegalArgumentException If not valid
+     */
+    private static void validateMove(int move) {
+        if (move < SOUTH_LEFT || move > NORTH_RIGHT) {
+            throw new IllegalArgumentException(
+                "Move is not a valid");
+        }
     }
 
 
@@ -342,10 +224,10 @@ public class OwareBoard implements Board {
      *
      * @throws IllegalArgumentException If not valid
      */
-    private void validateTurn(int turn) {
+    private static void validateTurn(int turn) {
         if (turn != SOUTH && turn != NORTH) {
             throw new IllegalArgumentException(
-                "Game turn is not a valid");
+                "Game turn is not valid");
         }
     }
 
@@ -355,7 +237,7 @@ public class OwareBoard implements Board {
      *
      * @throws IllegalArgumentException If not valid
      */
-    private void validatePosition(Object position) {
+    private static void validatePosition(Object position) {
         if (position instanceof int[] == false) {
             throw new IllegalArgumentException(
                 "Game position is not an array");
