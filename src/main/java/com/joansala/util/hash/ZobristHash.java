@@ -18,6 +18,8 @@ package com.joansala.util.hash;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import java.util.Random;
+
 
 /**
  * Zobrist hashing function.
@@ -52,35 +54,13 @@ public class ZobristHash implements HashFunction {
      * Precomputes the binomial coefficients table.
      */
     private void initialize() {
+        Random random = new Random();
+
         for (int c = 0; c < count; c++) {
             for (int i = 0; i < length; i++) {
-                final int k = count - c - 1;
-                randoms[c][i] = binomial(k + i + 1, k);
+                randoms[c][i] = random.nextLong();
             }
         }
-    }
-
-
-    /**
-     * Computes the binomial coefficient C(n, k).
-     *
-     * @param n     Number of objects
-     * @param k     Numner of choices
-     * @return      Binomial coeficient
-     */
-    private static long binomial(int n, int k) {
-        long value = 1L;
-
-        if (k > n - k) {
-            k = n - k;
-        }
-
-        for (int i = 0; i < k; i++) {
-            value *= (n - i);
-            value /= (i + 1);
-        }
-
-        return value;
     }
 
 
