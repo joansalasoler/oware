@@ -80,6 +80,22 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
     /**
      * {@inheritDoc}
      */
+    public Cache<Game> getCache() {
+        return cache;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    public Leaves<Game> getLeaves() {
+        return leaves;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public synchronized int getPonderMove(Game game) {
         int move = Game.NULL_MOVE;

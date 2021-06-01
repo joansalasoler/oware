@@ -88,6 +88,14 @@ public class UCT extends BaseEngine implements HasLeaves {
     /**
      * {@inheritDoc}
      */
+    public Leaves<Game> getLeaves() {
+        return leaves;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getPonderMove(Game game) {
         long hash = game.hash();

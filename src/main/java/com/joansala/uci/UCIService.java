@@ -55,8 +55,11 @@ public class UCIService {
     /** Opening book */
     private Roots<Game> roots = null;
 
-    /** Transposition table */
+    /** Engine's transposition table */
     private Cache<Game> cache = null;
+
+    /** Engine's endgames database */
+    private Leaves<Game> leaves = null;
 
     /** Last info shown for the current computation */
     private String lastInfo = null;
@@ -91,6 +94,9 @@ public class UCIService {
     /** If set to true the engine will use its own book */
     private volatile boolean ownBook = true;
 
+    /** If set the engine will use its endgames database */
+    private volatile boolean useLeaves = true;
+
     /** If set to true the time for next computation will be infinite */
     private volatile boolean infinite = false;
 
@@ -108,6 +114,14 @@ public class UCIService {
         this.game = game;
         this.engine = engine;
         this.rootBoard = game.rootBoard();
+
+        if (engine instanceof HasCache) {
+            cache = ((HasCache) engine).getCache();
+        }
+
+        if (engine instanceof HasLeaves) {
+            leaves = ((HasLeaves) engine).getLeaves();
+        }
     }
 
 
@@ -128,24 +142,6 @@ public class UCIService {
      */
     public synchronized void setInfinity(int score) {
         this.infinity = score;
-    }
-
-
-    /**
-     * Sets the transposition table to use by the service.
-     *
-     * This must be a reference to the same cache object the engine is
-     * using in order for the service to work properly. Note that without
-     * a cache this service won't be able to output any engine search
-     * information like the principal variation or the move to ponder.
-     *
-     * @param cache     A cache object or {@code null} to disable
-     *                  the transposition table
-     */
-    @Inject(optional=true)
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public synchronized void setCache(Cache cache) {
-        this.cache = cache;
     }
 
 
@@ -316,6 +312,13 @@ public class UCIService {
 
             if (ownBook && !infinite) {
                 bestMove = getBookMove(game);
+            }
+
+            // Enable or disable the endgames database
+
+            if (engine instanceof HasLeaves) {
+                HasLeaves e = (HasLeaves) engine;
+                e.setLeaves(useLeaves ? leaves : null);
             }
 
             // Use the engine to compute a move
@@ -503,6 +506,10 @@ public class UCIService {
         if (cache != null) {
             output("option name Hash type spin default " + currentHashSize +
                 " min " + minHashSize + " max " + maxHashSize);
+        }
+
+        if (leaves != null) {
+            output("option name UseLeaves type check default true");
         }
 
         // Show own book option only when the book is present
@@ -739,6 +746,20 @@ public class UCIService {
                 ownBook = false;
             } else {
                 showError("Invalid value for option OwnBook");
+            }
+
+            return;
+        }
+
+        // Use endgame tablebases
+
+        if (name.equals("UseLeaves")) {
+            if (value.equals("true")) {
+                useLeaves = true;
+            } else if (value.equals("false")) {
+                useLeaves = false;
+            } else {
+                showError("Invalid value for option UseLeaves");
             }
 
             return;

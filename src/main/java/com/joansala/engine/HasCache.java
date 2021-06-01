@@ -24,6 +24,12 @@ package com.joansala.engine;
 public interface HasCache {
 
     /**
+     * Obtains the cache in use.
+     */
+    Cache<Game> getCache();
+
+
+    /**
      * Sets the cache to use.
      */
     void setCache(Cache<Game> cache);
