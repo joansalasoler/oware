@@ -134,7 +134,9 @@ public class UCT extends BaseEngine implements HasLeaves {
      * @param leaves    Leaves instance or {@code null}
      */
     @Override
-    @Inject public synchronized void setLeaves(Leaves<Game> leaves) {
+    @Inject(optional=true)
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public synchronized void setLeaves(Leaves leaves) {
         this.leaves = (leaves != null) ? leaves : baseLeaves;
     }
 

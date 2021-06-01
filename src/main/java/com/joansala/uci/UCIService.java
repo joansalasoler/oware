@@ -143,7 +143,8 @@ public class UCIService {
      *                  the transposition table
      */
     @Inject(optional=true)
-    public synchronized void setCache(Cache<Game> cache) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public synchronized void setCache(Cache cache) {
         this.cache = cache;
     }
 
@@ -155,7 +156,8 @@ public class UCIService {
      *                  the use of an opening book
      */
     @Inject(optional=true)
-    public synchronized void setRoots(Roots<Game> roots) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public synchronized void setRoots(Roots roots) {
         this.roots = roots;
     }
 

@@ -133,7 +133,8 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
      */
     @Override
     @Inject(optional=true)
-    public synchronized void setCache(Cache<Game> cache) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public synchronized void setCache(Cache cache) {
         this.cache = (cache != null) ? cache : baseCache;
     }
 
@@ -146,7 +147,8 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
      */
     @Override
     @Inject(optional=true)
-    public synchronized void setLeaves(Leaves<Game> leaves) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public synchronized void setLeaves(Leaves leaves) {
         this.leaves = (leaves != null) ? leaves : baseLeaves;
     }
 
