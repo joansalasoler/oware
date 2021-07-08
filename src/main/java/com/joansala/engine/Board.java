@@ -47,16 +47,6 @@ public interface Board {
 
 
     /**
-     * Converts the current state of a game object to its board object
-     * representation.
-     *
-     * @param game  A game object
-     * @throws IllegalArgumentException If the game is not valid
-     */
-    Board toBoard(Game game);
-
-
-    /**
      * Converts a board notation to a board object.
      *
      * @param notation  A board notation

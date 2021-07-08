@@ -1,6 +1,7 @@
-package com.joansala.engine;
+package com.joansala.util.hash;
 
 /*
+ * Aalina oware engine.
  * Copyright (c) 2021 Joan Sala Soler <contact@joansala.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -19,18 +20,16 @@ package com.joansala.engine;
 
 
 /**
- * An object that uses a cache.
+ * An object that implements a hash function.
  */
-public interface HasCache {
+@FunctionalInterface
+public interface HashFunction {
 
     /**
-     * Obtains the cache in use.
+     * Computes the hash of an object.
+     *
+     * @param state     An object
+     * @return          Hash value
      */
-    Cache<Game> getCache();
-
-
-    /**
-     * Sets the cache to use.
-     */
-    void setCache(Cache<Game> cache);
+    long hash(Object state);
 }

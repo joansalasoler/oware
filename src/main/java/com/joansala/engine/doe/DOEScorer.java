@@ -1,4 +1,4 @@
-package com.joansala.engine;
+package com.joansala.engine.doe;
 
 /*
  * Copyright (c) 2021 Joan Sala Soler <contact@joansala.com>
@@ -17,20 +17,15 @@ package com.joansala.engine;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import java.util.function.Function;
+
 
 /**
- * An object that uses a cache.
+ * A function that evaluates a game path.
  */
-public interface HasCache {
+public interface DOEScorer extends Function<int[], Integer> {
 
-    /**
-     * Obtains the cache in use.
-     */
-    Cache<Game> getCache();
+    /** {@inheritDoc} */
+    @Override Integer apply(int[] moves);
 
-
-    /**
-     * Sets the cache to use.
-     */
-    void setCache(Cache<Game> cache);
 }

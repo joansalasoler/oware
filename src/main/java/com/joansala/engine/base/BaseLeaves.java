@@ -1,4 +1,4 @@
-package com.joansala.engine;
+package com.joansala.engine.base;
 
 /*
  * Copyright (c) 2021 Joan Sala Soler <contact@joansala.com>
@@ -17,20 +17,22 @@ package com.joansala.engine;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import com.joansala.engine.Flag;
+import com.joansala.engine.Game;
+import com.joansala.engine.Leaves;
+
 
 /**
- * An object that uses a cache.
+ * An endgames database that does not contain any entries.
  */
-public interface HasCache {
+public class BaseLeaves implements Leaves<Game> {
 
-    /**
-     * Obtains the cache in use.
-     */
-    Cache<Game> getCache();
+    /** {@inheritDoc} */
+    @Override public int getScore() { return 0; }
 
+    /** {@inheritDoc} */
+    @Override public int getFlag() { return Flag.EMPTY; }
 
-    /**
-     * Sets the cache to use.
-     */
-    void setCache(Cache<Game> cache);
+    /** {@inheritDoc} */
+    @Override public boolean find(Game game) { return false; }
 }

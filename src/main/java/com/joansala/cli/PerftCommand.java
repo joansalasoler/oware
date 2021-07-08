@@ -18,6 +18,9 @@ package com.joansala.cli;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.concurrent.Callable;
 import com.google.inject.Inject;
@@ -34,17 +37,16 @@ import static com.joansala.engine.Game.NULL_MOVE;
  */
 @Command(
   name = "perft",
-  version = "1.2.1",
   description = "Count leaf nodes of a certain depth",
   mixinStandardHelpOptions = true
 )
-public final class PerftCommand implements Callable<Integer> {
+public class PerftCommand implements Callable<Integer> {
 
     /** Statistics accumulator */
     private BenchStats stats;
 
     /** Game board instance */
-    private Board parser;
+    private Board rootBoard;
 
     /** Game instance */
     private Game game;
@@ -56,13 +58,20 @@ public final class PerftCommand implements Callable<Integer> {
     private int maxDepth = Engine.DEFAULT_DEPTH;
 
 
+    @Option(
+      names = "--file",
+      description = "Benchmark suite file."
+    )
+    private File file;
+
+
     /**
      * Creates a new service.
      */
-    @Inject public PerftCommand(Board board, Game game) {
-        this.stats = new BenchStats();
-        this.parser = board;
+    @Inject public PerftCommand(Game game) {
         this.game = game;
+        this.stats = new BenchStats();
+        this.rootBoard = game.rootBoard();
     }
 
 
@@ -80,8 +89,9 @@ public final class PerftCommand implements Callable<Integer> {
      */
     public void runBenchmark() throws IOException {
         System.out.format("%s", formatSetup());
+        InputStream input = getInputStream();
 
-        try (GameScanner scanner = new GameScanner(parser)) {
+        try (GameScanner scanner = new GameScanner(rootBoard, input)) {
             scanner.forEachRemaining((suite) -> {
                 System.out.format("%nGame: %s%n", ellipsis(suite, 53));
                 System.out.format("%s%n", horizontalRule('-'));
@@ -90,7 +100,7 @@ public final class PerftCommand implements Callable<Integer> {
                 final int[] moves = suite.moves();
 
                 game.ensureCapacity(moves.length);
-                game.setStart(board.position(), board.turn());
+                game.setStart(board);
 
                 for (int move : moves) {
                     if (game.hasEnded() == false) {
@@ -111,6 +121,21 @@ public final class PerftCommand implements Callable<Integer> {
         } catch (Exception e) {
             throw e;
         }
+    }
+
+
+    /**
+     * Obtain the input stream from which to read positions. That is,
+     * either from standard input or the specified file.
+     */
+    private InputStream getInputStream() throws IOException {
+        InputStream input = System.in;
+
+        if (file instanceof File) {
+            input = new FileInputStream(file);
+        }
+
+        return input;
     }
 
 

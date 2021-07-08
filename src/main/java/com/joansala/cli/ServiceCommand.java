@@ -30,7 +30,6 @@ import com.joansala.uci.UCIService;
  */
 @Command(
   name = "service",
-  version = "1.2.1",
   description = "Starts the engine in UCI mode",
   mixinStandardHelpOptions = true
 )

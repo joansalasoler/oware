@@ -18,14 +18,12 @@ package com.joansala.oware;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 
-import com.joansala.engine.Book;
 import com.joansala.engine.Flag;
 import com.joansala.engine.Game;
 import com.joansala.engine.Leaves;
+import com.joansala.engine.base.BaseBook;
 import static com.joansala.oware.Oware.*;
 import static com.joansala.oware.OwareGame.*;
 
@@ -37,10 +35,7 @@ import static com.joansala.oware.OwareGame.*;
  * seeds are kept on main memory. To obtain the score of a position a
  * search must be performed first with the method {@code find}.</p>
  */
-public class OwareLeaves extends Book implements Leaves {
-
-    /** Header signature for the book format */
-    public static final String SIGNATURE = "Oware Endgames ";
+public class OwareLeaves extends BaseBook implements Leaves<OwareGame> {
 
     /** Default path to the endgames book binary file */
     public static final String LEAVES_PATH = "/oware-leaves.bin";
@@ -77,7 +72,7 @@ public class OwareLeaves extends Book implements Leaves {
      * Create a new endgames book instance.
      */
     public OwareLeaves() throws IOException {
-        this(getResourceFile(LEAVES_PATH), DEFAULT_SEEDS);
+        this(getResourcePath(LEAVES_PATH), DEFAULT_SEEDS);
     }
 
 
@@ -87,8 +82,8 @@ public class OwareLeaves extends Book implements Leaves {
      * @param file      book file
      * @param seeds     maximum number of seeds
      */
-    public OwareLeaves(File file, int seeds) throws IOException {
-        super(file, SIGNATURE);
+    public OwareLeaves(String path, int seeds) throws IOException {
+        super(path);
 
         if (seeds < 1 || seeds > MAX_SEEDS) {
             throw new IllegalArgumentException(
@@ -97,16 +92,23 @@ public class OwareLeaves extends Book implements Leaves {
 
         data = new byte[1 + OFFSETS[seeds]];
         minStoreSeeds = SEED_COUNT - seeds;
+        file.readFully(data);
+        file.close();
+    }
 
-        RandomAccessFile database = getDatabase();
-        database.readFully(data);
-        database.close();
+
+    /**
+     * Obtain a path to the given resource file.
+     */
+    private static String getResourcePath(String path) {
+        return BaseBook.class.getResource(path).getFile();
     }
 
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getFlag() {
         return flag;
     }
@@ -115,6 +117,7 @@ public class OwareLeaves extends Book implements Leaves {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getScore() {
         return score;
     }
@@ -125,14 +128,6 @@ public class OwareLeaves extends Book implements Leaves {
      */
     public int getCaptures() {
         return captures;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean find(Game game) {
-        return find((OwareGame) game.cast());
     }
 
 
@@ -154,6 +149,7 @@ public class OwareLeaves extends Book implements Leaves {
      * @param game      A game object
      * @return          If a score can be computed
      */
+    @Override
     public boolean find(OwareGame game) {
         int[] state = game.state();
 

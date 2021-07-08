@@ -1,4 +1,4 @@
-package com.joansala.engine.uct;
+package com.joansala.engine.doe;
 
 /*
  * Copyright (c) 2021 Joan Sala Soler <contact@joansala.com>
@@ -26,7 +26,7 @@ import com.joansala.engine.*;
 /**
  * Obtains search information from a tree of nodes.
  */
-public class UCTReport implements Report {
+public class DOEReport implements Report {
 
     /** Type of the collected score */
     private int flag = Flag.EXACT;
@@ -48,8 +48,8 @@ public class UCTReport implements Report {
      * @param engine    Search engine
      * @param root      Root node
      */
-    public UCTReport(UCT engine, Game game, UCTNode root) {
-        if (root != null && root.expanded) {
+    public DOEReport(DOE engine, Game game, DOENode root) {
+        if (root != null && root.child != null) {
             collectReport(engine, game, root);
         }
     }
@@ -97,14 +97,13 @@ public class UCTReport implements Report {
      * @param game      Game state
      * @param root      Root node
      */
-    public void collectReport(UCT engine, Game game, UCTNode root) {
-        final UCTNode bestChild = engine.pickBestChild(root);
+    public void collectReport(DOE engine, Game game, DOENode root) {
+        final DOENode bestChild = engine.pickBestChild(root);
         final List<Integer> moves = new LinkedList<>();
-        final int size = samplingSize(bestChild);
 
-        UCTNode child = bestChild;
+        DOENode child = bestChild;
 
-        while ((child = nextNode(engine, child, size)) != null) {
+        while ((child = nextNode(engine, child)) != null) {
             moves.add(child.move);
         }
 
@@ -124,26 +123,8 @@ public class UCTReport implements Report {
      *
      * @return          Best child or {@code null}
      */
-    private UCTNode nextNode(UCT engine, UCTNode node, double size) {
-        if (node.expanded && node.count >= size) {
-            return engine.pickBestChild(node);
-        }
-
-        return null;
-    }
-
-
-    /**
-     * Approximate minimum sampling size of a node.
-     *
-     * @param node      Root node
-     * @return          Sample size
-     */
-    private int samplingSize(UCTNode root) {
-        double n = 1.6641 * root.count;
-        double e = 1.6641 + 0.0001 * (root.count - 1);
-
-        return (int) (n / e);
+    private DOENode nextNode(DOE engine, DOENode node) {
+        return (node.child != null) ? engine.pickBestChild(node) : null;
     }
 
 

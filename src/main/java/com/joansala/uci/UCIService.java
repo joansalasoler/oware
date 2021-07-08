@@ -17,7 +17,6 @@ package com.joansala.uci;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.io.IOException;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 import java.util.function.Consumer;
@@ -44,12 +43,6 @@ public class UCIService {
     /** Performs move computations for a game */
     private Engine engine = null;
 
-    /** Opening book */
-    private Roots roots = null;
-
-    /** Transposition table */
-    private Cache cache = null;
-
     /** Game where the computations are performed */
     private Game game = null;
 
@@ -57,7 +50,16 @@ public class UCIService {
     private Board board = null;
 
     /** Contains the initial board of the game */
-    private Board start = null;
+    private Board rootBoard = null;
+
+    /** Opening book */
+    private Roots<Game> roots = null;
+
+    /** Engine's transposition table */
+    private Cache<Game> cache = null;
+
+    /** Engine's endgames database */
+    private Leaves<Game> leaves = null;
 
     /** Last info shown for the current computation */
     private String lastInfo = null;
@@ -92,6 +94,9 @@ public class UCIService {
     /** If set to true the engine will use its own book */
     private volatile boolean ownBook = true;
 
+    /** If set the engine will use its endgames database */
+    private volatile boolean useLeaves = true;
+
     /** If set to true the time for next computation will be infinite */
     private volatile boolean infinite = false;
 
@@ -101,15 +106,22 @@ public class UCIService {
      * engine will be used to perform move computations. The provided
      * board is the initial position for the game.
      *
-     * @param start     Start board position
      * @param game      A game object
      * @param engine    An engine object
      */
-    @Inject public UCIService(Board start, Game game, Engine engine) {
+    @Inject public UCIService(Game game, Engine engine) {
         this.board = null;
-        this.start = start;
         this.game = game;
         this.engine = engine;
+        this.rootBoard = game.rootBoard();
+
+        if (engine instanceof HasCache) {
+            cache = ((HasCache) engine).getCache();
+        }
+
+        if (engine instanceof HasLeaves) {
+            leaves = ((HasLeaves) engine).getLeaves();
+        }
     }
 
 
@@ -134,29 +146,13 @@ public class UCIService {
 
 
     /**
-     * Sets the transposition table to use by the service.
-     *
-     * This must be a reference to the same cache object the engine is
-     * using in order for the service to work properly. Note that without
-     * a cache this service won't be able to output any engine search
-     * information like the principal variation or the move to ponder.
-     *
-     * @param cache     A cache object or {@code null} to disable
-     *                  the transposition table
-     */
-    @Inject(optional=true)
-    public synchronized void setCache(Cache cache) {
-        this.cache = cache;
-    }
-
-
-    /**
      * Sets the openings book database to use.
      *
      * @param roots     A roots object or {@code null} to disable
      *                  the use of an opening book
      */
     @Inject(optional=true)
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public synchronized void setRoots(Roots roots) {
         this.roots = roots;
     }
@@ -245,7 +241,7 @@ public class UCIService {
         /**
          * The main bucle for the brain.
          */
-        public void run() {
+        @Override public void run() {
             final Consumer<Report> consumer = createSearchConsumer();
             engine.attachConsumer(consumer);
 
@@ -318,6 +314,13 @@ public class UCIService {
                 bestMove = getBookMove(game);
             }
 
+            // Enable or disable the endgames database
+
+            if (engine instanceof HasLeaves) {
+                HasLeaves e = (HasLeaves) engine;
+                e.setLeaves(useLeaves ? leaves : null);
+            }
+
             // Use the engine to compute a move
 
             if (bestMove == Game.NULL_MOVE) {
@@ -331,14 +334,14 @@ public class UCIService {
             StringBuilder response = new StringBuilder();
 
             response.append("bestmove ");
-            response.append(start.toAlgebraic(bestMove));
+            response.append(rootBoard.toAlgebraic(bestMove));
 
             performMove(game, bestMove);
             int ponderMove = getPonderMove(game);
 
             if (ponderMove != Game.NULL_MOVE) {
                 response.append(" ponder ");
-                response.append(start.toAlgebraic(ponderMove));
+                response.append(rootBoard.toAlgebraic(ponderMove));
             }
 
             output(response.toString());
@@ -379,7 +382,7 @@ public class UCIService {
 
             if (variation.length > 0) {
                 response.append(" pv ");
-                response.append(start.toAlgebraic(variation));
+                response.append(rootBoard.toAlgebraic(variation));
             }
 
             return response.toString();
@@ -412,14 +415,20 @@ public class UCIService {
          * @return      A move or {@code Game.NULL_MOVE}
          */
         private int getBookMove(Game game) {
-            try {
-                if (roots != null)
-                    return roots.pickBestMove(game);
-            } catch (IOException e) {
-                showError("Cannot select book move");
+            int move = Game.NULL_MOVE;
+
+            if (roots instanceof Roots == false) {
+                return move;
             }
 
-            return Game.NULL_MOVE;
+            try {
+                move = roots.pickBestMove(game);
+            } catch (Exception e) {
+                showError("Cannot select book move");
+                showError(e.getMessage());
+            }
+
+            return move;
         }
 
 
@@ -497,6 +506,10 @@ public class UCIService {
         if (cache != null) {
             output("option name Hash type spin default " + currentHashSize +
                 " min " + minHashSize + " max " + maxHashSize);
+        }
+
+        if (leaves != null) {
+            output("option name UseLeaves type check default true");
         }
 
         // Show own book option only when the book is present
@@ -630,17 +643,7 @@ public class UCIService {
 
         // Set the board position
 
-        if (board == null) {
-            game.setStart(
-                start.position(),
-                start.turn()
-            );
-        } else {
-            game.setStart(
-                board.position(),
-                board.turn()
-            );
-        }
+        game.setStart(board == null ? rootBoard : board);
 
         // Perform the moves on the board
 
@@ -748,6 +751,20 @@ public class UCIService {
             return;
         }
 
+        // Use endgame tablebases
+
+        if (name.equals("UseLeaves")) {
+            if (value.equals("true")) {
+                useLeaves = true;
+            } else if (value.equals("false")) {
+                useLeaves = false;
+            } else {
+                showError("Invalid value for option UseLeaves");
+            }
+
+            return;
+        }
+
         // Set draw search parameter
 
         if (name.equals("DrawSearch")) {
@@ -823,7 +840,7 @@ public class UCIService {
 
         if (boardNotation != null) {
             try {
-                board = start.toBoard(boardNotation);
+                board = rootBoard.toBoard(boardNotation);
             } catch (Exception e) {
                 showError(e.getMessage());
                 return;
@@ -834,7 +851,7 @@ public class UCIService {
 
         if (movesNotation != null) {
             try {
-                moves = start.toMoves(movesNotation);
+                moves = rootBoard.toMoves(movesNotation);
             } catch (Exception e) {
                 showError(e.getMessage());
                 return;
@@ -894,6 +911,4 @@ public class UCIService {
 
         return sb.toString();
     }
-
-
 }

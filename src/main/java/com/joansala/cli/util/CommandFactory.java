@@ -1,4 +1,4 @@
-package com.joansala.cli;
+package com.joansala.cli.util;
 
 /*
  * Aalina oware engine.
@@ -21,9 +21,8 @@ package com.joansala.cli;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
 import picocli.CommandLine.IFactory;
-
-import com.joansala.oware.OwareModule;
 
 
 /**
@@ -38,11 +37,13 @@ public class CommandFactory implements IFactory {
 
     /**
      * Creates a new factory.
+     *
+     * @param module        Game module instance
      */
-    public CommandFactory() {
+    public CommandFactory(Module module) {
         injector = Guice.createInjector(new AbstractModule() {
             @Override protected void configure() {
-                install(new OwareModule());
+                install(module);
             }
         });
     }

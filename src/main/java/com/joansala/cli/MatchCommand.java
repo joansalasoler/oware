@@ -29,6 +29,7 @@ import picocli.CommandLine.*;
 import com.joansala.engine.Board;
 import com.joansala.engine.Engine;
 import com.joansala.engine.Game;
+import com.joansala.cli.util.ProcessConverter;
 import com.joansala.uci.UCIPlayer;
 
 /**
@@ -36,11 +37,10 @@ import com.joansala.uci.UCIPlayer;
  */
 @Command(
   name = "match",
-  version = "1.2.1",
   description = "Play a match against the engine",
   mixinStandardHelpOptions = true
 )
-public final class MatchCommand implements Callable<Integer> {
+public class MatchCommand implements Callable<Integer> {
 
     /** UCI player instance */
     private UCIPlayer player;
@@ -105,6 +105,9 @@ public final class MatchCommand implements Callable<Integer> {
         try {
             player.startEngine();
             player.startNewGame();
+            player.setDepth(depth);
+            player.setMoveTime(moveTime);
+
             printWelcome(writer);
             printBoard(writer);
 
@@ -225,7 +228,7 @@ public final class MatchCommand implements Callable<Integer> {
      * @param writer    Terminal writer
      */
     private void printBoard(PrintWriter writer) {
-        writer.format("%n%s%n%n", parser.toBoard(game));
+        writer.format("%n%s%n%n", game.board());
         writer.flush();
     }
 

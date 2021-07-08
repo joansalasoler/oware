@@ -24,7 +24,13 @@ package com.joansala.engine;
 public interface HasLeaves {
 
     /**
+     * Obtains the endgames database in use.
+     */
+    Leaves<Game> getLeaves();
+
+
+    /**
      * Sets the endgames database to use.
      */
-    void setLeaves(Leaves leaves);
+    void setLeaves(Leaves<Game> leaves);
 }

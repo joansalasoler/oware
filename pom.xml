@@ -66,7 +66,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>com.joansala.cli.MainCommand</mainClass>
+              <mainClass>com.joansala.oware.OwareModule</mainClass>
               <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
             </manifest>
             <manifestEntries>
@@ -91,9 +91,31 @@
     </resources>
   </build>
 
+  <!-- Project analysis ================================================= -->
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <version>3.14.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jxr-plugin</artifactId>
+        <version>2.3</version>
+      </plugin>
+    </plugins>
+  </reporting>
+
   <!-- Project dependencies ============================================= -->
 
   <dependencies>
+    <dependency>
+      <groupId>berkeleydb</groupId>
+      <artifactId>je</artifactId>
+      <version>3.2.76</version>
+    </dependency>
     <dependency>
       <groupId>com.google.inject</groupId>
       <artifactId>guice</artifactId>

@@ -48,11 +48,11 @@ public class UCIClient {
     /** Game object */
     private Game game = null;
 
-    /** Contains the current start position and turn */
+    /** Contains the current position and turn */
     private Board board = null;
 
     /** Contains the initial board of the game */
-    private Board start = null;
+    private Board rootBoard = null;
 
     /** Current state of the engine */
     private State state = State.STOPPED;
@@ -110,13 +110,12 @@ public class UCIClient {
      * parameters an engine process, a starting board for the game and
      * a game object where moves will be performed.
      *
-     * @param start     Start board position
      * @param game      A game object
      */
-    @Inject public UCIClient(Board start, Game game) {
-        this.start = start;
-        this.board = start;
+    @Inject public UCIClient(Game game) {
         this.game = game;
+        this.board = game.rootBoard();
+        this.rootBoard = game.rootBoard();
         this.state = State.STOPPED;
         this.ready = true;
         this.uciok = true;
@@ -155,7 +154,7 @@ public class UCIClient {
      * @return  A board object
      */
     public Board getBoard() {
-        return start.toBoard(game);
+        return game.board();
     }
 
 
@@ -448,14 +447,15 @@ public class UCIClient {
         }
 
         board = ("startpos".equals(position)) ?
-            start : start.toBoard(position);
+            rootBoard : rootBoard.toBoard(position);
 
-        game.setStart(board.position(), board.turn());
+        game.setStart(board);
 
         // Obtain the moves for the received notation
 
-        if (notation != null)
-            moves = start.toMoves(notation);
+        if (notation != null) {
+            moves = rootBoard.toMoves(notation);
+        }
 
         // Change the game state only if all moves are legal
 
@@ -677,7 +677,7 @@ public class UCIClient {
 
         // Validate the received moves legality
 
-        int best = start.toMove(bestMove);
+        int best = rootBoard.toMove(bestMove);
         int ponder = Game.NULL_MOVE;
 
         if (!game.isLegal(best)) {
@@ -690,7 +690,7 @@ public class UCIClient {
 
         try {
             if (ponderMove != null) {
-                ponder = start.toMove(ponderMove);
+                ponder = rootBoard.toMove(ponderMove);
 
                 if (!game.isLegal(ponder)) {
                     throw new IllegalArgumentException(
@@ -902,8 +902,10 @@ public class UCIClient {
 
         if (input.hasNextLine()) {
             message = input.nextLine();
-            if (!message.isEmpty())
+
+            if (!message.isEmpty()) {
                 evaluateInput(message);
+            }
         } else {
             throw new IllegalStateException(
                 "Engine process is not responding");

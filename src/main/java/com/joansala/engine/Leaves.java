@@ -27,7 +27,7 @@ package com.joansala.engine;
  * @author    Joan Sala Soler
  * @version   1.1.0
  */
-public interface Leaves {
+public interface Leaves<G extends Game> {
 
     /**
      * Flag of the last found position.
@@ -54,5 +54,5 @@ public interface Leaves {
      * @return      {@code true} if an exact score for the position
      *              could be found; {@code false} otherwise
      */
-    public boolean find(Game game);
+    boolean find(G game);
 }

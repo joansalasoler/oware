@@ -26,7 +26,7 @@ import com.joansala.engine.Game;
 /**
  * Implements a transposition table for an oware game.
  */
-public class OwareCache implements Cache {
+public class OwareCache implements Cache<OwareGame> {
 
     /** Default size of the cache in bytes */
     public static final long CACHE_SIZE = 32 << 20;
@@ -109,6 +109,7 @@ public class OwareCache implements Cache {
      *
      * @return  Stored score value or zero
      */
+    @Override
     public int getScore() {
         return this.score;
     }
@@ -119,6 +120,7 @@ public class OwareCache implements Cache {
      *
      * @return  Stored move value or {@code Game.NULL_MOVE}
      */
+    @Override
     public int getMove() {
         return (this.move == 0x0F) ? Game.NULL_MOVE : move;
     }
@@ -129,6 +131,7 @@ public class OwareCache implements Cache {
      *
      * @return  Stored depth value or zero
      */
+    @Override
     public int getDepth() {
         return this.depth;
     }
@@ -139,6 +142,7 @@ public class OwareCache implements Cache {
      *
      * @return  Stored flag value or {@code Flag.EMPTY}
      */
+    @Override
     public int getFlag() {
         return this.flag;
     }
@@ -154,7 +158,8 @@ public class OwareCache implements Cache {
      * @return  {@code true} if valid information for the position
      *          could be found; {@code false} otherwise.
      */
-    public synchronized boolean find(Game game) {
+    @Override
+    public synchronized boolean find(OwareGame game) {
         final long mask = 0x00FFFFFFFFL;
         final long hash = game.hash();
         final long id = (hash >>> 12);
@@ -196,7 +201,8 @@ public class OwareCache implements Cache {
      *               an exact value or empty.
      * @param move   The best move found so far for the position
      */
-    public synchronized void store(Game game, int score, int move, int depth, int flag) {
+    @Override
+    public synchronized void store(OwareGame game, int score, int move, int depth, int flag) {
         final long mask = 0x300000000L;
         final long hash = game.hash();
 
@@ -228,6 +234,7 @@ public class OwareCache implements Cache {
      * positions as old entries. Must be called periodically to make
      * room for new entries to be stored.</p>
      */
+    @Override
     public synchronized void discharge() {
         stamp = (stamp + 0x100000000L) & 0x300000000L;
         reset = (reset + 0x100000000L) & 0x300000000L;
@@ -239,6 +246,7 @@ public class OwareCache implements Cache {
      *
      * @param memory  The new memory request in bytes
      */
+    @Override
     public synchronized void resize(long memory) {
         int capacity = toCapacity(memory);
 
@@ -255,6 +263,7 @@ public class OwareCache implements Cache {
     /**
      * Clears all the information stored in this transposition table.
      */
+    @Override
     public synchronized void clear() {
         this.score = 0;
         this.depth = 0;
@@ -272,6 +281,7 @@ public class OwareCache implements Cache {
      *
      * @return  Allocated bytes for the cache
      */
+    @Override
     public long size() {
         return capacity * SLOT_SIZE;
     }

@@ -48,7 +48,7 @@ public class CacheReport implements Report {
      * @param cache     Engine cache
      * @param move      Best move
      */
-    public CacheReport(Game game, Cache cache, int move) {
+    public CacheReport(Game game, Cache<Game> cache, int move) {
         if (cache != null && move != Game.NULL_MOVE) {
             collectReport(game, cache, move);
         }
@@ -58,6 +58,7 @@ public class CacheReport implements Report {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getDepth() {
         return depth;
     }
@@ -66,6 +67,7 @@ public class CacheReport implements Report {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getFlag() {
         return flag;
     }
@@ -74,6 +76,7 @@ public class CacheReport implements Report {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getScore() {
         return score;
     }
@@ -82,6 +85,7 @@ public class CacheReport implements Report {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int[] getVariation() {
         return variation;
     }
@@ -94,7 +98,7 @@ public class CacheReport implements Report {
      * @param cache     Engine's cache
      * @param bestMove  Best move found
      */
-    private void collectReport(Game game, Cache cache, int bestMove) {
+    private void collectReport(Game game, Cache<Game> cache, int bestMove) {
         game.makeMove(bestMove);
 
         // Ensure the game state is cached
@@ -140,7 +144,7 @@ public class CacheReport implements Report {
      *
      * @return          A move value or {@code Game.NULL_MOVE}
      */
-    private int nextMove(Game game, Cache cache) {
+    private int nextMove(Game game, Cache<Game> cache) {
         if (!game.hasEnded() && cache.find(game)) {
             if (cache.getFlag() == Flag.EXACT) {
                 return cache.getMove();

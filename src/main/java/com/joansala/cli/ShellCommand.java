@@ -30,6 +30,7 @@ import org.jline.builtins.Completers.TreeCompleter;
 import static org.jline.builtins.Completers.TreeCompleter.node;
 
 import com.joansala.engine.Board;
+import com.joansala.cli.util.ProcessConverter;
 import com.joansala.uci.UCIClient;
 
 

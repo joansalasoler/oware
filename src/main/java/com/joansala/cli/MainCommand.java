@@ -18,17 +18,17 @@ package com.joansala.cli;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import com.google.inject.Module;
 import picocli.CommandLine;
 import picocli.CommandLine.*;
+import com.joansala.cli.util.CommandFactory;
 
 
 /**
  * Parent of all the command line tools.
  */
 @Command(
-  name = "aalina",
-  version = "1.2.1",
-  description = "Aalina is an Oware game engine",
+  name = "main",
   mixinStandardHelpOptions = true,
   subcommands = {
       BattleCommand.class,
@@ -36,13 +36,22 @@ import picocli.CommandLine.*;
       MatchCommand.class,
       PerftCommand.class,
       ServiceCommand.class,
-      ShellCommand.class
+      ShellCommand.class,
+      TrainCommand.class
   }
 )
-public final class MainCommand {
-    public static void main(String[] args) throws Exception {
-        CommandFactory factory = new CommandFactory();
-        CommandLine c = new CommandLine(MainCommand.class, factory);
-        System.exit(c.execute(args));
+public class MainCommand {
+
+    /**
+     * Execute a command line interface for a module.
+     *
+     * @param module        Game module
+     * @param args          Command line arguments
+     * @return              Exit code
+     */
+    public int execute(Module module, String[] args) {
+        CommandFactory factory = new CommandFactory(module);
+        CommandLine main = new CommandLine(this, factory);
+        return main.execute(args);
     }
 }
