@@ -165,13 +165,13 @@ public class OwareLeaves extends BaseBook implements Leaves<OwareGame> {
         final int entry = data[hash];
         final int flag = (entry & 0x03);
 
-        this.flag = flag;
-        this.captures = (entry >> 2);
-        this.score = game.turn() * score(state);
-
         if (flag != Flag.EXACT && !game.wasCapture()) {
             return false;
         }
+
+        this.flag = flag;
+        this.captures = (entry >> 2);
+        this.score = game.turn() * evaluation(state);
 
         return true;
     }
@@ -234,8 +234,9 @@ public class OwareLeaves extends BaseBook implements Leaves<OwareGame> {
      * @param state         Game position
      * @return              A score value
      */
-    private int score(int[] state) {
-        return (flag == Flag.EXACT) ? outcome(state) : heuristic(state);
+    private int evaluation(int[] state) {
+        return (flag == Flag.EXACT) ?
+            outcome(state) : heuristic(state);
     }
 
 
