@@ -264,8 +264,10 @@ public class OwareGame extends BaseGame {
      */
     @Override
     public void endMatch() {
-        if (!hasLegalMoves() || isRepetition()) {
-            pushState();
+        boolean gather = !hasLegalMoves() || isRepetition();
+        pushState();
+
+        if (gather == true) {
             gatherSeeds();
             hash = computeHash();
             move = NULL_MOVE;
@@ -654,6 +656,8 @@ public class OwareGame extends BaseGame {
      * Gather the remaining seeds from the board.
      */
     private void gatherSeeds() {
+        empty = SOUTH_MASK | NORTH_MASK;
+
         for (int move = SOUTH_LEFT; move <= SOUTH_RIGHT; move++) {
             state[SOUTH_STORE] += state[move];
             state[move] = 0;
