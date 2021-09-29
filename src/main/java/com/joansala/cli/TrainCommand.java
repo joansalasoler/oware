@@ -96,7 +96,7 @@ public class TrainCommand implements Callable<Integer> {
     @Inject public TrainCommand(Injector injector) {
         this.injector = injector;
         this.rootGame = injector.getInstance(Game.class);
-        this.rootBoard = rootGame.rootBoard();
+        this.rootBoard = rootGame.getBoard();
     }
 
 
@@ -154,7 +154,7 @@ public class TrainCommand implements Callable<Integer> {
             Negamax engine = engines.poll();
 
             game.ensureCapacity(moves.length);
-            game.setStart(game.rootBoard());
+            game.setBoard(rootBoard);
 
             for (int move : moves) {
                 game.makeMove(move);

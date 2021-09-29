@@ -75,7 +75,7 @@ public abstract class BaseGame implements Game {
         this.move = Game.NULL_MOVE;
         this.moves = new int[capacity];
         this.capacity = capacity;
-        this.setStart(rootBoard());
+        this.setBoard(defaultBoard());
         this.hash = computeHash();
     }
 
@@ -89,10 +89,11 @@ public abstract class BaseGame implements Game {
 
 
     /**
-     * {@inheritDoc}
+     * Obtain the default start board of a game.
+     *
+     * @return      A board instance
      */
-    @Override
-    public abstract Board board();
+    public abstract Board defaultBoard();
 
 
     /**
@@ -175,7 +176,14 @@ public abstract class BaseGame implements Game {
      * {@inheritDoc}
      */
     @Override
-    public abstract void setStart(Board board);
+    public abstract Board getBoard();
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public abstract void setBoard(Board board);
 
 
     /**
@@ -284,6 +292,13 @@ public abstract class BaseGame implements Game {
 
         return Arrays.copyOf(moves, length);
     }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public abstract Board toBoard();
 
 
     /**

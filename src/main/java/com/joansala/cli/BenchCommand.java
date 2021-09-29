@@ -118,7 +118,7 @@ public class BenchCommand implements Callable<Integer> {
                 int[] moves = suite.moves();
 
                 game.ensureCapacity(moves.length);
-                game.setStart(board);
+                game.setBoard(board);
 
                 engine.newMatch();
                 benchmark(engine, game);

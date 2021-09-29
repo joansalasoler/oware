@@ -146,7 +146,7 @@ public class BattleCommand implements Callable<Integer> {
 
             south.startNewGame();
             north.startNewGame();
-            game.setStart(board);
+            game.setBoard(board);
 
             while (!game.hasEnded()) {
                 player.startPondering(game);

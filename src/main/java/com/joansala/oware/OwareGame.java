@@ -58,6 +58,9 @@ public class OwareGame extends BaseGame {
     /** Hash code generator */
     private static final HashFunction hasher = hashFunction();
 
+    /** Start position and turn */
+    private OwareBoard board;
+
     /** Index of the last capture move */
     private int capture;
 
@@ -135,26 +138,36 @@ public class OwareGame extends BaseGame {
      * {@inheritDoc}
      */
     @Override
-    public void setStart(Board board) {
-        setStart((OwareBoard) board);
+    public Board getBoard() {
+        return board;
     }
 
 
     /**
-     * {@see #setStart(Board)}
+     * {@inheritDoc}
      */
-    public void setStart(OwareBoard board) {
-        index = -1;
-        capture = -1;
-        move = NULL_MOVE;
+    @Override
+    public void setBoard(Board board) {
+        setBoard((OwareBoard) board);
+    }
+
+
+    /**
+     * {@see #setBoard(Board)}
+     */
+    public void setBoard(OwareBoard board) {
+        this.index = -1;
+        this.capture = -1;
+        this.move = NULL_MOVE;
 
         setTurn(board.turn());
         resetCursor();
 
         int[] position = board.position();
-        state = Arrays.copyOf(position, 4 + BOARD_SIZE);
-        empty = computeEmpty();
-        hash = computeHash();
+
+        this.state = Arrays.copyOf(position, 4 + BOARD_SIZE);
+        this.empty = computeEmpty();
+        this.board = board;
     }
 
 
@@ -216,17 +229,7 @@ public class OwareGame extends BaseGame {
      * {@inheritDoc}
      */
     @Override
-    public OwareBoard board() {
-        int[] position = Arrays.copyOf(state, 2 + BOARD_SIZE);
-        return new OwareBoard(position, turn);
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public OwareBoard rootBoard() {
+    public OwareBoard defaultBoard() {
         return new OwareBoard();
     }
 
@@ -247,6 +250,16 @@ public class OwareGame extends BaseGame {
     @Override
     public int contempt() {
         return CONTEMPT_SCORE;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OwareBoard toBoard() {
+        int[] position = Arrays.copyOf(state, 2 + BOARD_SIZE);
+        return new OwareBoard(position, turn);
     }
 
 

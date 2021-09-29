@@ -83,19 +83,9 @@ public interface Game {
 
 
     /**
-     * Board representation of the current game state.
-     *
-     * @return      A board instance
+     * Obtain the start board of this game.
      */
-    Board board();
-
-
-    /**
-     * Start board of a game.
-     *
-     * @return      A board instance
-     */
-    Board rootBoard();
+    Board getBoard();
 
 
     /**
@@ -107,7 +97,7 @@ public interface Game {
      * @throws IllegalArgumentException  if {@code turn} is not valid or
      *      {@code postion} is not a valid position representation
      */
-    void setStart(Board board);
+    void setBoard(Board board);
 
 
     /**
@@ -267,6 +257,14 @@ public interface Game {
      * @return  A legal moves array
      */
     int[] legalMoves();
+
+
+    /**
+     * Board representation of the current game state.
+     *
+     * @return      A board instance
+     */
+    Board toBoard();
 
 
     /**

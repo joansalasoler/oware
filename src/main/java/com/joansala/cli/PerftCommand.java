@@ -71,7 +71,7 @@ public class PerftCommand implements Callable<Integer> {
     @Inject public PerftCommand(Game game) {
         this.game = game;
         this.stats = new BenchStats();
-        this.rootBoard = game.rootBoard();
+        this.rootBoard = game.getBoard();
     }
 
 
@@ -100,7 +100,7 @@ public class PerftCommand implements Callable<Integer> {
                 final int[] moves = suite.moves();
 
                 game.ensureCapacity(moves.length);
-                game.setStart(board);
+                game.setBoard(board);
 
                 for (int move : moves) {
                     if (game.hasEnded() == false) {

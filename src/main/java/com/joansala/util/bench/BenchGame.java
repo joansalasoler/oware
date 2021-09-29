@@ -90,20 +90,20 @@ public final class BenchGame implements Game {
 
 
     /** {@inheritDoc} */
-    @Override public Board board() {
-        return game.board();
+    @Override public Board toBoard() {
+        return game.toBoard();
     }
 
 
     /** {@inheritDoc} */
-    @Override public Board rootBoard() {
-        return game.rootBoard();
+    @Override public Board getBoard() {
+        return game.getBoard();
     }
 
 
     /** {@inheritDoc} */
-    @Override public void setStart(Board board) {
-        game.setStart(board);
+    @Override public void setBoard(Board board) {
+        game.setBoard(board);
     }
 
 

@@ -113,7 +113,7 @@ public class UCIService {
         this.board = null;
         this.game = game;
         this.engine = engine;
-        this.rootBoard = game.rootBoard();
+        this.rootBoard = game.getBoard();
 
         if (engine instanceof HasCache) {
             cache = ((HasCache) engine).getCache();
@@ -643,7 +643,7 @@ public class UCIService {
 
         // Set the board position
 
-        game.setStart(board == null ? rootBoard : board);
+        game.setBoard(board == null ? rootBoard : board);
 
         // Perform the moves on the board
 

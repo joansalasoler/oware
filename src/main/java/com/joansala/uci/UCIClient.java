@@ -114,8 +114,8 @@ public class UCIClient {
      */
     @Inject public UCIClient(Game game) {
         this.game = game;
-        this.board = game.rootBoard();
-        this.rootBoard = game.rootBoard();
+        this.board = game.getBoard();
+        this.rootBoard = game.getBoard();
         this.state = State.STOPPED;
         this.ready = true;
         this.uciok = true;
@@ -154,7 +154,7 @@ public class UCIClient {
      * @return  A board object
      */
     public Board getBoard() {
-        return game.board();
+        return game.toBoard();
     }
 
 
@@ -449,7 +449,7 @@ public class UCIClient {
         board = ("startpos".equals(position)) ?
             rootBoard : rootBoard.toBoard(position);
 
-        game.setStart(board);
+        game.setBoard(board);
 
         // Obtain the moves for the received notation
 
