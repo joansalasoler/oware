@@ -167,6 +167,7 @@ public class OwareGame extends BaseGame {
 
         this.state = Arrays.copyOf(position, 4 + BOARD_SIZE);
         this.empty = computeEmpty();
+        this.hash = computeHash();
         this.board = board;
     }
 
