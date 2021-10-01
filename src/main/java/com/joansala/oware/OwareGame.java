@@ -371,17 +371,17 @@ public class OwareGame extends BaseGame {
      */
     @Override
     public int score() {
-        int score = 25 * (state[SOUTH_STORE] - state[NORTH_STORE]);
+        int score = TALLY_WEIGHT * (state[SOUTH_STORE] - state[NORTH_STORE]);
 
         for (int house = SOUTH_LEFT; house <= SOUTH_RIGHT; house++) {
             final int seeds = state[house];
 
             if (seeds > 12) {
-                score += 28;
+                score += ATTACK_WEIGHT;
             } else if (seeds == 0) {
-                score -= 54;
+                score += MOBILITY_WEIGHT;
             } else if (seeds < 3) {
-                score -= 36;
+                score += DEFENSE_WEIGHT;
             }
         }
 
@@ -389,11 +389,11 @@ public class OwareGame extends BaseGame {
             final int seeds = state[house];
 
             if (seeds > 12) {
-                score -= 28;
+                score -= ATTACK_WEIGHT;
             } else if (seeds == 0) {
-                score += 54;
+                score -= MOBILITY_WEIGHT;
             } else if (seeds < 3) {
-                score += 36;
+                score -= DEFENSE_WEIGHT;
             }
         }
 

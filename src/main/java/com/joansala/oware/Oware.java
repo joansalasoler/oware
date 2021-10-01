@@ -27,6 +27,10 @@ package com.joansala.oware;
  */
 final class Oware {
 
+    // -------------------------------------------------------------------
+    // Game logic constants
+    // -------------------------------------------------------------------
+
     /** Number of pits on the board */
     static final int BOARD_SIZE = 12;
 
@@ -54,6 +58,10 @@ final class Oware {
     /** Store house for north */
     static final int NORTH_STORE = 13;
 
+    // -------------------------------------------------------------------
+    // Bitboard masks
+    // -------------------------------------------------------------------
+
     /** South houses bitmask */
     static final int SOUTH_MASK = 0b000000111111;
 
@@ -66,6 +74,26 @@ final class Oware {
     /** Hash sign for positions were north is to move */
     static final long NORTH_SIGN = 0x00000000000L;
 
+    // -------------------------------------------------------------------
+    // Evaluation function weights
+    // -------------------------------------------------------------------
+
+    /** Weight of the captured seeds difference */
+    static final int TALLY_WEIGHT = 25;
+
+    /** Weight of houses that contain more than 12 seeds */
+    static final int ATTACK_WEIGHT = 28;
+
+    /** Weight of houses that contain 1 or 2 seeds */
+    static final int DEFENSE_WEIGHT = -36;
+
+    /** Weight of houses that do not contain any seeds */
+    static final int MOBILITY_WEIGHT = -54;
+
+    // -------------------------------------------------------------------
+    // Board definitions
+    // -------------------------------------------------------------------
+
     /** Default start position */
     static final int[] START_POSITION = {
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0
@@ -76,6 +104,10 @@ final class Oware {
         "A", "B", "C", "D", "E", "F",
         "a", "b", "c", "d", "e", "f"
     };
+
+    // -------------------------------------------------------------------
+    // Move generation tables
+    // -------------------------------------------------------------------
 
     /** Used to determine the pit where a seeding lands. Helps in
         determining when a move could be a capture */
