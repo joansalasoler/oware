@@ -277,10 +277,8 @@ public class OwareGame extends BaseGame {
      */
     @Override
     public void endMatch() {
-        boolean gather = !hasLegalMoves() || isRepetition();
-        pushState();
-
-        if (gather == true) {
+        if (!hasLegalMoves() || isRepetition()) {
+            pushState();
             gatherSeeds();
             hash = computeHash();
             move = NULL_MOVE;
