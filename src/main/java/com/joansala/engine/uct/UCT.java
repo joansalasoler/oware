@@ -97,9 +97,13 @@ public class UCT extends BaseEngine implements HasLeaves {
      * {@inheritDoc}
      */
     @Override
-    public int getPonderMove(Game game) {
-        long hash = game.hash();
+    public synchronized int getPonderMove(Game game) {
+        if (root == null) {
+            return Game.NULL_MOVE;
+        }
+
         UCTNode node = null;
+        long hash = game.hash();
 
         if ((node = findNode(root, hash, 1)) != null) {
             if (node.expanded && !node.terminal) {
