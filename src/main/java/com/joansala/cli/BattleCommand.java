@@ -21,6 +21,8 @@ package com.joansala.cli;
 import java.util.concurrent.Callable;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import picocli.CommandLine.*;
@@ -91,6 +93,13 @@ public class BattleCommand implements Callable<Integer> {
     private int rounds = 1;
 
 
+    @Option(
+      names = "--debug",
+      description = "Log debug messages."
+    )
+    private boolean debug = false;
+
+
     /**
      * Creates a new service.
      */
@@ -105,6 +114,7 @@ public class BattleCommand implements Callable<Integer> {
      * {@inheritDoc}
      */
     @Override public Integer call() throws Exception {
+        configureLoggers();
         players = createPlayers(services);
         runTournament();
 
@@ -196,6 +206,15 @@ public class BattleCommand implements Callable<Integer> {
         }
 
         return players;
+    }
+
+
+    /**
+     * Configure the application loggers.
+     */
+    private void configureLoggers() {
+        Logger logger = Logger.getLogger("com.joansala.uci");
+        logger.setLevel(debug ? Level.ALL : Level.OFF);
     }
 
 

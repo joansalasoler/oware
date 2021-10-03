@@ -21,6 +21,8 @@ package com.joansala.cli;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.concurrent.Callable;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 import com.google.inject.Inject;
 import org.jline.reader.*;
 import org.jline.terminal.*;
@@ -56,6 +58,13 @@ public class ShellCommand implements Callable<Integer> {
     private Process service = null;
 
 
+    @Option(
+      names = "--debug",
+      description = "Log debug messages."
+    )
+    private boolean debug = false;
+
+
     /**
      * Creates a new service.
      */
@@ -68,6 +77,7 @@ public class ShellCommand implements Callable<Integer> {
      * {@inheritDoc}
      */
     @Override public Integer call() throws Exception {
+        configureLoggers();
         client.setService(service);
         runInterpreter();
         return 0;
@@ -158,6 +168,15 @@ public class ShellCommand implements Callable<Integer> {
         }
 
         return line;
+    }
+
+
+    /**
+     * Configure the application loggers.
+     */
+    private void configureLoggers() {
+        Logger logger = Logger.getLogger("com.joansala.uci");
+        logger.setLevel(debug ? Level.ALL : Level.OFF);
     }
 
 

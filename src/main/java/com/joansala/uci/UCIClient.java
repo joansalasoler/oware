@@ -20,6 +20,7 @@ package com.joansala.uci;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.Scanner;
@@ -41,6 +42,9 @@ public class UCIClient {
     /** Command regular expression */
     private static final Pattern pattern =
         Pattern.compile("^[ \\t]*(\\S+)(?:[ \\t]+(.*))?$");
+
+    /** Logger instance */
+    private final Logger logger;
 
     /** Engine process */
     private Process service;
@@ -113,6 +117,7 @@ public class UCIClient {
      * @param game      A game object
      */
     @Inject public UCIClient(Game game) {
+        logger = Logger.getLogger("com.joansala.uci");
         this.game = game;
         this.board = game.getBoard();
         this.rootBoard = game.getBoard();
@@ -884,6 +889,7 @@ public class UCIClient {
      * @throws Exception    if the evaluation did not succeed
      */
     public void send(String message) throws Exception {
+        logger.info(String.format("%s > %s", name, message));
         evaluateOutput(message);
         output.format("%s%n", message);
     }
@@ -900,15 +906,21 @@ public class UCIClient {
     public String receive() throws Exception {
         String message = null;
 
-        if (input.hasNextLine()) {
-            message = input.nextLine();
-
-            if (!message.isEmpty()) {
-                evaluateInput(message);
+        if (input.hasNextLine() == false) {
+            try (Scanner scanner = new Scanner(service.getErrorStream())) {
+                while (scanner.hasNextLine()) {
+                    message = scanner.nextLine();
+                    logger.severe(String.format("%s ! %s", name, message));
+                }
             }
-        } else {
+
             throw new IllegalStateException(
                 "Engine process is not responding");
+        }
+
+        if (!(message = input.nextLine()).isEmpty()) {
+            logger.info(String.format("%s < %s", name, message));
+            evaluateInput(message);
         }
 
         return message;
