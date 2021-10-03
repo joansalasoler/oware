@@ -34,9 +34,6 @@ import static com.joansala.oware.Oware.*;
  */
 public class OwareGame extends BaseGame {
 
-    /** Recommended score to evaluate draws */
-    public static final int CONTEMPT_SCORE = -9;
-
     /** The maximum number of moves this object can store */
     public static final int MAX_CAPACITY = Integer.MAX_VALUE >> 4;
 

@@ -68,6 +68,10 @@ final class Oware {
     /** North houses bitmask */
     static final int NORTH_MASK = 0b111111000000;
 
+    // -------------------------------------------------------------------
+    // Binomial hashing
+    // -------------------------------------------------------------------
+
     /** Hash sign for positions were south is to move */
     static final long SOUTH_SIGN = 0x80000000000L;
 
@@ -75,7 +79,7 @@ final class Oware {
     static final long NORTH_SIGN = 0x00000000000L;
 
     // -------------------------------------------------------------------
-    // Evaluation function weights
+    // Heuristic evaluation weights
     // -------------------------------------------------------------------
 
     /** Weight of the captured seeds difference */
@@ -89,6 +93,16 @@ final class Oware {
 
     /** Weight of houses that do not contain any seeds */
     static final int MOBILITY_WEIGHT = -54;
+
+    /** Recommended score to evaluate draws */
+    static final int CONTEMPT_SCORE = -9;
+
+    // -------------------------------------------------------------------
+    // Openings book
+    // -------------------------------------------------------------------
+
+    /** Default maximum score error allowed on the opening */
+    static final int ROOT_ERROR = 10;
 
     // -------------------------------------------------------------------
     // Board definitions

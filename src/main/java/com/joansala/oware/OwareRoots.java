@@ -50,7 +50,7 @@ public class OwareRoots extends BaseBook implements Roots<OwareGame> {
     private boolean outOfBook = false;
 
     /** Increases variety by playing weaker moves */
-    private int margin = 10;
+    private int margin = ROOT_ERROR;
 
 
     /**
