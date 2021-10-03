@@ -1,4 +1,4 @@
-package com.joansala.oware;
+package com.joansala.game.oware;
 
 /*
  * Aalina oware engine.
@@ -24,9 +24,9 @@ import java.util.Random;
 
 import com.joansala.engine.Roots;
 import com.joansala.engine.base.BaseBook;
-import com.joansala.oware.OwareGame;
+import com.joansala.game.oware.OwareGame;
 import static com.joansala.engine.Game.*;
-import static com.joansala.oware.Oware.*;
+import static com.joansala.game.oware.Oware.*;
 
 
 /**

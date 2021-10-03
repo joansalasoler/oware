@@ -1,4 +1,4 @@
-package com.joansala.oware;
+package com.joansala.game.oware;
 
 /*
  * Aalina oware engine.
@@ -23,7 +23,7 @@ import com.joansala.engine.Board;
 import com.joansala.engine.base.BaseGame;
 import com.joansala.engine.hash.HashFunction;
 import com.joansala.engine.hash.BinomialHash;
-import static com.joansala.oware.Oware.*;
+import static com.joansala.game.oware.Oware.*;
 
 
 /**

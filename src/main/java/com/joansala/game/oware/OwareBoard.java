@@ -1,4 +1,4 @@
-package com.joansala.oware;
+package com.joansala.game.oware;
 
 /*
  * Aalina oware engine.
@@ -20,8 +20,8 @@ package com.joansala.oware;
 
 import java.util.Arrays;
 import com.joansala.engine.Board;
-import static com.joansala.oware.OwareGame.*;
-import static com.joansala.oware.Oware.*;
+import static com.joansala.game.oware.OwareGame.*;
+import static com.joansala.game.oware.Oware.*;
 
 
 /**

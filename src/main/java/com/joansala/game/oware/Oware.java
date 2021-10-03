@@ -1,4 +1,4 @@
-package com.joansala.oware;
+package com.joansala.game.oware;
 
 /*
  * Aalina oware engine.

@@ -1,4 +1,4 @@
-package com.joansala.oware;
+package com.joansala.game.oware;
 
 /*
  * Aalina oware engine.
@@ -24,8 +24,8 @@ import com.joansala.engine.Flag;
 import com.joansala.engine.Game;
 import com.joansala.engine.Leaves;
 import com.joansala.engine.base.BaseBook;
-import static com.joansala.oware.Oware.*;
-import static com.joansala.oware.OwareGame.*;
+import static com.joansala.game.oware.Oware.*;
+import static com.joansala.game.oware.OwareGame.*;
 
 
 /**
