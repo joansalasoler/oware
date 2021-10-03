@@ -122,6 +122,11 @@ public class UCIService {
         if (engine instanceof HasLeaves) {
             leaves = ((HasLeaves) engine).getLeaves();
         }
+
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            throwable.printStackTrace();
+            System.exit(1);
+        });
     }
 
 
