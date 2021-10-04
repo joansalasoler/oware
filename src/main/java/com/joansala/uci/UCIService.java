@@ -827,8 +827,9 @@ public class UCIService {
             String token = scanner.next();
 
             if (token.equals("fen")) {
-                if (scanner.hasNext())
-                    boardNotation = scanner.next();
+                if (scanner.hasNext()) {
+                    boardNotation = consumeString(scanner, stop);
+                }
             } else if (token.equals("moves")) {
                 movesNotation = consumeString(scanner, stop);
             }

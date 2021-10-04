@@ -435,8 +435,9 @@ public class UCIClient {
             if ("startpos".equals(token)) {
                 position = "startpos";
             } else if ("fen".equals(token)) {
-                if (scanner.hasNext())
-                    position = scanner.next();
+                if (scanner.hasNext()) {
+                    position = consumeString(scanner, stop);
+                }
             } else if ("moves".equals(token)) {
                 notation = consumeString(scanner, stop);
             }
