@@ -298,27 +298,6 @@ public class OwareGame extends BaseGame {
 
 
     /**
-     * Returns the winner of the game on the current position.
-     *
-     * @return  {@code SOUTH}, {@code NORTH} or {@code DRAW}
-     */
-    @Override
-    public int winner() {
-        final int score = outcome();
-
-        if (score == MAX_SCORE) {
-            return SOUTH;
-        }
-
-        if (score == -MAX_SCORE) {
-            return NORTH;
-        }
-
-        return DRAW;
-    }
-
-
-    /**
      * Returns an utility evaluation of the current position.
      *
      * <p>This method evaluates the current position as an endgame,

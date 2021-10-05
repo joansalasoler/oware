@@ -107,13 +107,6 @@ public abstract class BaseGame implements Game {
      * {@inheritDoc}
      */
     @Override
-    public abstract int winner();
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public abstract int outcome();
 
 
@@ -169,13 +162,6 @@ public abstract class BaseGame implements Game {
      * {@inheritDoc}
      */
     @Override
-    public abstract void ensureCapacity(int size);
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public abstract Board getBoard();
 
 
@@ -184,6 +170,13 @@ public abstract class BaseGame implements Game {
      */
     @Override
     public abstract void setBoard(Board board);
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public abstract Board toBoard();
 
 
     /**
@@ -237,6 +230,25 @@ public abstract class BaseGame implements Game {
     @Override
     public int infinity() {
         return MAX_SCORE;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int winner() {
+        final int score = outcome();
+
+        if (score == MAX_SCORE) {
+            return SOUTH;
+        }
+
+        if (score == -MAX_SCORE) {
+            return NORTH;
+        }
+
+        return DRAW;
     }
 
 
@@ -298,7 +310,9 @@ public abstract class BaseGame implements Game {
      * {@inheritDoc}
      */
     @Override
-    public abstract Board toBoard();
+    public void ensureCapacity(int size) {
+        System.gc();
+    }
 
 
     /**
