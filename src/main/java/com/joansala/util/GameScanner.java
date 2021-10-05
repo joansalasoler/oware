@@ -68,7 +68,7 @@ public class GameScanner implements Closeable, Iterator<GameState> {
      */
     @Override public GameState next() {
         String line = scanner.nextLine();
-        String[] parts = line.trim().split("\\s", 2);
+        String[] parts = line.trim().split("\\s+moves\\s+", 2);
         Board board = parser.toBoard(parts[0]);
         int[] moves = new int[0];
 
