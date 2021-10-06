@@ -17,6 +17,7 @@ package com.joansala.engine.base;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.HashSet;
 import java.util.Set;
@@ -36,6 +37,9 @@ public class BaseEngine implements Engine {
 
     /** Search count-down timer */
     protected final Timer timer;
+
+    /** Abort computation mutex */
+    private ReentrantLock abortLock = new ReentrantLock();
 
     /** Consumer of best moves */
     protected Set<Consumer<Report>> consumers = new HashSet<>();
@@ -185,10 +189,15 @@ public class BaseEngine implements Engine {
      */
     @Override
     public void abortComputation() {
-        aborted = true;
+        try {
+            abortLock.lock();
+            aborted = true;
 
-        synchronized (this) {
-            aborted = false;
+            synchronized (this) {
+                aborted = false;
+            }
+        } finally {
+            abortLock.unlock();
         }
     }
 
@@ -207,13 +216,16 @@ public class BaseEngine implements Engine {
      * when the time per move of the engine is elapsed.
      */
     protected TimerTask scheduleCountDown() {
+        if (abortLock.isLocked() == false) {
+            aborted = false;
+        }
+
         TimerTask countDown = new TimerTask() {
             @Override public void run() {
                 aborted = true;
             }
         };
 
-        aborted = false;
         timer.schedule(countDown, moveTime);
 
         return countDown;
