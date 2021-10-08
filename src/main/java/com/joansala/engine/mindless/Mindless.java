@@ -1,4 +1,4 @@
-package com.joansala.engine.random;
+package com.joansala.engine.mindless;
 
 /*
  * Copyright (c) 2021 Joan Sala Soler <contact@joansala.com>
@@ -23,9 +23,9 @@ import com.joansala.engine.base.BaseEngine;
 
 
 /**
- * An engine that plays randomly.
+ * An engine that plays random moves.
  */
-public class Erratic extends BaseEngine {
+public class Mindless extends BaseEngine {
 
     /** Random number generator */
     private Random random = new Random();

@@ -1,4 +1,4 @@
 /**
  * An engine that plays random moves.
  */
-package com.joansala.engine.random;
+package com.joansala.engine.mindless;
