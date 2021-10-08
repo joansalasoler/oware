@@ -101,8 +101,8 @@ final class Oware {
     // Openings book
     // -------------------------------------------------------------------
 
-    /** Default maximum score error allowed on the opening */
-    static final int ROOT_ERROR = 10;
+    /** Maximum score error allowed on the opening */
+    static final int SCORE_MARGIN = 10;
 
     // -------------------------------------------------------------------
     // Board definitions

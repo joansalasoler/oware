@@ -50,7 +50,7 @@ public class OwareRoots extends BaseBook implements Roots<OwareGame> {
     private boolean outOfBook = false;
 
     /** Increases variety by playing weaker moves */
-    private int margin = ROOT_ERROR;
+    private int margin = SCORE_MARGIN;
 
 
     /**
@@ -91,7 +91,7 @@ public class OwareRoots extends BaseBook implements Roots<OwareGame> {
      */
     @Override
     public void newMatch() {
-        this.outOfBook = false;
+        outOfBook = false;
     }
 
 
@@ -148,30 +148,20 @@ public class OwareRoots extends BaseBook implements Roots<OwareGame> {
      * @throws IOException  If an I/O exception occurred
      */
     public int[] findBestMoves(OwareGame game) throws IOException {
-        final int size = BOARD_SIZE / 2;
-        final int[] moves = new int[size];
-        final short[] scores = readScores(game);
-
-        final int turn = game.turn();
-        final int left = (turn == SOUTH) ? SOUTH_LEFT : NORTH_LEFT;
-
-        short bestScore = Short.MIN_VALUE;
-
-        for (int i = 0; i < size; i++) {
-            if (scores[i] > bestScore) {
-                bestScore = scores[i];
-            }
-        }
+        final int[] moves = new int[BOARD_SIZE / 2];
+        final int[] scores = readScores(game);
+        final int offset = getMoveOffset(game.turn());
+        final int bestScore = findBestScore(scores);
+        final int minScore = Math.max(bestScore - margin, -margin);
 
         int length = 0;
-        int minScore = Math.max(bestScore - margin, -margin);
 
         if (bestScore > Short.MIN_VALUE) {
-            for (int i = 0; i < size; i++) {
-                final short score = scores[i];
+            for (int i = 0; i < scores.length; i++) {
+                final int score = scores[i];
 
                 if (score == bestScore || score >= minScore) {
-                    moves[length++] = i + left;
+                    moves[length++] = i + offset;
                 }
             }
         }
@@ -187,10 +177,10 @@ public class OwareRoots extends BaseBook implements Roots<OwareGame> {
      * @param game      Game state to read
      * @return          New move scores array
      */
-    private short[] readScores(OwareGame game) throws IOException {
+    private int[] readScores(OwareGame game) throws IOException {
         final int size = BOARD_SIZE / 2;
         final long gameHash = game.hash();
-        final short[] scores = new short[size];
+        final int[] scores = new int[size];
         Arrays.fill(scores, Short.MIN_VALUE);
 
         long hash = -1;
@@ -217,5 +207,35 @@ public class OwareRoots extends BaseBook implements Roots<OwareGame> {
         }
 
         return scores;
+    }
+
+
+    /**
+     * Obtain the highest score on the given scores array.
+     *
+     * @param scores        Score values
+     * @return              Highest value
+     */
+    private int findBestScore(int[] scores) {
+        int bestScore = Short.MIN_VALUE;
+
+        for (int i = 0; i < scores.length; i++) {
+            if (scores[i] > bestScore) {
+                bestScore = scores[i];
+            }
+        }
+
+        return bestScore;
+    }
+
+
+    /**
+     * Offset of a move on the scores array given the game turn.
+     *
+     * @param turn      Game turn
+     * @return          Move offset
+     */
+    private int getMoveOffset(int turn) {
+        return (turn == SOUTH) ? SOUTH_LEFT : NORTH_LEFT;
     }
 }
