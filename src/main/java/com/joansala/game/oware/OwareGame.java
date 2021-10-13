@@ -21,8 +21,8 @@ package com.joansala.game.oware;
 import java.util.Arrays;
 import com.joansala.engine.Board;
 import com.joansala.engine.base.BaseGame;
-import com.joansala.engine.hash.HashFunction;
-import com.joansala.engine.hash.BinomialHash;
+import com.joansala.util.hash.HashFunction;
+import com.joansala.util.hash.BinomialHash;
 import static com.joansala.game.oware.Oware.*;
 
 

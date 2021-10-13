@@ -1,4 +1,4 @@
-package com.joansala.engine.hash;
+package com.joansala.util.hash;
 
 /*
  * Aalina oware engine.
