@@ -50,9 +50,6 @@ public class DOENode implements Comparable<DOENode>, Serializable {
     /** First sibling of this node */
     Long sibling = null;
 
-    /** Current move generation cursor */
-    int cursor = Game.NULL_MOVE;
-
     /** Performed move to reach the node */
     int move = Game.NULL_MOVE;
 
@@ -89,29 +86,9 @@ public class DOENode implements Comparable<DOENode>, Serializable {
      */
     DOENode(Game game, int move) {
         hash = game.hash();
-        cursor = game.getCursor();
         terminal = game.hasEnded();
         moves = game.moves();
         this.move = move;
-    }
-
-
-    /**
-     * Generate the next move and return it.
-     */
-    int nextMove(Game game) {
-        final int move;
-
-        if (expanded) {
-            move = Game.NULL_MOVE;
-        } else {
-            game.setCursor(cursor);
-            move = game.nextMove();
-            cursor = game.getCursor();
-            expanded = (move == Game.NULL_MOVE);
-        }
-
-        return move;
     }
 
 

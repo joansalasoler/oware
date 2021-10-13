@@ -123,10 +123,11 @@ public class DOE extends BaseEngine {
      * Trains the engine using an evaluation function. This method expands
      * the engine book by using an UCT search algorithm.
      *
+     * @param size      Nodes to expand
      * @param game      Root state
      * @param scorer    Evaluation function
      */
-    public synchronized void trainEngine(Game game, DOEScorer scorer) {
+    public synchronized void trainEngine(int size, Game game, DOEScorer scorer) {
         this.game = game;
 
         int counter = 0;
@@ -136,33 +137,38 @@ public class DOE extends BaseEngine {
         // There may be unevaluated nodes if the executor was shutdown
         // before all tasks were completed. Enqueue them now.
 
-        store.values().forEach(node -> {
+        for (DOENode node : store.values()) {
             if (node.evaluated == false) {
-                executor.submit(() -> {
-                    evaluate(node, scorer);
-                });
+                executor.submit(() -> evaluate(node, scorer));
+                counter++;
             }
-        });
+        }
 
         // Expand the UCT tree and enqueue the expanded nodes for
         // its asynchronous evaluation.
 
-        while (aborted() == false) {
-            final DOENode node;
+        while (size > 0 && !aborted()) {
+            final DOENode[] nodes;
 
             synchronized (lock) {
-                node = expand(root, maxDepth);
-                backpropagate(node, node.score);
+                nodes = expand(root, maxDepth);
+
+                for (DOENode node : nodes) {
+                    backpropagate(node, node.score);
+                }
+
                 store.commit();
+                size--;
             }
 
-            if (node.evaluated == false) {
-                executor.submit(() -> {
-                    evaluate(node, scorer);
-                });
+            for (DOENode node : nodes) {
+                if (!aborted() && !node.evaluated) {
+                    executor.submit(() -> evaluate(node, scorer));
+                    counter++;
+                }
             }
 
-            if (root.expanded && ++counter >= 10) {
+            if (root.expanded && counter >= 10) {
                 invokeConsumers(game);
                 counter = 0;
             }
@@ -190,6 +196,20 @@ public class DOE extends BaseEngine {
 
 
     /**
+     * Compute the selection score of a node.
+     *
+     * @param node      A node
+     * @return          Score of the node
+     */
+    private double computeScore(DOENode node) {
+        final double reward = maxScore / Math.sqrt(node.count);
+        final double score = node.score + reward;
+
+        return score;
+    }
+
+
+    /**
      * Best child found so far for the given node.
      *
      * @param node      Parent node
@@ -198,10 +218,10 @@ public class DOE extends BaseEngine {
     protected DOENode pickBestChild(DOENode node) {
         DOENode child = store.read(node.child);
         DOENode bestChild = store.read(node.child);
-        double bestScore = bestChild.score;
+        double bestScore = computeScore(bestChild);
 
         while ((child = store.read(child.sibling)) != null) {
-            double score = child.score;
+            double score = computeScore(child);
 
             if (score >= bestScore) {
                 bestScore = score;
@@ -329,28 +349,50 @@ public class DOE extends BaseEngine {
 
 
     /**
+     * Expands all the children of a node.
+     *
+     * @param node      Parent node
+     * @param game      Game state
+     *
+     * @return          Expanded nodes
+     */
+    private DOENode[] appendChildren(DOENode node, Game game) {
+        int[] moves = game.legalMoves();
+        DOENode[] childs = new DOENode[moves.length];
+
+        for (int i = 0; i < moves.length; i++) {
+            game.makeMove(moves[i]);
+            childs[i] = appendChild(node, moves[i]);
+            game.unmakeMove();
+        }
+
+        node.expanded = true;
+
+        return childs;
+    }
+
+
+    /**
      * Expands the most prioritary tree node.
      *
      * @param game      Game
      * @param node      Root node
      */
-    private DOENode expand(DOENode node, int depth) {
-        DOENode selected = node;
+    private DOENode[] expand(DOENode node, int depth) {
+        DOENode[] selected = { node };
 
-        if (!node.terminal && depth > 0) {
-            int move = node.nextMove(game);
+        if (node.terminal || depth == 0) {
+            return selected;
+        }
+
+        if (node.expanded) {
+            DOENode child = pickLeadChild(node);
+            game.makeMove(child.move);
+            selected = expand(child, depth - 1);
+            game.unmakeMove();
+        } else {
+            selected = appendChildren(node, game);
             store.write(node);
-
-            if (move != Game.NULL_MOVE) {
-                game.makeMove(move);
-                selected = appendChild(node, move);
-                game.unmakeMove();
-            } else {
-                DOENode child = pickLeadChild(node);
-                game.makeMove(child.move);
-                selected = expand(child, depth - 1);
-                game.unmakeMove();
-            }
         }
 
         return selected;

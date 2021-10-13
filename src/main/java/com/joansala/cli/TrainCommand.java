@@ -20,7 +20,6 @@ package com.joansala.cli;
 
 import java.util.Queue;
 import java.util.ArrayDeque;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.Callable;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -29,12 +28,12 @@ import picocli.CommandLine.*;
 import com.joansala.engine.Board;
 import com.joansala.engine.Game;
 import com.joansala.engine.Engine;
-import com.joansala.engine.negamax.Negamax;
+import com.joansala.engine.mcts.Montecarlo;
 import com.joansala.engine.doe.*;
 
 
 /**
- * Executes the Universal Chess Interface service.
+ * Automatic opening book builder.
  */
 @Command(
   name = "train",
@@ -76,18 +75,23 @@ public class TrainCommand implements Callable<Integer> {
     )
     private long moveTime = Engine.DEFAULT_MOVETIME;
 
-
     @Option(
       names = "--nodes",
       description = "Number of nodes to expand (nodes)"
     )
-    private long nodeSize = 1000;
+    private int nodeSize = 1000;
 
     @Option(
       names = "--threads",
       description = "Size of the evaluation thread pool"
     )
     private int poolSize = Runtime.getRuntime().availableProcessors();
+
+    @Option(
+      names = "--export",
+      description = "Path to export the opening book"
+    )
+    private String exportPath = null;
 
 
     /**
@@ -105,6 +109,7 @@ public class TrainCommand implements Callable<Integer> {
      */
     @Override public Integer call() throws Exception {
         final DOEStore store = new DOEStore(path);
+        final DOEExporter exporter = new DOEExporter(store);
         final DOE trainer = new DOE(store, poolSize);
 
         trainer.setDepth(depth);
@@ -126,12 +131,12 @@ public class TrainCommand implements Callable<Integer> {
 
         // Initialize the engine and game pools
 
-        Queue<Negamax> engines = new ArrayDeque<>(poolSize);
+        Queue<Montecarlo> engines = new ArrayDeque<>(poolSize);
         Queue<Game> games = new ArrayDeque<>(poolSize);
 
         for (int i = 0; i < poolSize; i++) {
             Game game = injector.getInstance(Game.class);
-            Negamax engine = injector.getInstance(Negamax.class);
+            Montecarlo engine = injector.getInstance(Montecarlo.class);
 
             engine.setMoveTime(moveTime);
             engine.setContempt(game.contempt());
@@ -143,15 +148,9 @@ public class TrainCommand implements Callable<Integer> {
 
         // Evaluate postions as they arrive
 
-        AtomicInteger nodeCount = new AtomicInteger();
-
-        trainer.trainEngine(rootGame, (moves) -> {
-            if (nodeSize < nodeCount.incrementAndGet()) {
-                trainer.abortComputation();
-            }
-
+        trainer.trainEngine(nodeSize, rootGame, (moves) -> {
             Game game = games.poll();
-            Negamax engine = engines.poll();
+            Montecarlo engine = engines.poll();
 
             game.ensureCapacity(moves.length);
             game.setBoard(rootBoard);
@@ -170,6 +169,13 @@ public class TrainCommand implements Callable<Integer> {
 
             return score;
         });
+
+        // Export the book to the given path
+
+        if (exportPath != null) {
+            System.out.format("%nExporting book%n%s%n", horizontalRule('-'));
+            System.out.format("Entries: %d%n", exporter.export(exportPath));
+        }
 
         store.close();
 
