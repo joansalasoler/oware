@@ -80,7 +80,7 @@ public class Sampler extends BaseEngine {
                 final int move = moves[i];
 
                 game.makeMove(move);
-                int value = simulateMatch(game, maxDepth);
+                int value = simulateMatch(game, maxDepth - 1);
                 outcomes[i] += (value - outcome) / count;
                 game.unmakeMove();
             }
