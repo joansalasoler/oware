@@ -54,6 +54,9 @@ public class UCT extends BaseEngine implements HasLeaves {
     /** Current computation root node */
     protected UCTNode root;
 
+    /** Best child found so far */
+    protected UCTNode bestChild;
+
     /** References the {@code Game} to search */
     protected Game game = null;
 
@@ -165,6 +168,18 @@ public class UCT extends BaseEngine implements HasLeaves {
 
 
     /**
+     * Computes the best move for a game and returns its score.
+     *
+     * @param game      Game instance
+     * @return          Average outcome score
+     */
+    public synchronized int computeBestScore(Game game) {
+        computeBestMove(game);
+        return (int) -bestChild.score;
+    }
+
+
+    /**
      * Computes a best move for the current position of a game.
      *
      * <p>Note that the search is performed on the provided game object,
@@ -188,7 +203,6 @@ public class UCT extends BaseEngine implements HasLeaves {
         game.ensureCapacity(MAX_DEPTH + game.length());
         root = rootNode(game);
 
-        UCTNode bestChild = null;
         double bestScore = Game.DRAW_SCORE;
         int reportCount = REPORT_PROBES;
         int reportProbes = REPORT_PROBES;
