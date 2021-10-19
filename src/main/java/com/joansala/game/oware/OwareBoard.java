@@ -20,6 +20,7 @@ package com.joansala.game.oware;
 
 import java.util.Arrays;
 import com.joansala.engine.Board;
+import com.joansala.util.notation.Algebraic;
 import static com.joansala.game.oware.OwareGame.*;
 import static com.joansala.game.oware.Oware.*;
 
@@ -33,6 +34,9 @@ import static com.joansala.game.oware.Oware.*;
  */
 public class OwareBoard implements Board {
 
+    /** Algebraic coordinates converter */
+    private static Algebraic algebraic = new Algebraic(HOUSES);
+
     /** Player to move */
     private int turn;
 
@@ -44,8 +48,7 @@ public class OwareBoard implements Board {
      * Creates a new board for the start position.
      */
     public OwareBoard() {
-        this.turn = SOUTH;
-        this.position = rootPosition();
+        this(START_POSITION, SOUTH);
     }
 
 
@@ -87,9 +90,17 @@ public class OwareBoard implements Board {
      * {@inheritDoc}
      */
     @Override
+    public int toMove(String notation) {
+        return algebraic.toChecker(notation);
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String toAlgebraic(int move) {
-        validateMove(move);
-        return MOVES[move];
+        return algebraic.toCoordinate(move);
     }
 
 
@@ -105,17 +116,6 @@ public class OwareBoard implements Board {
         }
 
         return builder.toString();
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int toMove(String notation) {
-        int move = Arrays.binarySearch(MOVES, notation);
-        validateMove(move);
-        return move;
     }
 
 
@@ -141,10 +141,10 @@ public class OwareBoard implements Board {
     @Override
     public OwareBoard toBoard(String notation) {
         String[] parts = notation.split("-");
-        int[] position = new int[2 + BOARD_SIZE];
-        int turn = "S".equals(parts[14]) ? SOUTH : NORTH;
+        int[] position = new int[POSITION_SIZE];
+        int turn = toTurn(parts[POSITION_SIZE].charAt(0));
 
-        for (int i = 0; i < 2 + BOARD_SIZE; i++) {
+        for (int i = 0; i < POSITION_SIZE; i++) {
             position[i] = Integer.parseInt(parts[i]);
         }
 
@@ -164,22 +164,9 @@ public class OwareBoard implements Board {
             builder.append('-');
         }
 
-        char player = (turn == SOUTH) ? 'S' : 'N';
-        builder.append(player);
+        builder.append(toPlayerSymbol(turn));
 
         return builder.toString();
-    }
-
-
-    /**
-     * Array representation for the start position.
-     *
-     * @return      New position array
-     */
-    private static int[] rootPosition() {
-        final int length = 2 + BOARD_SIZE;
-        final int[] position = START_POSITION;
-        return Arrays.copyOf(position, length);
     }
 
 
@@ -192,8 +179,8 @@ public class OwareBoard implements Board {
     private static boolean isPosition(int[] position) {
         int count = 0;
 
-        if (position.length == 2 + BOARD_SIZE) {
-            for (int i = 0; i < 2 + BOARD_SIZE; i++) {
+        if (position.length == POSITION_SIZE) {
+            for (int i = 0; i < POSITION_SIZE; i++) {
                 if (position[i] >= 0) {
                     count += position[i];
                 } else {
@@ -203,19 +190,6 @@ public class OwareBoard implements Board {
         }
 
         return (count == SEED_COUNT);
-    }
-
-
-    /**
-     * Asserts a value represents a valid move for this game.
-     *
-     * @throws IllegalArgumentException If not valid
-     */
-    private static void validateMove(int move) {
-        if (move < SOUTH_LEFT || move > NORTH_RIGHT) {
-            throw new IllegalArgumentException(
-                "Move is not a valid");
-        }
     }
 
 
@@ -251,6 +225,38 @@ public class OwareBoard implements Board {
 
 
     /**
+     * An array of piece symbols placed on the board.
+     */
+    private Object[] toPieceSymbols(int[] position) {
+        return Arrays.stream(position).boxed().toArray(Object[]::new);
+    }
+
+
+    /**
+     * Converts a turn identifier to a player notation.
+     */
+    private static char toPlayerSymbol(int turn) {
+        return turn == SOUTH ? SOUTH_SYMBOL : NORTH_SYMBOL;
+    }
+
+
+    /**
+     * Converts a turn identifier to a player name.
+     */
+    private static String toPlayerName(int turn) {
+        return turn == SOUTH ? SOUTH_NAME : NORTH_NAME;
+    }
+
+
+    /**
+     * Converts a player symbol to a turn identifier.
+     */
+    private static int toTurn(char symbol) {
+        return symbol == SOUTH_SYMBOL ? SOUTH : NORTH;
+    }
+
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -266,8 +272,8 @@ public class OwareBoard implements Board {
             "        A    B    C    D    E    F%n" +
             "=========================================").
             replaceAll("#?(\\d+)", "%$1\\$2d").
-            replace("%turn", turn == SOUTH ? "South" : "North"),
-            Arrays.stream(position).boxed().toArray(Object[]::new)
+            replace("%turn", toPlayerName(turn)),
+            toPieceSymbols(position)
         ).replaceAll("\\s0", "  ");
     }
 }

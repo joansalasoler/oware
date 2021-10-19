@@ -62,7 +62,7 @@ public class OwareLeaves extends BaseBook implements Leaves<OwareGame> {
     private int captures = 0;
 
     /** Placeholder for mirrored game states */
-    private int[] mirror = new int[2 + BOARD_SIZE];
+    private int[] mirror = new int[POSITION_SIZE];
 
     /** Entries of the database */
     private final byte[] data;

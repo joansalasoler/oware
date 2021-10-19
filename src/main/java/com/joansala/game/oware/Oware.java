@@ -58,6 +58,25 @@ final class Oware {
     /** Store house for north */
     static final int NORTH_STORE = 13;
 
+    /** Length of the position array */
+    static final int POSITION_SIZE = 14;
+
+    // -------------------------------------------------------------------
+    // Board representation
+    // -------------------------------------------------------------------
+
+    /** South player name */
+    static final String SOUTH_NAME = "South";
+
+    /** North player name */
+    static final String NORTH_NAME = "North";
+
+    /** South player symbol */
+    static final char SOUTH_SYMBOL = 'S';
+
+    /** North player symbol */
+    static final char NORTH_SYMBOL = 'N';
+
     // -------------------------------------------------------------------
     // Bitboard masks
     // -------------------------------------------------------------------
@@ -113,8 +132,8 @@ final class Oware {
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0
     };
 
-    /** Indexed moves strings */
-    static final String[] MOVES = {
+    /** Indexed board cell names */
+    static final String[] HOUSES = {
         "A", "B", "C", "D", "E", "F",
         "a", "b", "c", "d", "e", "f"
     };

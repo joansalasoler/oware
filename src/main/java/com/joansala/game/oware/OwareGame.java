@@ -127,7 +127,7 @@ public class OwareGame extends BaseGame {
      * Initialize the hash code generator.
      */
     private static HashFunction hashFunction() {
-        return new BinomialHash(SEED_COUNT, 2 + BOARD_SIZE);
+        return new BinomialHash(SEED_COUNT, POSITION_SIZE);
     }
 
 
@@ -202,7 +202,7 @@ public class OwareGame extends BaseGame {
         captures[index] = capture;
         hashes[index] = hash;
         empties[index] = empty;
-        state[2 + BOARD_SIZE] = next;
+        state[POSITION_SIZE] = next;
         state[3 + BOARD_SIZE] = stage;
         System.arraycopy(state, 0, states, index << 4, 4 + BOARD_SIZE);
     }
@@ -214,7 +214,7 @@ public class OwareGame extends BaseGame {
     private void popState() {
         System.arraycopy(states, index << 4, state, 0, 4 + BOARD_SIZE);
         stage = state[3 + BOARD_SIZE];
-        next = state[2 + BOARD_SIZE];
+        next = state[POSITION_SIZE];
         empty = empties[index];
         hash = hashes[index];
         capture = captures[index];
@@ -256,7 +256,7 @@ public class OwareGame extends BaseGame {
      */
     @Override
     public OwareBoard toBoard() {
-        int[] position = Arrays.copyOf(state, 2 + BOARD_SIZE);
+        int[] position = Arrays.copyOf(state, POSITION_SIZE);
         return new OwareBoard(position, turn);
     }
 
