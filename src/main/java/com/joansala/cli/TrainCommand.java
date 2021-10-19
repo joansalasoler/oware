@@ -113,7 +113,6 @@ public class TrainCommand implements Callable<Integer> {
         final DOE trainer = new DOE(store, poolSize);
 
         trainer.setDepth(depth);
-        trainer.setContempt(rootGame.contempt());
         trainer.setInfinity(rootGame.infinity());
         trainer.setExplorationBias(bias);
 
@@ -139,7 +138,6 @@ public class TrainCommand implements Callable<Integer> {
             Montecarlo engine = injector.getInstance(Montecarlo.class);
 
             engine.setMoveTime(moveTime);
-            engine.setContempt(game.contempt());
             engine.setInfinity(game.infinity());
 
             games.add(game);
