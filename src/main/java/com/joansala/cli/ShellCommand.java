@@ -113,7 +113,11 @@ public class ShellCommand implements Callable<Integer> {
                     }
                 }
             } catch (Exception e) {
-                writer.format("Error: %s%n", e.getMessage());
+                if (client.isDebugOn()) {
+                    e.printStackTrace(writer);
+                } else {
+                    writer.format("Error: %s%n", e.getMessage());
+                }
             }
         }
     }
@@ -212,6 +216,7 @@ public class ShellCommand implements Callable<Integer> {
         node("setoption", node("name")),
         node("ucinewgame"),
         node("isready"),
+        node("moves"),
         node("ponderhit"),
         node("quit"),
         node("stop"),

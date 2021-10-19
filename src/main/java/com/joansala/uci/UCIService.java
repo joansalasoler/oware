@@ -18,6 +18,7 @@ package com.joansala.uci;
  */
 
 import java.util.Scanner;
+import java.util.StringJoiner;
 import java.util.regex.Pattern;
 import java.util.function.Consumer;
 import com.google.inject.Inject;
@@ -110,10 +111,11 @@ public class UCIService {
      * @param engine    An engine object
      */
     @Inject public UCIService(Game game, Engine engine) {
-        this.board = null;
         this.game = game;
         this.engine = engine;
         this.rootBoard = game.getBoard();
+        this.board = rootBoard;
+        this.moves = new int[0];
 
         if (engine instanceof HasCache) {
             cache = ((HasCache) engine).getCache();
@@ -193,19 +195,10 @@ public class UCIService {
             String command = scanner.next();
             String params = scanner.nextLine();
 
-            // Show the received command in debug mode
-
-            if (debug == true) {
-                printString("Command: " + command);
-
-                if (!params.equals(""))
-                    printString("Options:" + params);
-            }
-
-            // Perform the requested command
-
             if ("debug".equals(command)) {
                 switchDebugMode(params);
+            } else if ("moves".equals(command)) {
+                printMoves();
             } else if ("go".equals(command)) {
                 startThinking(params);
             } else if ("isready".equals(command)) {
@@ -646,22 +639,6 @@ public class UCIService {
             movetime = 60 * 60 * 1000;
         }
 
-        // Set the board position
-
-        game.setBoard(board == null ? rootBoard : board);
-
-        // Perform the moves on the board
-
-        try {
-            if (moves != null) {
-                for (int move : moves)
-                    performMove(game, move);
-            }
-        } catch (Exception e) {
-            showError(e.getMessage());
-            return;
-        }
-
         // Set the comptempt factor
 
         infinity = game.infinity();
@@ -687,9 +664,37 @@ public class UCIService {
             }
         }
 
+        // Set the position
+
+        game.setBoard(board);
+
+        for (int move : moves) {
+            performMove(game, move);
+        }
+
         // Start calculating a move
 
         brain.startThinking();
+    }
+
+
+    /**
+     * Outputs legals moves for the current game state.
+     */
+    private void printMoves() {
+        StringJoiner notation = new StringJoiner(" ");
+        int[] moves = game.legalMoves();
+
+        for (int move : moves) {
+            Board board = game.toBoard();
+            notation.add(board.toAlgebraic(move));
+        }
+
+        String message = String.format("Legal moves: %s",
+            moves.length > 0 ? notation : "None");
+
+        printString(message);
+        answerPing();
     }
 
 
@@ -817,6 +822,8 @@ public class UCIService {
     private void setPosition(String params) {
         String boardNotation = null;
         String movesNotation = null;
+        Board board = this.rootBoard;
+        int[] moves = new int[0];
 
         // Obtain the position command parameters
 
@@ -837,16 +844,12 @@ public class UCIService {
 
         scanner.close();
 
-        // Set default values
-
-        board = null;
-        moves = null;
-
         // Set the new board if we received a notation for it
 
         if (boardNotation != null) {
             try {
                 board = rootBoard.toBoard(boardNotation);
+                game.setBoard(board);
             } catch (Exception e) {
                 showError(e.getMessage());
                 return;
@@ -862,6 +865,22 @@ public class UCIService {
                 showError(e.getMessage());
                 return;
             }
+        }
+
+
+        // Set the board state on the game
+
+        try {
+            game.setBoard(board);
+
+            for (int move : moves) {
+                performMove(game, move);
+            }
+
+            this.board = board;
+            this.moves = moves;
+        } catch (Exception e) {
+            showError(e.getMessage());
         }
     }
 

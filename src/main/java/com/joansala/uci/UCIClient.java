@@ -856,6 +856,8 @@ public class UCIClient {
             parseUCI(params);
         } else if ("debug".equals(command)) {
             parseDebug(params);
+        } else if ("moves".equals(command)) {
+            parseIsReady(params);
         } else if ("isready".equals(command)) {
             parseIsReady(params);
         } else if ("setoption".equals(command)) {
