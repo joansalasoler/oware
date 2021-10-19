@@ -19,6 +19,8 @@ package com.joansala.engine.base;
  */
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.LinkedList;
 import com.joansala.engine.Board;
 import com.joansala.engine.Game;
 
@@ -288,21 +290,26 @@ public abstract class BaseGame implements Game {
      */
     @Override
     public int[] legalMoves() {
-        int length = 0;
         int move = NULL_MOVE;
-
-        final int cursor = getCursor();
-        final int[] moves = new int[6];
+        int cursor = getCursor();
+        List<Integer> moves = new LinkedList<>();
 
         resetCursor();
 
         while ((move = nextMove()) != NULL_MOVE) {
-            moves[length++] = move;
+            moves.add(move);
         }
 
         setCursor(cursor);
 
-        return Arrays.copyOf(moves, length);
+        int length = moves.size();
+        int[] array = new int[length];
+
+        for (int i = 0; i < length; i++) {
+            array[i] = moves.get(i);
+        }
+
+        return array;
     }
 
 
