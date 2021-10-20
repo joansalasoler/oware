@@ -20,6 +20,7 @@ package com.joansala.book.base;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Objects;
 import static com.joansala.engine.Game.*;
 
 
@@ -131,9 +132,34 @@ public class BookEntry implements Comparable<BookEntry> {
      * {@inheritDoc}
      */
     @Override
+    public int hashCode() {
+        return Objects.hash(hash, parent);
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public int compareTo(BookEntry o) {
         int value = Long.compare(parent, o.parent);
         return value == 0 ? Long.compare(hash, o.hash) : value;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof BookEntry == false) {
+            return false;
+        }
+
+        BookEntry e = (BookEntry) o;
+
+        return Objects.equals(parent, e.parent) &&
+               Objects.equals(hash, e.hash);
     }
 
 

@@ -81,7 +81,16 @@ public class BookWriter implements Closeable {
      * @param entry     A book entry
      */
     public void writeEntry(BookEntry entry) {
-        entries.add(entry);
+        if (entries.contains(entry) == false) {
+            entries.add(entry);
+        } else {
+            BookEntry e = entries.ceiling(entry);
+
+            if (entry.getCount() > e.getCount()) {
+                entries.remove(e);
+                entries.add(entry);
+            }
+        }
     }
 
 
