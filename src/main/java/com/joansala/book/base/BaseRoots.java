@@ -40,6 +40,9 @@ public class BaseRoots implements Closeable, Roots<Game> {
     /** Random number generator */
     private final Random random;
 
+    /** Contempt factor to choose suboptimal moves */
+    protected int contempt = Game.DRAW_SCORE;
+
     /** If no more book moves can be found */
     private boolean outOfBook;
 
@@ -55,6 +58,17 @@ public class BaseRoots implements Closeable, Roots<Game> {
          random = new Random();
          outOfBook = false;
      }
+
+
+    /**
+     *
+     *
+     * @see Engine#setContempt(int)
+     * @param score     Contempt score
+     */
+    public void setContempt(int score) {
+        contempt = score;
+    }
 
 
     /**
@@ -88,8 +102,8 @@ public class BaseRoots implements Closeable, Roots<Game> {
 
             if ((outOfBook = entries.isEmpty()) == false) {
                 BookEntry bestEntry = pickBestEntry(entries);
-                double bestScore = computeScore(bestEntry);
-                entries.removeIf(e -> computeScore(e) < bestScore);
+                double minScore = computeScore(bestEntry) - contempt;
+                entries.removeIf(e -> computeScore(e) < minScore);
 
                 return pickRandomEntry(entries).getMove();
             }
@@ -140,8 +154,8 @@ public class BaseRoots implements Closeable, Roots<Game> {
      * @return          Score of the node
      */
     private double computeScore(BookEntry entry) {
-        final double reward = maxScore / Math.sqrt(entry.getCount());
-        final double score = entry.getScore() + reward;
+        final double bound = maxScore / Math.sqrt(entry.getCount());
+        final double score = entry.getScore() - bound;
 
         return score;
     }
