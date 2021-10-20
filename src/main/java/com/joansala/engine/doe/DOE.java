@@ -101,6 +101,22 @@ public class DOE extends BaseEngine {
      * {@inheritDoc}
      */
     @Override
+    public synchronized int computeBestScore(Game game) {
+        DOENode root = rootNode(game);
+
+        if (root.expanded) {
+            DOENode child = pickBestChild(root);
+            return (int) -child.score;
+        }
+
+        return 0;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public synchronized int computeBestMove(Game game) {
         this.game = game;
 

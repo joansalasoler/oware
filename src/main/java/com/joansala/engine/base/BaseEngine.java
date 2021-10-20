@@ -206,6 +206,15 @@ public class BaseEngine implements Engine {
      * {@inheritDoc}
      */
     @Override
+    public synchronized int computeBestScore(Game game) {
+        return 0;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public synchronized int computeBestMove(Game game) {
         return Game.NULL_MOVE;
     }
