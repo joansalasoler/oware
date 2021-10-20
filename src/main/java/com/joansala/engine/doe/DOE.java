@@ -170,7 +170,9 @@ public class DOE extends BaseEngine {
                 nodes = expand(root, maxDepth);
 
                 for (DOENode node : nodes) {
-                    backpropagate(node, node.score);
+                    if (node.evaluated) {
+                        backpropagate(node, node.score);
+                    }
                 }
 
                 store.commit();
@@ -205,9 +207,23 @@ public class DOE extends BaseEngine {
      */
     private double computePriority(DOENode child, double factor) {
         final double E = Math.sqrt(factor / child.count);
-        final double priority = E * bias + child.score;
+        final double priority = child.score - E * bias;
 
         return priority;
+    }
+
+
+    /**
+     * Compute the selection score of a node.
+     *
+     * @param node      A node
+     * @return          Score of the node
+     */
+    private double computeScore(DOENode node) {
+        final double bound = maxScore / Math.sqrt(node.count);
+        final double score = node.score + bound;
+
+        return score;
     }
 
 
@@ -220,12 +236,12 @@ public class DOE extends BaseEngine {
     protected DOENode pickBestChild(DOENode node) {
         DOENode child = store.read(node.child);
         DOENode bestChild = store.read(node.child);
-        double bestScore = bestChild.score;
+        double bestScore = computeScore(bestChild);
 
         while ((child = store.read(child.sibling)) != null) {
-            double score = child.score;
+            double score = computeScore(child);
 
-            if (score >= bestScore) {
+            if (score < bestScore) {
                 bestScore = score;
                 bestChild = child;
             }
@@ -250,7 +266,7 @@ public class DOE extends BaseEngine {
         while ((child = store.read(child.sibling)) != null) {
             double score = computePriority(child, factor);
 
-            if (score >= bestScore) {
+            if (score < bestScore) {
                 bestScore = score;
                 bestNode = child;
             }
@@ -309,16 +325,15 @@ public class DOE extends BaseEngine {
 
 
     /**
-     * Scores the current game position for the given node.
+     * Scores the given node as a terminal state.
      *
      * @param node      Tree node to evaluate
      * @param depth     Maximum search depth
      *
      * @return          Score of the game
      */
-    private int score(DOENode node) {
-        int score = (node.terminal) ?
-            game.outcome() : game.score();
+    private int outcome(DOENode node) {
+        int score = game.outcome();
 
         if (score == Game.DRAW_SCORE) {
             score = contempt;
@@ -338,10 +353,12 @@ public class DOE extends BaseEngine {
      */
     private DOENode appendChild(DOENode parent, int move) {
         final DOENode node = new DOENode(game, move);
-        final double score = -score(node);
 
-        node.evaluated = node.terminal;
-        node.updateScore(score);
+        if (node.terminal) {
+            node.evaluated = true;
+            node.updateScore(outcome(node));
+        }
+
         store.write(node);
         parent.pushChild(node);
         store.write(parent);
