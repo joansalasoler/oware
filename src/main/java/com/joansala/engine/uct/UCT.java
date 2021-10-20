@@ -254,7 +254,7 @@ public class UCT extends BaseEngine implements HasLeaves {
      */
     private double computePriority(UCTNode child, double factor) {
         final double E = Math.sqrt(factor / child.count);
-        final double priority = E * bias + child.score;
+        final double priority = child.score - E * bias;
 
         return priority;
     }
@@ -268,7 +268,7 @@ public class UCT extends BaseEngine implements HasLeaves {
      */
     private double computeScore(UCTNode node) {
         final double bound = maxScore / Math.sqrt(node.count);
-        final double score = node.score - bound;
+        final double score = node.score + bound;
 
         return score;
     }
@@ -288,7 +288,7 @@ public class UCT extends BaseEngine implements HasLeaves {
         while ((child = child.sibling) != null) {
             double score = computeScore(child);
 
-            if (score >= bestScore) {
+            if (score < bestScore) {
                 bestScore = score;
                 bestChild = child;
             }
@@ -299,7 +299,7 @@ public class UCT extends BaseEngine implements HasLeaves {
 
 
     /**
-     *
+     * Pick the expanded child with the worst score.
      *
      * @param node      Parent node
      * @return          Child node
@@ -309,7 +309,7 @@ public class UCT extends BaseEngine implements HasLeaves {
         UCTNode futileNode = node.child;
 
         while ((child = child.sibling) != null) {
-            if (child.score <= futileNode.score) {
+            if (child.score > futileNode.score) {
                 if (child.expanded == true) {
                     futileNode = child;
                 }
@@ -335,7 +335,7 @@ public class UCT extends BaseEngine implements HasLeaves {
         while ((child = child.sibling) != null) {
             double score = computePriority(child, factor);
 
-            if (score >= bestScore) {
+            if (score < bestScore) {
                 bestScore = score;
                 bestNode = child;
             }
@@ -447,7 +447,7 @@ public class UCT extends BaseEngine implements HasLeaves {
      * @return          Score of the node
      */
     private double evaluate(UCTNode node, int depth) {
-        final double score = -score(node, depth);
+        final double score = score(node, depth);
         node.initScore(score);
 
         return score;
@@ -504,9 +504,9 @@ public class UCT extends BaseEngine implements HasLeaves {
 
         if (child.terminal == false) {
             node.updateScore(score);
-        } else if (score == -maxScore) {
+        } else if (score == maxScore) {
             node.settleScore(score);
-        } else if (score == maxScore && node.expanded) {
+        } else if (score == -maxScore && node.expanded) {
             node.proveScore(score);
         } else {
             node.updateScore(score);
