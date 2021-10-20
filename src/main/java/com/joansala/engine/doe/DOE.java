@@ -32,6 +32,9 @@ public class DOE extends BaseEngine {
     /** Factors the amount of exploration of the tree */
     public static final double DEFAULT_BIAS = 0.707;
 
+    /** Penalty for each descendant awaiting evaluation */
+    public static int WAIT_PENALTY = 1;
+
     /** Executes evaluations on a thread pool */
     private final DOEExecutor executor;
 
@@ -172,6 +175,8 @@ public class DOE extends BaseEngine {
                 for (DOENode node : nodes) {
                     if (node.evaluated) {
                         backpropagate(node, node.score);
+                    } else {
+                        updateWaitCount(node, +WAIT_PENALTY);
                     }
                 }
 
@@ -197,8 +202,10 @@ public class DOE extends BaseEngine {
 
 
     /**
-     * Computes the expansion priority of an edge. Guides the selection
-     * using Upper Confidence Bounds (UCB1).
+     * Computes the expansion priority of an edge.
+     *
+     * Priority is computed using the UCB1 formula with an additional penalty
+     * for each descendant node waiting to be evaluated (virtual loss).
      *
      * @param child      Child node
      * @param factor     Parent factor
@@ -206,8 +213,16 @@ public class DOE extends BaseEngine {
      * @return           Expansion priority
      */
     private double computePriority(DOENode child, double factor) {
-        final double E = Math.sqrt(factor / child.count);
-        final double priority = child.score - E * bias;
+        long count = child.count;
+        double score = child.score;
+
+        for (int i = 0; i < child.waiting; i++) {
+            int value = -maxScore * child.turn;
+            score += (value - score) / ++count;
+        }
+
+        final double E = Math.sqrt(factor / count);
+        final double priority = score - E * bias;
 
         return priority;
     }
@@ -318,6 +333,7 @@ public class DOE extends BaseEngine {
 
         synchronized (lock) {
             node.evaluated = true;
+            updateWaitCount(node, -WAIT_PENALTY);
             backpropagate(node, score);
             store.commit();
         }
@@ -431,6 +447,28 @@ public class DOE extends BaseEngine {
 
         while((parent = store.read(node.parent)) != null) {
             parent.updateScore(-node.score);
+            store.write(parent);
+            node = parent;
+        }
+    }
+
+
+    /**
+     * Increase or decrease a node waiting count by the given value.
+     * The value is backpropagated and indicates how many child nodes
+     * are waiting to be evaluated.
+     *
+     * @param node      A node
+     * @param value     Increment value
+     */
+    private void updateWaitCount(DOENode node, int value) {
+        DOENode parent;
+
+        node.waiting += value;
+        store.write(node);
+
+        while((parent = store.read(node.parent)) != null) {
+            parent.waiting += value;
             store.write(parent);
             node = parent;
         }

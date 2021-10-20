@@ -28,7 +28,7 @@ import com.joansala.engine.Game;
 /**
  * A game state on a search tree.
  */
-@Entity
+@Entity(version = 1)
 public class DOENode implements Comparable<DOENode>, Serializable {
 
     /** Serialization version */
@@ -52,6 +52,12 @@ public class DOENode implements Comparable<DOENode>, Serializable {
 
     /** Performed move to reach the node */
     int move = Game.NULL_MOVE;
+
+    /** Player to move */
+    int turn = Game.SOUTH;
+
+    /** Descendant nodes waiting to be evaluated */
+    int waiting = 0;
 
     /** Moves that lead to this node */
     int[] moves = null;
@@ -88,6 +94,7 @@ public class DOENode implements Comparable<DOENode>, Serializable {
         hash = game.hash();
         terminal = game.hasEnded();
         moves = game.moves();
+        turn = game.turn();
         this.move = move;
     }
 
