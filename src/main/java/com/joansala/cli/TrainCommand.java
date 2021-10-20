@@ -25,10 +25,10 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import picocli.CommandLine.*;
 
+import com.joansala.cli.util.EngineType;
 import com.joansala.engine.Board;
 import com.joansala.engine.Game;
 import com.joansala.engine.Engine;
-import com.joansala.engine.mcts.Montecarlo;
 import com.joansala.engine.doe.*;
 
 
@@ -88,6 +88,12 @@ public class TrainCommand implements Callable<Integer> {
     private int poolSize = Runtime.getRuntime().availableProcessors();
 
     @Option(
+      names = "--engine",
+      description = "Evaluation engine to use (${COMPLETION-CANDIDATES})"
+    )
+    private EngineType engineType = EngineType.MONTECARLO;
+
+    @Option(
       names = "--export",
       description = "Path to export the opening book"
     )
@@ -119,51 +125,38 @@ public class TrainCommand implements Callable<Integer> {
         System.out.format("%s%n", formatSetup());
         System.out.format("Expanding nodes%n%s%n", horizontalRule('-'));
 
-        // Report best variation found so far
+        // Initialize the evaluation engines
 
-        trainer.attachConsumer(report -> {
-            final long count = store.count();
-            final int centis = report.getScore();
-            final int[] moves = report.getVariation();
-            System.out.format("= %s%n", fromatResult(moves, centis, count));
-        });
-
-        // Initialize the engine and game pools
-
-        Queue<Montecarlo> engines = new ArrayDeque<>(poolSize);
-        Queue<Game> games = new ArrayDeque<>(poolSize);
+        Queue<Evaluator> evaluators = new ArrayDeque<>(poolSize);
 
         for (int i = 0; i < poolSize; i++) {
-            Game game = injector.getInstance(Game.class);
-            Montecarlo engine = injector.getInstance(Montecarlo.class);
-
-            engine.setMoveTime(moveTime);
-            engine.setInfinity(game.infinity());
-
-            games.add(game);
-            engines.add(engine);
+            evaluators.add(new Evaluator());
         }
+
+        // Report the best variation found so far
+
+        trainer.attachConsumer(report -> {
+            final int[] moves = report.getVariation();
+            final int centis = report.getScore();
+            final long count = store.count();
+
+            String result = formatResult(moves, centis, count);
+            System.out.format("= %s%n", result);
+        });
 
         // Evaluate postions as they arrive
 
         trainer.trainEngine(nodeSize, rootGame, (moves) -> {
-            Game game = games.poll();
-            Montecarlo engine = engines.poll();
+            Evaluator evaluator = evaluators.poll();
 
-            game.ensureCapacity(moves.length);
-            game.setBoard(rootBoard);
-
-            for (int move : moves) {
-                game.makeMove(move);
-            }
-
+            final int score = evaluator.computeScore(moves);
+            final int centis = rootGame.toCentiPawns(score);
             final long count = store.count();
-            final int score = engine.computeBestScore(game);
-            final int centis = game.toCentiPawns(score);
-            System.out.format("- %s%n", fromatResult(moves, centis, count));
 
-            engines.offer(engine);
-            games.offer(game);
+            String result = formatResult(moves, centis, count);
+            System.out.format("- %s%n", result);
+
+            evaluators.offer(evaluator);
 
             return score;
         });
@@ -182,6 +175,28 @@ public class TrainCommand implements Callable<Integer> {
 
 
     /**
+     * Obtain an evaluation engine instance.
+     */
+    private Engine getEngineInstance() {
+        Class<Engine> type = engineType.getType();
+        Engine engine = injector.getInstance(type);
+
+        engine.setInfinity(rootGame.infinity());
+        engine.setMoveTime(moveTime);
+
+        return engine;
+    }
+
+
+    /**
+     * Obtain a game instance.
+     */
+    private Game getGameInstance() {
+        return injector.getInstance(Game.class);
+    }
+
+
+    /**
      * Formats the current engine setting into a string.
      *
      * @retun       A string
@@ -194,12 +209,14 @@ public class TrainCommand implements Callable<Integer> {
             "Time per move:     %,33d ms%n" +
             "Depth limit:       %,33d plies%n" +
             "Thread pool size:  %,33d threads%n" +
+            "Engine class:  %45s%n" +
             "Game class:    %45s%n",
             horizontalRule('-'),
             bias,
             moveTime,
             depth,
             poolSize,
+            ellipsis(engineType.getType().getName(), 44),
             ellipsis(className(rootGame), 44)
         );
     }
@@ -210,7 +227,7 @@ public class TrainCommand implements Callable<Integer> {
      *
      * @retun       A string
      */
-    private String fromatResult(int[] moves, int score, long count) {
+    private String formatResult(int[] moves, int score, long count) {
         String notation = rootBoard.toAlgebraic(moves);
         String result = String.format("%d %6d %s", count, score, notation);
         return ellipsis(result, 57);
@@ -249,5 +266,33 @@ public class TrainCommand implements Callable<Integer> {
      */
     private static String className(Object o) {
         return o == null ? "-" : o.getClass().getName();
+    }
+
+
+    /**
+     * Evaluates a game states using an engine.
+     */
+    private class Evaluator {
+        private Game game;
+        private Engine engine;
+
+        private Evaluator() {
+            game = getGameInstance();
+            engine = getEngineInstance();
+        }
+
+        private void setMoves(int[] moves) {
+            game.setBoard(rootBoard);
+            game.ensureCapacity(moves.length);
+
+            for (int move : moves) {
+                game.makeMove(move);
+            }
+        }
+
+        private int computeScore(int[] moves) {
+            setMoves(moves);
+            return engine.computeBestScore(game);
+        }
     }
 }
