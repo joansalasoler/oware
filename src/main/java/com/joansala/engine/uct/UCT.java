@@ -267,8 +267,8 @@ public class UCT extends BaseEngine implements HasLeaves {
      * @return          Score of the node
      */
     private double computeScore(UCTNode node) {
-        final double reward = maxScore / Math.sqrt(node.count);
-        final double score = node.score + reward;
+        final double bound = maxScore / Math.sqrt(node.count);
+        final double score = node.score - bound;
 
         return score;
     }
