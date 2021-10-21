@@ -68,6 +68,15 @@ public class RandomRoots implements Roots<Game> {
 
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int pickPonderMove(Game game) throws IOException {
+        return pickBestMove(game);
+    }
+
+
+    /**
      * Picks a random element from a list of moves.
      *
      * @param entries       List of moves

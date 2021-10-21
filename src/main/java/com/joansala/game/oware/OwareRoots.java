@@ -125,13 +125,30 @@ public class OwareRoots extends BaseBook implements Roots<OwareGame> {
         }
 
         int move = NULL_MOVE;
-        int[] moves = findBestMoves(game);
+        int[] moves = findBestMoves(game, margin);
 
         if (moves.length > 0) {
             int choice = random.nextInt(moves.length);
             move = moves[choice];
         } else {
             outOfBook = true;
+        }
+
+        return move;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int pickPonderMove(OwareGame game) throws IOException {
+        int move = NULL_MOVE;
+        int[] moves = findBestMoves(game, 0);
+
+        if (moves.length > 0) {
+            int choice = random.nextInt(moves.length);
+            move = moves[choice];
         }
 
         return move;
@@ -147,7 +164,7 @@ public class OwareRoots extends BaseBook implements Roots<OwareGame> {
      *
      * @throws IOException  If an I/O exception occurred
      */
-    public int[] findBestMoves(OwareGame game) throws IOException {
+    public int[] findBestMoves(OwareGame game, int margin) throws IOException {
         final int[] moves = new int[BOARD_SIZE / 2];
         final int[] scores = readScores(game);
         final int offset = getMoveOffset(game.turn());

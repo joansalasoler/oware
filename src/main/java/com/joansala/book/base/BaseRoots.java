@@ -102,8 +102,8 @@ public class BaseRoots implements Closeable, Roots<Game> {
 
             if ((outOfBook = entries.isEmpty()) == false) {
                 BookEntry bestEntry = pickBestEntry(entries);
-                double minScore = computeScore(bestEntry) - contempt;
-                entries.removeIf(e -> computeScore(e) < minScore);
+                double minScore = computeScore(bestEntry) + contempt;
+                entries.removeIf(e -> computeScore(e) > minScore);
 
                 return pickRandomEntry(entries).getMove();
             }
@@ -114,7 +114,24 @@ public class BaseRoots implements Closeable, Roots<Game> {
 
 
     /**
-     * Picks the entry which provides the best move.
+     * {@inheritDoc}
+     */
+    @Override
+    public int pickPonderMove(Game game) throws IOException {
+        List<BookEntry> entries = readChildren(game);
+        entries.removeIf(e -> !game.isLegal(e.getMove()));
+
+        if (entries.isEmpty() == false) {
+            return pickPromisingEntry(entries).getMove();
+        }
+
+        return NULL_MOVE;
+    }
+
+
+    /**
+     * Picks the entry which provides the best move. This is the
+     * entry for which its score's lowest bound is greater.
      *
      * @param entries       List of entries
      * @return              Best entry on the list
@@ -126,7 +143,30 @@ public class BaseRoots implements Closeable, Roots<Game> {
         for (BookEntry entry : entries) {
             final double score = computeScore(entry);
 
-            if (score > bestScore) {
+            if (score < bestScore) {
+                bestScore = score;
+                bestEntry = entry;
+            }
+        }
+
+        return bestEntry;
+    }
+
+
+    /**
+     * Picks the entry with the highest average score.
+     *
+     * @param entries       List of entries
+     * @return              Best entry on the list
+     */
+    private BookEntry pickPromisingEntry(List<BookEntry> entries) {
+        BookEntry bestEntry = entries.get(0);
+        double bestScore = bestEntry.getScore();
+
+        for (BookEntry entry : entries) {
+            final double score = entry.getScore();
+
+            if (score < bestScore) {
                 bestScore = score;
                 bestEntry = entry;
             }
@@ -155,7 +195,7 @@ public class BaseRoots implements Closeable, Roots<Game> {
      */
     private double computeScore(BookEntry entry) {
         final double bound = maxScore / Math.sqrt(entry.getCount());
-        final double score = entry.getScore() - bound;
+        final double score = entry.getScore() + bound;
 
         return score;
     }

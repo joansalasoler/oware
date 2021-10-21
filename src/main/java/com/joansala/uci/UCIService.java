@@ -309,7 +309,7 @@ public class UCIService {
             // Use the book to find a move
 
             if (ownBook && !infinite) {
-                bestMove = getBookMove(game);
+                bestMove = getBookMove(game, false);
             }
 
             // Enable or disable the endgames database
@@ -412,7 +412,7 @@ public class UCIService {
          * @param game  A game object
          * @return      A move or {@code Game.NULL_MOVE}
          */
-        private int getBookMove(Game game) {
+        private int getBookMove(Game game, boolean ponder) {
             int move = Game.NULL_MOVE;
 
             if (roots instanceof Roots == false) {
@@ -420,7 +420,9 @@ public class UCIService {
             }
 
             try {
-                move = roots.pickBestMove(game);
+                move = (ponder == false) ?
+                       roots.pickBestMove(game) :
+                       roots.pickPonderMove(game);
             } catch (Exception e) {
                 showError("Cannot select book move");
                 showError(e.getMessage());
@@ -437,10 +439,14 @@ public class UCIService {
          * @return      A move or {@code Game.NULL_MOVE}
          */
         private int getPonderMove(Game game) {
-            int move = engine.getPonderMove(game);
+            int move = Game.NULL_MOVE;
 
-            if (move == Game.NULL_MOVE && ownBook) {
-                move = getBookMove(game);
+            if (ownBook == true) {
+                move = getBookMove(game, true);
+            }
+
+            if (move == Game.NULL_MOVE) {
+                move = engine.getPonderMove(game);
             }
 
             return move;
