@@ -19,7 +19,8 @@ package com.joansala.game.oware;
  */
 
 import java.util.Arrays;
-import com.joansala.engine.Board;
+import com.joansala.engine.base.BaseBoard;
+import com.joansala.except.IllegalPositionException;
 import com.joansala.util.notation.Algebraic;
 import static com.joansala.game.oware.OwareGame.*;
 import static com.joansala.game.oware.Oware.*;
@@ -32,16 +33,10 @@ import static com.joansala.game.oware.Oware.*;
  * the board and the moves performed on it between its textual and numeric
  * representations.
  */
-public class OwareBoard implements Board {
+public class OwareBoard extends BaseBoard<int[]> {
 
     /** Algebraic coordinates converter */
     private static Algebraic algebraic = new Algebraic(HOUSES);
-
-    /** Player to move */
-    private int turn;
-
-    /** Board position state */
-    private int[] position;
 
 
     /**
@@ -58,13 +53,11 @@ public class OwareBoard implements Board {
      * @param position      Position array
      * @param turn          Player to move
      *
-     * @throws IllegalArgumentException
+     * @throws GameEngineException
      */
     public OwareBoard(int[] position, int turn) {
-        validateTurn(turn);
+        super(position.clone(), turn);
         validatePosition(position);
-        this.position = position.clone();
-        this.turn = turn;
     }
 
 
@@ -74,15 +67,6 @@ public class OwareBoard implements Board {
     @Override
     public int[] position() {
         return position.clone();
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int turn() {
-        return this.turn;
     }
 
 
@@ -194,31 +178,18 @@ public class OwareBoard implements Board {
 
 
     /**
-     * Asserts a value represents a valid turn for this game.
-     *
-     * @throws IllegalArgumentException If not valid
-     */
-    private static void validateTurn(int turn) {
-        if (turn != SOUTH && turn != NORTH) {
-            throw new IllegalArgumentException(
-                "Game turn is not valid");
-        }
-    }
-
-
-    /**
      * Asserts a value represents a valid position for this game.
      *
-     * @throws IllegalArgumentException If not valid
+     * @throws GameEngineException If not valid
      */
     private static void validatePosition(Object position) {
         if (position instanceof int[] == false) {
-            throw new IllegalArgumentException(
+            throw new IllegalPositionException(
                 "Game position is not an array");
         }
 
         if (isPosition((int[]) position) == false) {
-            throw new IllegalArgumentException(
+            throw new IllegalPositionException(
                 "Game position is not valid");
         }
     }

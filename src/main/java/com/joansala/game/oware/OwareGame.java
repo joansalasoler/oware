@@ -786,7 +786,7 @@ public class OwareGame extends BaseGame {
      * Ensures this object can store at least the give number of moves.
      *
      * @param size      Number of moves
-     * @throws IllegalStateException
+     * @throws IllegalArgumentException
      */
     @Override
     public void ensureCapacity(int size) {
@@ -795,7 +795,7 @@ public class OwareGame extends BaseGame {
         }
 
         if (size > MAX_CAPACITY) {
-            throw new IllegalStateException(
+            throw new IllegalArgumentException(
                 "Requested capacity is above the maximum");
         }
 

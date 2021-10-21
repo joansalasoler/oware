@@ -21,6 +21,7 @@ package com.joansala.util.notation;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.StringJoiner;
+import com.joansala.except.IllegalPieceException;
 
 
 /**
@@ -59,14 +60,33 @@ public class Diagram {
 
     /**
      * Converts a piece index to a piece notation.
+     *
+     * @param piece         A piece identifier
+     * @return              Piece symbol
+     *
+     * @throws IllegalPieceException    If piece is not a valid
      */
     public char toSymbol(int piece) {
-        return piece == NULL_PIECE ? EMPTY_SYMBOL : pieces[piece];
+        if (piece == NULL_PIECE) {
+            return EMPTY_SYMBOL;
+        }
+
+        if (piece < 0 || piece >= pieces.length) {
+            throw new IllegalPieceException(
+                "Not a valid piece: " + piece);
+        }
+
+        return pieces[piece];
     }
 
 
     /**
      * Converts a piece notation to a piece identifier.
+     *
+     * @param symbol        A piece symbol
+     * @return              Piece identifier
+     *
+     * @throws IllegalPieceException    If symbol is not a valid
      */
     public int toPiece(char symbol) {
         for (int piece = 0; piece < pieces.length; piece++) {
@@ -75,7 +95,8 @@ public class Diagram {
             }
         }
 
-        return NULL_PIECE;
+        throw new IllegalPieceException(
+            "Not a valid piece symbol: " + symbol);
     }
 
 
@@ -84,6 +105,8 @@ public class Diagram {
      *
      * @param notation      Piece placement notation
      * @return              Pieces on each rank and file
+     *
+     * @throws IllegalPieceException    If a piece symbol is not a valid
      */
     public int[][] toArray(String notation) {
         String[] placements = notation.split("/");
@@ -104,6 +127,8 @@ public class Diagram {
      *
      * @param occupants     Pieces on each rank and file
      * @return              Placement notation
+     *
+     * @throws IllegalPieceException    If a piece is not a valid
      */
     public String toNotation(int[][] occupants) {
         StringJoiner notation = new StringJoiner("/");
@@ -122,6 +147,8 @@ public class Diagram {
      *
      * @param occupants     Pieces on each rank and file
      * @return              Piece notations array
+     *
+     * @throws IllegalPieceException    If a piece is not a valid
      */
     public String[] toSymbols(int[][] occupants) {
         List<String> symbols = new LinkedList<>();
@@ -142,6 +169,8 @@ public class Diagram {
      *
      * @param occupants     Pieces on the file
      * @return              Rank notation
+     *
+     * @throws IllegalPieceException    If a piece is not a valid
      */
     private String toPlacements(int[] occupants) {
         final StringBuilder builder = new StringBuilder();
@@ -176,6 +205,8 @@ public class Diagram {
      *
      * @param symbols       Array of symbols
      * @return              Pieces array
+     *
+     * @throws IllegalPieceException    If a symbol is not a valid
      */
     private int[] toPieces(char[] symbols) {
         List<Integer> pieces = new LinkedList<>();

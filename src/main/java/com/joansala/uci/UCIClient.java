@@ -26,6 +26,8 @@ import java.util.regex.Matcher;
 import java.util.Scanner;
 import com.google.inject.Inject;
 
+import com.joansala.except.IllegalMoveException;
+import com.joansala.except.IllegalPositionException;
 import com.joansala.engine.*;
 
 
@@ -409,7 +411,7 @@ public class UCIClient {
      * position cannot be set.
      *
      * @param params    command parameters
-     * @throws IllegalArgumentException if one or more of the
+     * @throws IllegalPositionException if one or more of the
      *      parameters cannot be set
      */
     private void parsePosition(String params) throws Exception {
@@ -420,7 +422,7 @@ public class UCIClient {
         // This command requieres at least one parameter
 
         if (params == null) {
-            throw new IllegalArgumentException(
+            throw new IllegalPositionException(
                 "No parameters were provided");
         }
 
@@ -448,7 +450,7 @@ public class UCIClient {
         // Obtain the board for the received position
 
         if (position == null) {
-            throw new IllegalArgumentException(
+            throw new IllegalPositionException(
                 "No position was provided");
         }
 
@@ -475,7 +477,7 @@ public class UCIClient {
             if (!game.isLegal(move)) {
                 for (int i = 0; i < madeCount; i++)
                     game.unmakeMove();
-                throw new IllegalArgumentException(
+                throw new IllegalPositionException(
                     "The provided moves are not legal");
             }
 
@@ -637,7 +639,7 @@ public class UCIClient {
      *
      * @param params    command parameters
      * @throws IllegalStateException  if the engine was not thinking
-     * @throws IllegalArgumentException if the moves are not valid
+     * @throws IllegalMoveException if the moves are not valid
      */
     private void parseBestMove(String params) throws Exception {
         String bestMove = null;
@@ -651,8 +653,8 @@ public class UCIClient {
         // This method requieres at least a parameter
 
         if (params == null) {
-            throw new IllegalArgumentException(
-                "No parameters were provided");
+            throw new IllegalMoveException(
+                "No moves were provided");
         }
 
         // Parse the provided parameters
@@ -687,7 +689,7 @@ public class UCIClient {
         int ponder = Game.NULL_MOVE;
 
         if (!game.isLegal(best)) {
-            throw new IllegalArgumentException(
+            throw new IllegalMoveException(
                 "The returned move is not legal");
         }
 
@@ -699,7 +701,7 @@ public class UCIClient {
                 ponder = rootBoard.toMove(ponderMove);
 
                 if (!game.isLegal(ponder)) {
-                    throw new IllegalArgumentException(
+                    throw new IllegalMoveException(
                         "The returned move is not legal");
                 }
             }
@@ -792,8 +794,7 @@ public class UCIClient {
         Matcher matcher = pattern.matcher(message);
 
         if (matcher.matches() == false) {
-            throw new IllegalArgumentException(
-                "Syntax error: " + message);
+            throw new IllegalArgumentException(message);
         }
 
         // Parse the received command
@@ -843,8 +844,7 @@ public class UCIClient {
         Matcher matcher = pattern.matcher(message);
 
         if (matcher.matches() == false) {
-            throw new IllegalArgumentException(
-                "Syntax error: " + message);
+            throw new IllegalArgumentException(message);
         }
 
         // Parse the received command

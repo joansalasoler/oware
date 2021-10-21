@@ -50,7 +50,7 @@ public interface Board {
      * Converts a board notation to a board object.
      *
      * @param notation  A board notation
-     * @throws IllegalArgumentException If the notation is not valid
+     * @throws GameEngineException If the notation is not valid
      */
     Board toBoard(String notation);
 
@@ -78,7 +78,7 @@ public interface Board {
      *
      * @param move  A move identifier
      * @return      Move notation
-     * @throws IllegalArgumentException if the move is not valid
+     * @throws GameEngineException if the move is not valid
      */
     String toAlgebraic(int move);
 
@@ -89,7 +89,7 @@ public interface Board {
      *
      * @param moves Moves array
      * @return      Moves notation
-     * @throws IllegalArgumentException if a move is not valid
+     * @throws GameEngineException if a move is not valid
      */
     String toAlgebraic(int[] moves);
 
@@ -99,7 +99,7 @@ public interface Board {
      *
      * @param notation  Move notation
      * @return          Integer representation of the move
-     * @throws IllegalArgumentException If the notation does not
+     * @throws GameEngineException If the notation does not
      *                  represent a valid move
      */
     int toMove(String notation);
@@ -111,7 +111,7 @@ public interface Board {
      *
      * @param notation  Moves notation
      * @return          Array representation of the moves
-     * @throws IllegalArgumentException If the notation does not
+     * @throws GameEngineException If the notation does not
      *                  represent a valid move sequence
      */
     int[] toMoves(String notation);

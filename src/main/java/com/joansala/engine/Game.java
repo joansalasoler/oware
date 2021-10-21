@@ -94,7 +94,7 @@ public interface Game {
      * performed moves.
      *
      * @param board     Start board
-     * @throws IllegalArgumentException  if {@code turn} is not valid or
+     * @throws GameEngineException  if {@code turn} is not valid or
      *      {@code postion} is not a valid position representation
      */
     void setBoard(Board board);
@@ -283,7 +283,7 @@ public interface Game {
      *
      * @see Game#makeMove
      * @param minCapacity  capacity specified in number of moves
-     * @throws IllegalStateException  if {@code minCapacity} is above
+     * @throws IllegalArgumentException  if {@code minCapacity} is above
      *          the maximum possible capacity for the object
      */
     void ensureCapacity(int minCapacity);

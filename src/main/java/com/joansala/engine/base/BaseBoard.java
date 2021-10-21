@@ -20,6 +20,8 @@ package com.joansala.engine.base;
 
 import java.util.StringJoiner;
 import com.joansala.engine.Board;
+import com.joansala.engine.Game;
+import com.joansala.except.IllegalTurnException;
 
 
 /**
@@ -36,8 +38,11 @@ public abstract class BaseBoard<P> implements Board {
 
     /**
      * Instantiates a new board.
+     *
+     * @throws IllegalTurnException  If turn is not valid
      */
     public BaseBoard(P position, int turn) {
+        validateTurn(turn);
         this.position = position;
         this.turn = turn;
     }
@@ -118,4 +123,16 @@ public abstract class BaseBoard<P> implements Board {
      */
     @Override
     public abstract String toNotation();
+
+
+    /**
+     * Asserts a value represents a valid turn for a game.
+     * @throws GameEngineException If not valid
+     */
+    protected static void validateTurn(int turn) {
+        if (turn != Game.SOUTH && turn != Game.NORTH) {
+            throw new IllegalTurnException(
+                "Turn is not valid");
+        }
+    }
 }

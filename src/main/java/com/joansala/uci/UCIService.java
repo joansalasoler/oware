@@ -23,6 +23,7 @@ import java.util.regex.Pattern;
 import java.util.function.Consumer;
 import com.google.inject.Inject;
 
+import com.joansala.except.IllegalMoveException;
 import com.joansala.engine.*;
 
 
@@ -461,7 +462,7 @@ public class UCIService {
      *
      * @param game  Game object where a move must be performed
      * @param move  Move to perform on the game
-     * @throws IllegalArgumentException  if the move cannot be
+     * @throws IllegalMoveException  if the move cannot be
      *      performed on the provided game object
      */
     private void performMove(Game game, int move) {
@@ -469,7 +470,7 @@ public class UCIService {
             game.ensureCapacity(1 + game.length());
             game.makeMove(move);
         } else {
-            throw new IllegalArgumentException(
+            throw new IllegalMoveException(
                 "The provided move is not legal");
         }
     }

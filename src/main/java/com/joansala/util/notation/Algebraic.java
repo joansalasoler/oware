@@ -18,6 +18,8 @@ package com.joansala.util.notation;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import com.joansala.except.IllegalMoveException;
+
 
 /**
  * Simple algebraic move notation converter.
@@ -46,8 +48,15 @@ public class Algebraic {
      *
      * @param checker       Checker index
      * @return              Coordinate notation
+     *
+     * @throws IllegalMoveException     If checker is not valid
      */
     public String toCoordinate(int checker) {
+        if (checker < 0 || checker >= checkers.length) {
+            throw new IllegalMoveException(
+                "Not a valid checker: " + checker);
+        }
+
         return checkers[checker];
     }
 
@@ -57,6 +66,8 @@ public class Algebraic {
      *
      * @param coordinate    Coordinate notation
      * @return              Checker index
+     *
+     * @throws IllegalMoveException     If coordinate is not valid
      */
     public int toChecker(String coordinate) {
         for (int index = 0; index < checkers.length; index++) {
@@ -65,6 +76,7 @@ public class Algebraic {
             }
         }
 
-        return NOT_FOUND;
+        throw new IllegalMoveException(
+            "Not a valid notation: " + coordinate);
     }
 }

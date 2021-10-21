@@ -296,6 +296,8 @@ public class DOE extends BaseEngine {
      *
      * @param game      Game state
      * @return          A root node
+     *
+     * @throws IllegalArgumentException
      */
     private DOENode rootNode(Game game) {
         DOENode root = store.read(1L);
@@ -314,7 +316,7 @@ public class DOE extends BaseEngine {
         // state. Each database must contain exactly one root.
 
         if (root.hash != game.hash()) {
-            throw new RuntimeException(
+            throw new IllegalArgumentException(
                 "Root state is not valid");
         }
 
