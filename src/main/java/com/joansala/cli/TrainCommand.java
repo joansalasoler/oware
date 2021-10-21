@@ -133,6 +133,15 @@ public class TrainCommand implements Callable<Integer> {
             evaluators.add(new Evaluator());
         }
 
+        // Ensures the store is properly closed
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Shutting down.");
+            trainer.abortComputation();
+            store.close();
+            System.out.println("Done.");
+        }));
+
         // Report the best variation found so far
 
         trainer.attachConsumer(report -> {
@@ -167,8 +176,6 @@ public class TrainCommand implements Callable<Integer> {
             System.out.format("%nExporting book%n%s%n", horizontalRule('-'));
             System.out.format("Entries: %d%n", exporter.export(exportPath));
         }
-
-        store.close();
 
         return 0;
     }
