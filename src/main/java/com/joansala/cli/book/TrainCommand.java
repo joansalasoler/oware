@@ -1,4 +1,4 @@
-package com.joansala.cli;
+package com.joansala.cli.book;
 
 /*
  * Aalina oware engine.
@@ -93,12 +93,6 @@ public class TrainCommand implements Callable<Integer> {
     )
     private EngineType engineType = EngineType.MONTECARLO;
 
-    @Option(
-      names = "--export",
-      description = "Path to export the opening book"
-    )
-    private String exportPath = null;
-
 
     /**
      * Creates a new trainer.
@@ -169,13 +163,6 @@ public class TrainCommand implements Callable<Integer> {
 
             return score;
         });
-
-        // Export the book to the given path
-
-        if (exportPath != null) {
-            System.out.format("%nExporting book%n%s%n", horizontalRule('-'));
-            System.out.format("Entries: %d%n", exporter.export(exportPath));
-        }
 
         return 0;
     }

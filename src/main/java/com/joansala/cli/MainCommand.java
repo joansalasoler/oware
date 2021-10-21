@@ -22,6 +22,7 @@ import com.google.inject.Module;
 import picocli.CommandLine;
 import picocli.CommandLine.*;
 import com.joansala.cli.util.CommandFactory;
+import com.joansala.cli.book.BookCommand;
 
 
 /**
@@ -33,11 +34,11 @@ import com.joansala.cli.util.CommandFactory;
   subcommands = {
       BattleCommand.class,
       BenchCommand.class,
+      BookCommand.class,
       MatchCommand.class,
       PerftCommand.class,
       ServiceCommand.class,
-      ShellCommand.class,
-      TrainCommand.class
+      ShellCommand.class
   }
 )
 public class MainCommand {
