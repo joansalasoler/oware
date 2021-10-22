@@ -186,7 +186,7 @@ public class UCIPlayer {
      */
     private String toUCIPosition(Game game) {
         String command = "position startpos";
-        String moves = parser.toAlgebraic(game.moves());
+        String moves = parser.toNotation(game.moves());
         String params = moves.isEmpty() ? moves : " moves " + moves;
         return String.format("%s%s", command, params);
     }

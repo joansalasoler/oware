@@ -21,7 +21,7 @@ package com.joansala.game.oware;
 import java.util.Arrays;
 import com.joansala.engine.base.BaseBoard;
 import com.joansala.except.IllegalPositionException;
-import com.joansala.util.notation.Algebraic;
+import com.joansala.util.notation.CoordinateConverter;
 import static com.joansala.game.oware.OwareGame.*;
 import static com.joansala.game.oware.Oware.*;
 
@@ -36,7 +36,15 @@ import static com.joansala.game.oware.Oware.*;
 public class OwareBoard extends BaseBoard<int[]> {
 
     /** Algebraic coordinates converter */
-    private static Algebraic algebraic = new Algebraic(HOUSES);
+    private static CoordinateConverter algebraic;
+
+
+    /**
+     * Initialize notation converters.
+     */
+    static {
+        algebraic = new CoordinateConverter(HOUSES);
+    }
 
 
     /**
@@ -75,7 +83,7 @@ public class OwareBoard extends BaseBoard<int[]> {
      */
     @Override
     public int toMove(String notation) {
-        return algebraic.toChecker(notation);
+        return algebraic.toIndex(notation);
     }
 
 
@@ -83,7 +91,7 @@ public class OwareBoard extends BaseBoard<int[]> {
      * {@inheritDoc}
      */
     @Override
-    public String toAlgebraic(int move) {
+    public String toCoordinate(int move) {
         return algebraic.toCoordinate(move);
     }
 
@@ -92,11 +100,11 @@ public class OwareBoard extends BaseBoard<int[]> {
      * {@inheritDoc}
      */
     @Override
-    public String toAlgebraic(int[] moves) {
+    public String toNotation(int[] moves) {
         StringBuilder builder = new StringBuilder();
 
         for (int move : moves) {
-            builder.append(toAlgebraic(move));
+            builder.append(toCoordinate(move));
         }
 
         return builder.toString();
@@ -140,7 +148,7 @@ public class OwareBoard extends BaseBoard<int[]> {
      * {@inheritDoc}
      */
     @Override
-    public String toNotation() {
+    public String toDiagram() {
         StringBuilder builder = new StringBuilder();
 
         for (int seeds : position) {

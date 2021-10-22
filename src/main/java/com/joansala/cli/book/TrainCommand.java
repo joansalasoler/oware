@@ -222,7 +222,7 @@ public class TrainCommand implements Callable<Integer> {
      * @retun       A string
      */
     private String formatResult(int[] moves, int score, long count) {
-        String notation = rootBoard.toAlgebraic(moves);
+        String notation = rootBoard.toNotation(moves);
         String result = String.format("%d %6d %s", count, score, notation);
         return ellipsis(result, 57);
     }

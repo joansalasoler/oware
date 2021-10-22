@@ -24,59 +24,59 @@ import com.joansala.except.IllegalMoveException;
 /**
  * Simple algebraic move notation converter.
  */
-public class Algebraic {
+public class CoordinateConverter {
 
     /** Element not found in array */
     public static final int NOT_FOUND = -1;
 
-    /** Notation for each board checker */
-    private final String[] checkers;
+    /** Notation for each board coordinate */
+    private final String[] coordinates;
 
 
     /**
      * Creates a new algebraic converter.
      *
-     * @param checkers      Coordinate notations
+     * @param coordinates      Coordinate notations
      */
-    public Algebraic(String[] checkers) {
-        this.checkers = checkers;
+    public CoordinateConverter(String[] coordinates) {
+        this.coordinates = coordinates;
     }
 
 
     /**
-     * Converts a checker index to a checker notation.
+     * Converts a coordinate index to a coordinate notation.
      *
-     * @param checker       Checker index
+     * @param index         Coordinate index
      * @return              Coordinate notation
      *
-     * @throws IllegalMoveException     If checker is not valid
+     * @throws IllegalMoveException     If index is not valid
      */
-    public String toCoordinate(int checker) {
-        if (checker < 0 || checker >= checkers.length) {
+    public String toCoordinate(int index) {
+        if (index < 0 || index >= coordinates.length) {
             throw new IllegalMoveException(
-                "Not a valid checker: " + checker);
+                "Not a valid coordinate index: " + index);
         }
 
-        return checkers[checker];
+        return coordinates[index];
     }
 
 
     /**
-     * Converts a checker notation to a checker index.
+     * Converts a coordinate notation to a coordinate index.
      *
      * @param coordinate    Coordinate notation
-     * @return              Checker index
+     * @return              Coordinate index
      *
      * @throws IllegalMoveException     If coordinate is not valid
      */
-    public int toChecker(String coordinate) {
-        for (int index = 0; index < checkers.length; index++) {
-            if (coordinate.equals(checkers[index])) {
+    public int toIndex(String coordinate) {
+        for (int index = 0; index < coordinates.length; index++) {
+            if (coordinate.equals(coordinates[index])) {
                 return index;
             }
         }
 
         throw new IllegalMoveException(
-            "Not a valid notation: " + coordinate);
+            "Not a valid coordinate notation: " + coordinate);
     }
 }

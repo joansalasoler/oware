@@ -58,9 +58,10 @@ public abstract class BaseBoard<P> implements Board {
 
 
     /**
-     * {@inheritDoc}
+     * State of the board and its pieces.
+     *
+     * @return      Position instance
      */
-    @Override
     public P position() {
         return position;
     }
@@ -70,11 +71,11 @@ public abstract class BaseBoard<P> implements Board {
      * {@inheritDoc}
      */
     @Override
-    public String toAlgebraic(int[] moves) {
+    public String toNotation(int[] moves) {
         StringJoiner joiner = new StringJoiner(" ");
 
         for (int move : moves) {
-            joiner.add(toAlgebraic(move));
+            joiner.add(toCoordinate(move));
         }
 
         return joiner.toString();
@@ -108,7 +109,7 @@ public abstract class BaseBoard<P> implements Board {
      * {@inheritDoc}
      */
     @Override
-    public abstract String toAlgebraic(int move);
+    public abstract String toCoordinate(int move);
 
 
     /**
@@ -122,7 +123,7 @@ public abstract class BaseBoard<P> implements Board {
      * {@inheritDoc}
      */
     @Override
-    public abstract String toNotation();
+    public abstract String toDiagram();
 
 
     /**

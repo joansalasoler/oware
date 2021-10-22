@@ -28,7 +28,7 @@ import com.joansala.except.IllegalPieceException;
  * Diagram position notation converter. This is based on the popular
  * Forsyth-Edwards Notation for Chess.
  */
-public class Diagram {
+public class DiagramConverter {
 
     /** Identifier of an occupant that is not a piece */
     public static final int NULL_PIECE = -1;
@@ -45,7 +45,7 @@ public class Diagram {
      *
      * @param pieces        Piece notations
      */
-    public Diagram(char[] pieces) {
+    public DiagramConverter(char[] pieces) {
         this.pieces = pieces;
     }
 
@@ -130,7 +130,7 @@ public class Diagram {
      *
      * @throws IllegalPieceException    If a piece is not a valid
      */
-    public String toNotation(int[][] occupants) {
+    public String toDiagram(int[][] occupants) {
         StringJoiner notation = new StringJoiner("/");
 
         for (int i = occupants.length - 1; i >= 0; i--) {

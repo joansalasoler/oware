@@ -333,14 +333,14 @@ public class UCIService {
             StringBuilder response = new StringBuilder();
 
             response.append("bestmove ");
-            response.append(rootBoard.toAlgebraic(bestMove));
+            response.append(rootBoard.toCoordinate(bestMove));
 
             performMove(game, bestMove);
             int ponderMove = getPonderMove(game);
 
             if (ponderMove != Game.NULL_MOVE) {
                 response.append(" ponder ");
-                response.append(rootBoard.toAlgebraic(ponderMove));
+                response.append(rootBoard.toCoordinate(ponderMove));
             }
 
             output(response.toString());
@@ -381,7 +381,7 @@ public class UCIService {
 
             if (variation.length > 0) {
                 response.append(" pv ");
-                response.append(rootBoard.toAlgebraic(variation));
+                response.append(rootBoard.toNotation(variation));
             }
 
             return response.toString();
@@ -694,7 +694,7 @@ public class UCIService {
 
         for (int move : moves) {
             Board board = game.toBoard();
-            notation.add(board.toAlgebraic(move));
+            notation.add(board.toCoordinate(move));
         }
 
         String message = String.format("Legal moves: %s",

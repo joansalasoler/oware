@@ -249,7 +249,7 @@ public class MatchCommand implements Callable<Integer> {
      * @param writer    Terminal writer
      */
     private void printMove(PrintWriter writer, int move) {
-        String notation = parser.toAlgebraic(move);
+        String notation = parser.toCoordinate(move);
         writer.format("My move is: %s%n", notation);
         writer.flush();
     }

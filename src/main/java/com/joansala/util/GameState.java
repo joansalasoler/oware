@@ -60,8 +60,8 @@ public final class GameState {
      * {@inheritDoc}
      */
     @Override public String toString() {
-        final String n = board.toNotation();
-        final String m = board.toAlgebraic(moves);
+        final String n = board.toDiagram();
+        final String m = board.toNotation(moves);
         return String.format("%s %s", n, m).trim();
     }
 }

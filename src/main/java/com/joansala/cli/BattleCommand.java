@@ -179,7 +179,7 @@ public class BattleCommand implements Callable<Integer> {
             north.wins.test(winner == NORTH);
             north.ties.test(winner == DRAW);
 
-            String notation = board.toAlgebraic(game.moves());
+            String notation = board.toNotation(game.moves());
             System.out.format("%s ", ellipsis(notation, 42));
             System.out.format("%s%n", formatWinner(winner));
         }

@@ -2,7 +2,7 @@ package com.joansala.engine;
 
 /*
  * Aalina oware engine.
- * Copyright (C) 2014 Joan Sala Soler <contact@joansala.com>
+ * Copyright (c) 2014-2021 Joan Sala Soler <contact@joansala.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,99 +20,124 @@ package com.joansala.engine;
 
 
 /**
- * A board represents an immutable game state and its representations.
- * An implementation of this class must encapsulate a single game state and
- * provide methods for the conversion of the game state between different
- * board representations.
+ * Immutable state of a match on a given instant.
  *
- * @author    Joan Sala Soler
- * @version   1.0.0
+ * A {@code Board} object encapsulates the state of a {@code Game}, which
+ * includes the player to move, the location of the game pieces and any
+ * other information relevant for the gameplay; and provides methods for
+ * the conversion of the game state between different representations.
+ *
+ * For example, a chess {@code Board} may encapulate the possibility of
+ * an en-passant capture or the number of moves performed along with the
+ * position of the pieces and the turn; and use the Forsyth–Edwards Notation
+ * to encode the game state as a diagram string ({@see toDiagram}) and an
+ * Alegraic Notation to encode sequence of moves ({@see toNotation(int[])}).
+ *
+ * It is a requirement for the board to be immutable. Any methods that
+ * return state data must either return immutable objects or a new copy.
  */
 public interface Board {
 
     /**
-     * Returns which player is to move for the board position
+     * Which player is to move.
      *
-     * @return   The player to move
+     * @return      Player identifier
      */
     int turn();
 
 
     /**
-     * Returns a copy of the position on this the board.
+     * Diagram representation of this board.
      *
-     * @return   The position array
+     * Returns a string that desbribes the state of this board and can
+     * be used to construct a new board instance that represents exactly
+     * the same state as this board (@see #toBoard(String)).
+     *
+     * @return      Diagram string
      */
-    Object position();
+    String toDiagram();
 
 
     /**
-     * Converts a board notation to a board object.
+     * Coordinate representation of a single move.
      *
-     * @param notation  A board notation
-     * @throws GameEngineException If the notation is not valid
+     * Returns a string that describes the location of a move on this
+     * board and can be used to convert back the move coordinate to its
+     * identifier (@see #toMove(String)).
+     *
+     * @param move      Move identifier
+     * @return          Move notation
+     *
+     * @throws GameEngineException  If move is not a valid identifier
      */
-    Board toBoard(String notation);
+    String toCoordinate(int move);
 
 
     /**
-     * Converts this board object to its equivalent board notation.
+     * Coordinate representation of a sequence of moves.
      *
-     * @return   String representation of this board
+     * Returns a string that describes a sequence of moves performed on
+     * this board and can be used to convert back the sequence notation
+     * to an array of move identifiers (@see #toMoves(int[])). This method
+     * may not check if the sequence is valid.
+     *
+     * @param moves     Move identifiers array
+     * @return          Move sequence notation
+     *
+     * @throws GameEngineException  If any move identifier is not valid
      */
-    String toNotation();
+    String toNotation(int[] moves);
 
 
     /**
-     * Returns an human readable string representation of this object.
+     * Board repesentation of a board diagram.
      *
-     * @return   A formatted string
+     * Returns a new board instance that represents exactly the same
+     * board state described on the diagram notation (@see #toDiagram).
+     *
+     * @param diagram   Board diagram notation
+     * @return          New board instance
+     *
+     * @throws GameEngineException  If the diagram is not valid
+     */
+    Board toBoard(String diagram);
+
+
+    /**
+     * Move identifier of a move coordinate.
+     *
+     * Returns a move identifier given a move coordinate on this
+     * board (@see #toCoordinate(int)). This method may not check if
+     * the coordinate is a valid move on this board.
+     *
+     * @param coordinate    Move notation
+     * @return              Move identifier
+     *
+     * @throws GameEngineException  If coordinate is not a valid
+     */
+    int toMove(String coordinate);
+
+
+    /**
+     * Notation of a sequence of moves.
+     *
+     * Returns a sequence of move identifiers given the notation of a
+     * sequence of moves (@see #toNotation(int[])). This method may not
+     * check if the moves are valid on this board.
+     *
+     * @param notation      Move sequence notation
+     * @return              An array of move identifiers
+     *
+     * @throws GameEngineException  If the notation is not valid
+     */
+    int[] toMoves(String notation);
+
+
+    /**
+     * Human readable representation of this board.
+     *
+     * @return      Board representation
      */
     @Override
     String toString();
-
-
-    /**
-     * Converts an integer representation of one move to its algebraic
-     * representation.
-     *
-     * @param move  A move identifier
-     * @return      Move notation
-     * @throws GameEngineException if the move is not valid
-     */
-    String toAlgebraic(int move);
-
-
-    /**
-     * Converts an integer representation of one or more moves to their
-     * algebraic representation.
-     *
-     * @param moves Moves array
-     * @return      Moves notation
-     * @throws GameEngineException if a move is not valid
-     */
-    String toAlgebraic(int[] moves);
-
-
-    /**
-     * Converts an algebraic move notation to an integer representation.
-     *
-     * @param notation  Move notation
-     * @return          Integer representation of the move
-     * @throws GameEngineException If the notation does not
-     *                  represent a valid move
-     */
-    int toMove(String notation);
-
-
-    /**
-     * Converts an algebraic moves notation to an integer move array
-     * representation.
-     *
-     * @param notation  Moves notation
-     * @return          Array representation of the moves
-     * @throws GameEngineException If the notation does not
-     *                  represent a valid move sequence
-     */
-    int[] toMoves(String notation);
 }
