@@ -49,7 +49,7 @@ public final class BenchCache implements Cache<Game> {
 
     /** {@inheritDoc} */
     @Override public boolean find(Game game) {
-        return stats.cache.test(cache.find(game));
+        return stats.cache.test(cache.find(game.cast()));
     }
 
 
@@ -80,7 +80,7 @@ public final class BenchCache implements Cache<Game> {
     /** {@inheritDoc} */
     @Override
     public void store(Game game, int score, int move, int depth, int flag) {
-        cache.store(game, score, move, depth, flag);
+        cache.store(game.cast(), score, move, depth, flag);
     }
 
 
