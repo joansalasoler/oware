@@ -28,7 +28,7 @@ import picocli.CommandLine.*;
 
 import com.joansala.engine.*;
 import com.joansala.util.bench.*;
-import com.joansala.util.GameScanner;
+import com.joansala.util.suites.SuiteReader;
 import static com.joansala.engine.Game.NULL_MOVE;
 
 
@@ -91,13 +91,13 @@ public class PerftCommand implements Callable<Integer> {
         System.out.format("%s", formatSetup());
         InputStream input = getInputStream();
 
-        try (GameScanner scanner = new GameScanner(rootBoard, input)) {
-            scanner.forEachRemaining((suite) -> {
+        try (SuiteReader reader = new SuiteReader(input)) {
+            reader.stream().forEach((suite) -> {
                 System.out.format("%nGame: %s%n", ellipsis(suite, 53));
                 System.out.format("%s%n", horizontalRule('-'));
 
-                final Board board = suite.board();
-                final int[] moves = suite.moves();
+                Board board = rootBoard.toBoard(suite.diagram());
+                int[] moves = rootBoard.toMoves(suite.notation());
 
                 game.ensureCapacity(moves.length);
                 game.setBoard(board);
@@ -119,7 +119,8 @@ public class PerftCommand implements Callable<Integer> {
 
             System.out.format("%n%s", formatStats());
         } catch (Exception e) {
-            throw e;
+            e.printStackTrace();
+            System.exit(1);
         }
     }
 

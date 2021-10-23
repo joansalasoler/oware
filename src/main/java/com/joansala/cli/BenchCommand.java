@@ -30,7 +30,7 @@ import picocli.CommandLine.*;
 
 import com.joansala.engine.*;
 import com.joansala.util.bench.*;
-import com.joansala.util.GameScanner;
+import com.joansala.util.suites.SuiteReader;
 
 /**
  * Runs an engine benchmark.
@@ -110,12 +110,12 @@ public class BenchCommand implements Callable<Integer> {
         System.out.format("Running tests%n%s%n", horizontalRule('-'));
         InputStream input = getInputStream();
 
-        try (GameScanner scanner = new GameScanner(parser, input)) {
-            scanner.forEachRemaining((suite) -> {
+        try (SuiteReader reader = new SuiteReader(input)) {
+            reader.stream().forEach((suite) -> {
                 System.out.format("Game: %s%n", ellipsis(suite, 53));
 
-                Board board = suite.board();
-                int[] moves = suite.moves();
+                Board board = parser.toBoard(suite.diagram());
+                int[] moves = parser.toMoves(suite.notation());
 
                 game.ensureCapacity(moves.length);
                 game.setBoard(board);
@@ -131,7 +131,8 @@ public class BenchCommand implements Callable<Integer> {
                 }
             });
         } catch (Exception e) {
-            throw e;
+            e.printStackTrace();
+            System.exit(1);
         }
 
         System.out.format("%n%s", formatStats());

@@ -1,4 +1,4 @@
-package com.joansala.util;
+package com.joansala.util.suites;
 
 /*
  * Copyright (c) 2021 Joan Sala Soler <contact@joansala.com>
@@ -16,52 +16,50 @@ package com.joansala.util;
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import com.joansala.engine.Board;
 
 
 /**
- * Static game state representation.
+ * Encapsulates a game suite.
  */
-public final class GameState {
+public class Suite {
 
-    /** Initial board of the game */
-    private final Board board;
+    /** Initial board diagram */
+    private String diagram;
 
-    /** Performed moves on the game */
-    private final int[] moves;
+    /** Performed moves notation */
+    private String notation;
 
 
     /**
-     * Create a new game state.
+     * Create a new game suite.
      */
-    public GameState(Board board, int[] moves) {
-        this.board = board;
-        this.moves = moves;
+    public Suite(String diagram, String notation) {
+        this.diagram = diagram;
+        this.notation = notation;
     }
 
 
     /**
-     * Obtain the initial board.
+     * Start board diagram.
      */
-    public Board board() {
-        return board;
+    public String diagram() {
+        return diagram;
     }
 
 
     /**
-     * Obtain the performed moves.
+     * Performed moves.
      */
-    public int[] moves() {
-        return moves;
+    public String notation() {
+        return notation;
     }
 
 
     /**
      * {@inheritDoc}
      */
-    @Override public String toString() {
-        final String n = board.toDiagram();
-        final String m = board.toNotation(moves);
-        return String.format("%s %s", n, m).trim();
+    @Override
+    public String toString() {
+        return String.format("%s %s", diagram, notation);
     }
 }
