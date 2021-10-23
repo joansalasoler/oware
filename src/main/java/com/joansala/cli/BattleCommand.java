@@ -92,6 +92,12 @@ public class BattleCommand implements Callable<Integer> {
     )
     private int rounds = 1;
 
+    @Option(
+      names = "--suite",
+      description = "Print games instead of a report"
+    )
+    private boolean suite = false;
+
 
     @Option(
       names = "--debug",
@@ -139,18 +145,23 @@ public class BattleCommand implements Callable<Integer> {
             matches = Math.max(1, rounds * tables * (size - 1));
         }
 
-        System.out.format("%s%n", formatSetup());
-        System.out.format("%s%n", formatPlayers());
-        System.out.println("Playing tournament");
-        System.out.println(horizontalRule('-'));
+        if (suite == false) {
+            System.out.format("%s%n", formatSetup());
+            System.out.format("%s%n", formatPlayers());
+            System.out.println("Playing tournament");
+            System.out.println(horizontalRule('-'));
+        }
 
         for (int match = 1; match <= matches; match++) {
             BenchPlayer south = pairer.next();
             BenchPlayer north = pairer.next();
             BenchPlayer player = north;
 
-            System.out.format("%3d. %2d-%-2d ", match,
-                south.identifier(), north.identifier());
+            if (suite == false) {
+                int s = south.identifier();
+                int n = north.identifier();
+                System.out.format("%3d. %2d-%-2d ", match, s, n);
+            }
 
             // Play a match till its completion
 
@@ -179,12 +190,20 @@ public class BattleCommand implements Callable<Integer> {
             north.wins.test(winner == NORTH);
             north.ties.test(winner == DRAW);
 
-            String notation = board.toNotation(game.moves());
-            System.out.format("%s ", ellipsis(notation, 42));
-            System.out.format("%s%n", formatWinner(winner));
+            if (suite == false) {
+                String notation = board.toNotation(game.moves());
+                System.out.format("%s ", ellipsis(notation, 42));
+                System.out.format("%s%n", formatWinner(winner));
+            } else {
+                String diagram = board.toDiagram();
+                String notation = board.toNotation(game.moves());
+                System.out.format("%s moves %s\n", diagram, notation);
+            }
         }
 
-        System.out.format("%n%s", formatResults());
+        if (suite == false) {
+            System.out.format("%n%s", formatResults());
+        }
     }
 
 
