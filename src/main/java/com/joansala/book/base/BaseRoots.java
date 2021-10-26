@@ -40,11 +40,14 @@ public class BaseRoots implements Closeable, Roots<Game> {
     /** Random number generator */
     private final Random random;
 
-    /** Contempt factor to choose suboptimal moves */
-    protected int contempt = Game.DRAW_SCORE;
+    /** Disturbance score */
+    private double disturbance = Game.DRAW_SCORE;
+
+    /** Threshold score */
+    private double threshold = Game.DRAW_SCORE;
 
     /** If no more book moves can be found */
-    private boolean outOfBook;
+    private boolean outOfBook = false;
 
     /** Maximum evaluation score */
     private int maxScore = Integer.MAX_VALUE;
@@ -56,18 +59,27 @@ public class BaseRoots implements Closeable, Roots<Game> {
      public BaseRoots(String path) throws IOException {
          reader = new BookReader(path);
          random = new Random();
-         outOfBook = false;
      }
 
 
     /**
+     * Choose moves only if their score is above this distance from
+     * the best score found on its siblings.
      *
-     *
-     * @see Engine#setContempt(int)
-     * @param score     Contempt score
+     * @param score     Disturbance score
      */
-    public void setContempt(int score) {
-        contempt = score;
+    public void setDisturbance(double score) {
+        disturbance = Math.abs(score);
+    }
+
+
+    /**
+     * Minimum score a move must have to be playable.
+     *
+     * @param score     Threshold score
+     */
+    public void setThreshold(double score) {
+        threshold = score;
     }
 
 
@@ -92,19 +104,35 @@ public class BaseRoots implements Closeable, Roots<Game> {
 
 
     /**
+     * Compute the selection score of a node. This method returns an
+     * upper confidence bound on the score of the entry.
+     *
+     * @param node      A node
+     * @return          Score of the node
+     */
+    private double computeScore(BookEntry entry) {
+        final double bound = maxScore / Math.sqrt(entry.getCount());
+        final double score = entry.getScore() + bound;
+
+        return score;
+    }
+
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public int pickBestMove(Game game) throws IOException {
         if (outOfBook == false) {
             List<BookEntry> entries = readChildren(game);
+            BookEntry secure = pickSecureEntry(entries);
+            double minScore = disturbance + computeScore(secure);
+
             entries.removeIf(e -> !game.isLegal(e.getMove()));
+            entries.removeIf(e -> computeScore(e) > minScore);
+            entries.removeIf(e -> computeScore(e) > -threshold);
 
             if ((outOfBook = entries.isEmpty()) == false) {
-                BookEntry bestEntry = pickBestEntry(entries);
-                double minScore = computeScore(bestEntry) + contempt;
-                entries.removeIf(e -> computeScore(e) > minScore);
-
                 return pickRandomEntry(entries).getMove();
             }
         }
@@ -122,7 +150,7 @@ public class BaseRoots implements Closeable, Roots<Game> {
         entries.removeIf(e -> !game.isLegal(e.getMove()));
 
         if (entries.isEmpty() == false) {
-            return pickPromisingEntry(entries).getMove();
+            return pickMaxEntry(entries).getMove();
         }
 
         return NULL_MOVE;
@@ -136,7 +164,7 @@ public class BaseRoots implements Closeable, Roots<Game> {
      * @param entries       List of entries
      * @return              Best entry on the list
      */
-    private BookEntry pickBestEntry(List<BookEntry> entries) {
+    protected BookEntry pickSecureEntry(List<BookEntry> entries) {
         BookEntry bestEntry = entries.get(0);
         double bestScore = computeScore(bestEntry);
 
@@ -159,7 +187,7 @@ public class BaseRoots implements Closeable, Roots<Game> {
      * @param entries       List of entries
      * @return              Best entry on the list
      */
-    private BookEntry pickPromisingEntry(List<BookEntry> entries) {
+    protected BookEntry pickMaxEntry(List<BookEntry> entries) {
         BookEntry bestEntry = entries.get(0);
         double bestScore = bestEntry.getScore();
 
@@ -182,22 +210,8 @@ public class BaseRoots implements Closeable, Roots<Game> {
      * @param entries       List of entries
      * @return              An entry on the list
      */
-    private BookEntry pickRandomEntry(List<BookEntry> entries) {
+    protected BookEntry pickRandomEntry(List<BookEntry> entries) {
         return entries.get(random.nextInt(entries.size()));
-    }
-
-
-    /**
-     * Compute the selection score of a node.
-     *
-     * @param node      A node
-     * @return          Score of the node
-     */
-    private double computeScore(BookEntry entry) {
-        final double bound = maxScore / Math.sqrt(entry.getCount());
-        final double score = entry.getScore() + bound;
-
-        return score;
     }
 
 
@@ -207,7 +221,7 @@ public class BaseRoots implements Closeable, Roots<Game> {
      * @param game      Game state
      * @return          Book entries
      */
-    private List<BookEntry> readChildren(Game game) throws IOException {
+    protected List<BookEntry> readChildren(Game game) throws IOException {
         List<BookEntry> entries = new LinkedList<>();
         long parent = game.hash();
 
