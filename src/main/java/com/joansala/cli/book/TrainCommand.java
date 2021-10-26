@@ -109,7 +109,6 @@ public class TrainCommand implements Callable<Integer> {
      */
     @Override public Integer call() throws Exception {
         final DOEStore store = new DOEStore(path);
-        final DOEExporter exporter = new DOEExporter(store);
         final DOE trainer = new DOE(store, poolSize);
 
         trainer.setDepth(depth);
@@ -149,7 +148,7 @@ public class TrainCommand implements Callable<Integer> {
 
         // Evaluate postions as they arrive
 
-        trainer.trainEngine(nodeSize, rootGame, (moves) -> {
+        trainer.train(nodeSize, rootGame, (moves) -> {
             Evaluator evaluator = evaluators.poll();
 
             final int score = evaluator.computeScore(moves);

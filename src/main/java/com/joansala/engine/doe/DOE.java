@@ -146,7 +146,7 @@ public class DOE extends BaseEngine {
      * @param game      Root state
      * @param scorer    Evaluation function
      */
-    public synchronized void trainEngine(int size, Game game, DOEScorer scorer) {
+    public synchronized void train(int size, Game game, DOEScorer scorer) {
         this.game = game;
 
         int counter = 0;
