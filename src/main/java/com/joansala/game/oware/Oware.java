@@ -120,8 +120,11 @@ final class Oware {
     // Openings book
     // -------------------------------------------------------------------
 
-    /** Maximum score error allowed on the opening */
-    static final int SCORE_MARGIN = 10;
+    /** Minimum score for an opening move to be choosen */
+    static final double ROOT_THRESHOLD = -27.0D;
+
+    /** Threshold on the highest opening move reward */
+    static final double ROOT_DISTURBANCE = -13.5D;
 
     // -------------------------------------------------------------------
     // Board definitions
