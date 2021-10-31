@@ -87,6 +87,10 @@ public abstract class BaseBoard<P> implements Board {
      */
     @Override
     public int[] toMoves(String notation) {
+        if (notation == null || notation.isBlank()) {
+            return new int[0];
+        }
+
         String[] notations = notation.split(" ");
         int[] moves = new int[notations.length];
 
