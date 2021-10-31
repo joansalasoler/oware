@@ -172,7 +172,7 @@ public interface Game {
 
 
     /**
-     * Maximus ccore to which a position can be evaluated.
+     * Maximum score to which a position can be evaluated.
      *
      * @see     Game#score
      * @return  Infinity evaluation value

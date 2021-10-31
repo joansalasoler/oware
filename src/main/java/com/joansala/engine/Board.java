@@ -62,7 +62,7 @@ public interface Board {
      * Coordinate representation of a single move.
      *
      * Returns a string that describes the location of a move on this
-     * board and can be used to convert back the move coordinate to its
+     * board and can be used to convert back the move coordinates to its
      * identifier (@see #toMove(String)).
      *
      * @param move      Move identifier
@@ -70,7 +70,7 @@ public interface Board {
      *
      * @throws GameEngineException  If move is not a valid identifier
      */
-    String toCoordinate(int move);
+    String toCoordinates(int move);
 
 
     /**
@@ -107,7 +107,7 @@ public interface Board {
      * Move identifier of a move coordinate.
      *
      * Returns a move identifier given a move coordinate on this
-     * board (@see #toCoordinate(int)). This method may not check if
+     * board (@see #toCoordinates(int)). This method may not check if
      * the coordinate is a valid move on this board.
      *
      * @param coordinate    Move notation

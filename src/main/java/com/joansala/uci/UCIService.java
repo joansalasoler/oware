@@ -330,17 +330,18 @@ public class UCIService {
 
             // Show the computed best and ponder moves
 
+            Board board = game.toBoard();
             StringBuilder response = new StringBuilder();
 
             response.append("bestmove ");
-            response.append(rootBoard.toCoordinate(bestMove));
+            response.append(board.toCoordinates(bestMove));
 
             performMove(game, bestMove);
             int ponderMove = getPonderMove(game);
 
             if (ponderMove != Game.NULL_MOVE) {
                 response.append(" ponder ");
-                response.append(rootBoard.toCoordinate(ponderMove));
+                response.append(board.toCoordinates(ponderMove));
             }
 
             output(response.toString());
@@ -381,7 +382,7 @@ public class UCIService {
 
             if (variation.length > 0) {
                 response.append(" pv ");
-                response.append(rootBoard.toNotation(variation));
+                response.append(board.toNotation(variation));
             }
 
             return response.toString();
@@ -694,7 +695,7 @@ public class UCIService {
 
         for (int move : moves) {
             Board board = game.toBoard();
-            notation.add(board.toCoordinate(move));
+            notation.add(board.toCoordinates(move));
         }
 
         String message = String.format("Legal moves: %s",
@@ -867,7 +868,7 @@ public class UCIService {
 
         if (movesNotation != null) {
             try {
-                moves = rootBoard.toMoves(movesNotation);
+                moves = board.toMoves(movesNotation);
             } catch (Exception e) {
                 showError(e.getMessage());
                 return;

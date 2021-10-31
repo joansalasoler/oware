@@ -68,13 +68,13 @@ public interface BoardContract {
 
     @ParameterizedTest()
     @MethodSource("suites")
-    @DisplayName("coordinate to move is commutative")
+    @DisplayName("coordinates to move is commutative")
     default void ToCoordinateIsCommutative(Suite suite) {
         Board instance = newInstance();
         String notation = suite.notation();
 
         for (int move : instance.toMoves(notation)) {
-            String coordinate = instance.toCoordinate(move);
+            String coordinate = instance.toCoordinates(move);
             int converted = instance.toMove(coordinate);
             assertEquals(move, converted);
         }
@@ -115,11 +115,11 @@ public interface BoardContract {
 
     @ParameterizedTest()
     @ValueSource(ints = { Game.NULL_MOVE, Integer.MIN_VALUE })
-    @DisplayName("move to coordinate throws runtime exception")
+    @DisplayName("move to coordinates throws runtime exception")
     default void ToCoordinateThrowsRuntimeException(int move) {
         Board instance = newInstance();
         assertThrows(RuntimeException.class, () -> {
-            instance.toCoordinate(move);
+            instance.toCoordinates(move);
         });
     }
 

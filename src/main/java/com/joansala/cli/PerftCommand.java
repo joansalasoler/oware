@@ -46,7 +46,7 @@ public class PerftCommand implements Callable<Integer> {
     private BenchStats stats;
 
     /** Game board instance */
-    private Board rootBoard;
+    private Board parser;
 
     /** Game instance */
     private Game game;
@@ -71,7 +71,7 @@ public class PerftCommand implements Callable<Integer> {
     @Inject public PerftCommand(Game game) {
         this.game = game;
         this.stats = new BenchStats();
-        this.rootBoard = game.getBoard();
+        this.parser = game.getBoard();
     }
 
 
@@ -96,8 +96,8 @@ public class PerftCommand implements Callable<Integer> {
                 System.out.format("%nGame: %s%n", ellipsis(suite, 53));
                 System.out.format("%s%n", horizontalRule('-'));
 
-                Board board = rootBoard.toBoard(suite.diagram());
-                int[] moves = rootBoard.toMoves(suite.notation());
+                Board board = parser.toBoard(suite.diagram());
+                int[] moves = board.toMoves(suite.notation());
 
                 game.ensureCapacity(moves.length);
                 game.setBoard(board);

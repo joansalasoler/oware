@@ -75,7 +75,7 @@ public abstract class BaseBoard<P> implements Board {
         StringJoiner joiner = new StringJoiner(" ");
 
         for (int move : moves) {
-            joiner.add(toCoordinate(move));
+            joiner.add(toCoordinates(move));
         }
 
         return joiner.toString();
@@ -113,7 +113,7 @@ public abstract class BaseBoard<P> implements Board {
      * {@inheritDoc}
      */
     @Override
-    public abstract String toCoordinate(int move);
+    public abstract String toCoordinates(int move);
 
 
     /**

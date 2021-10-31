@@ -115,7 +115,7 @@ public class BenchCommand implements Callable<Integer> {
                 System.out.format("Game: %s%n", ellipsis(suite, 53));
 
                 Board board = parser.toBoard(suite.diagram());
-                int[] moves = parser.toMoves(suite.notation());
+                int[] moves = board.toMoves(suite.notation());
 
                 game.ensureCapacity(moves.length);
                 game.setBoard(board);

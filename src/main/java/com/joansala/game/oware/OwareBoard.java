@@ -91,7 +91,7 @@ public class OwareBoard extends BaseBoard<int[]> {
      * {@inheritDoc}
      */
     @Override
-    public String toCoordinate(int move) {
+    public String toCoordinates(int move) {
         return algebraic.toCoordinate(move);
     }
 
@@ -104,7 +104,7 @@ public class OwareBoard extends BaseBoard<int[]> {
         StringBuilder builder = new StringBuilder();
 
         for (int move : moves) {
-            builder.append(toCoordinate(move));
+            builder.append(toCoordinates(move));
         }
 
         return builder.toString();

@@ -462,7 +462,7 @@ public class UCIClient {
         // Obtain the moves for the received notation
 
         if (notation != null) {
-            moves = rootBoard.toMoves(notation);
+            moves = board.toMoves(notation);
         }
 
         // Change the game state only if all moves are legal
@@ -685,7 +685,8 @@ public class UCIClient {
 
         // Validate the received moves legality
 
-        int best = rootBoard.toMove(bestMove);
+        Board board = game.toBoard();
+        int best = board.toMove(bestMove);
         int ponder = Game.NULL_MOVE;
 
         if (!game.isLegal(best)) {
@@ -698,7 +699,7 @@ public class UCIClient {
 
         try {
             if (ponderMove != null) {
-                ponder = rootBoard.toMove(ponderMove);
+                ponder = board.toMove(ponderMove);
 
                 if (!game.isLegal(ponder)) {
                     throw new IllegalMoveException(

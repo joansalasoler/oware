@@ -18,7 +18,6 @@ package com.joansala.engine.base;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.LinkedList;
 import com.joansala.engine.Board;
