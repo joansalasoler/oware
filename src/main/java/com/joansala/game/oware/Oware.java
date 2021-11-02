@@ -18,6 +18,8 @@ package com.joansala.game.oware;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import com.joansala.engine.Game;
+
 
 /**
  * Definitions for the Oware Abapa game.
@@ -140,6 +142,37 @@ final class Oware {
         "A", "B", "C", "D", "E", "F",
         "a", "b", "c", "d", "e", "f"
     };
+
+    // -------------------------------------------------------------------
+    // Player definitions
+    // -------------------------------------------------------------------
+
+    static class Player {
+        int turn;  // Player turn
+        int left;  // Left house
+        int right; // Right house
+        int store; // Store house
+        int mask;  // Houses mask
+        long sign; // Hash sign
+
+        static final Player SOUTH = new Player() {{
+            sign =  SOUTH_SIGN;
+            turn =  Game.SOUTH;
+            left =  SOUTH_LEFT;
+            right = SOUTH_RIGHT;
+            store = SOUTH_STORE;
+            mask =  SOUTH_MASK;
+        }};
+
+        static final Player NORTH = new Player() {{
+            sign =  NORTH_SIGN;
+            turn =  Game.NORTH;
+            left =  NORTH_LEFT;
+            right = NORTH_RIGHT;
+            store = NORTH_STORE;
+            mask =  NORTH_MASK;
+        }};
+    }
 
     // -------------------------------------------------------------------
     // Move generation tables

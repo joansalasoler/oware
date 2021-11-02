@@ -58,26 +58,17 @@ public class OwareGame extends BaseGame {
     /** Start position and turn */
     private OwareBoard board;
 
+    /** Player to move */
+    private Player player;
+
+    /** Player to move opponent */
+    private Player rival;
+
     /** Index of the last capture move */
     private int capture;
 
-    /** Bitmask of player houses */
-    private int playerMask;
-
-    /** Bitmask of opponent houses */
-    private int rivalMask;
-
     /** Bitmask of empty houses */
     private int empty;
-
-    /** Leftmost house of the current player */
-    private int left;
-
-    /** Rightmost house of the current player */
-    private int right;
-
-    /** First house of the rival player */
-    private int stop;
 
     /** Current move generation stage */
     private int stage;
@@ -120,6 +111,7 @@ public class OwareGame extends BaseGame {
         captures = new int[capacity];
         empties = new int[capacity];
         states = new int[capacity << 4];
+        setTurn(SOUTH);
     }
 
 
@@ -128,6 +120,15 @@ public class OwareGame extends BaseGame {
      */
     private static HashFunction hashFunction() {
         return new BinomialHash(SEED_COUNT, POSITION_SIZE);
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int turn() {
+        return player.turn;
     }
 
 
@@ -174,22 +175,24 @@ public class OwareGame extends BaseGame {
      *
      * @param turn      {@code SOUTH} or {@code NORTH}
      */
-    protected void setTurn(int turn) {
-        this.turn = turn;
-
+    private void setTurn(int turn) {
         if (turn == SOUTH) {
-            left = SOUTH_LEFT;
-            right = SOUTH_RIGHT;
-            stop = NORTH_LEFT;
-            playerMask = SOUTH_MASK;
-            rivalMask = NORTH_MASK;
+            player = Player.SOUTH;
+            rival = Player.NORTH;
         } else {
-            left = NORTH_LEFT;
-            right = NORTH_RIGHT;
-            stop = SOUTH_LEFT;
-            playerMask = NORTH_MASK;
-            rivalMask = SOUTH_MASK;
+            player = Player.NORTH;
+            rival = Player.SOUTH;
         }
+    }
+
+
+    /**
+     * Toggles the player to move.
+     */
+    private void switchTurn() {
+        Player player = this.player;
+        this.player = rival;
+        this.rival = player;
     }
 
 
@@ -257,7 +260,7 @@ public class OwareGame extends BaseGame {
     @Override
     public OwareBoard toBoard() {
         int[] position = Arrays.copyOf(state, POSITION_SIZE);
-        return new OwareBoard(position, turn);
+        return new OwareBoard(position, player.turn);
     }
 
 
@@ -389,10 +392,7 @@ public class OwareGame extends BaseGame {
      */
     @Override
     protected long computeHash() {
-        final long sign = (turn == SOUTH) ? SOUTH_SIGN : NORTH_SIGN;
-        final long hash = sign + hasher.hash(state);
-
-        return hash;
+        return player.sign + hasher.hash(state);
     }
 
 
@@ -444,7 +444,7 @@ public class OwareGame extends BaseGame {
     @Override
     public void resetCursor() {
         stage = ATTACKING_MOVES;
-        next = 1 + right;
+        next = 1 + player.right;
     }
 
 
@@ -464,7 +464,7 @@ public class OwareGame extends BaseGame {
             return true;
         }
 
-        for (int move = right; move >= left; move--) {
+        for (int move = player.right; move >= player.left; move--) {
             if (feedsRival(move)) {
                 return true;
             }
@@ -501,7 +501,7 @@ public class OwareGame extends BaseGame {
      * @return      If it feeds the opponent
      */
     private boolean feedsRival(int move) {
-        return (move + state[move] > right);
+        return (move + state[move] > player.right);
     }
 
 
@@ -522,7 +522,7 @@ public class OwareGame extends BaseGame {
      * @return      False if the pits are empty
      */
     private boolean playerHasSeeds() {
-        return (empty & playerMask) != playerMask;
+        return (empty & player.mask) != player.mask;
     }
 
 
@@ -532,7 +532,7 @@ public class OwareGame extends BaseGame {
      * @return      False if the pits are empty
      */
     private boolean rivalHasSeeds() {
-        return (empty & rivalMask) != rivalMask;
+        return (empty & rival.mask) != rival.mask;
     }
 
 
@@ -544,7 +544,7 @@ public class OwareGame extends BaseGame {
      * @return      False if the pits are empty
      */
     private boolean rivalHasSeedsAfter(int house) {
-        return (empty & rivalMask) != (rivalMask & (0xFFE << house));
+        return (empty & rival.mask) != (rival.mask & (0xFFE << house));
     }
 
 
@@ -573,7 +573,7 @@ public class OwareGame extends BaseGame {
         final int house = sowSeeds(move);
         if (isCapture) captureSeeds(house);
 
-        setTurn(-turn);
+        switchTurn();
         resetCursor();
         this.move = move;
         this.hash = computeHash();
@@ -585,7 +585,7 @@ public class OwareGame extends BaseGame {
      */
     @Override
     public void unmakeMove() {
-        setTurn(-turn);
+        switchTurn();
         popState();
     }
 
@@ -623,10 +623,7 @@ public class OwareGame extends BaseGame {
     private void captureSeeds(int move) {
         this.capture = index;
 
-        final int store = (turn == SOUTH) ?
-            SOUTH_STORE : NORTH_STORE;
-
-        for (int house = move; house >= stop; house--) {
+        for (int house = move; house >= rival.left; house--) {
             final int seeds = state[house];
 
             if ((seeds >>> 1) != 1) {
@@ -634,7 +631,7 @@ public class OwareGame extends BaseGame {
             }
 
             empty |= (1 << house);
-            state[store] += seeds;
+            state[player.store] += seeds;
             state[house] = 0;
         }
     }
@@ -694,7 +691,7 @@ public class OwareGame extends BaseGame {
                     return true;
                 }
 
-                for (int house = stop; house < finish; house++) {
+                for (int house = rival.left; house < finish; house++) {
                     if (state[house] == 0 || state[house] > 2) {
                         return true;
                     }
@@ -702,18 +699,18 @@ public class OwareGame extends BaseGame {
             }
         } else if (sown < 2 * BOARD_SIZE - 1) { // Exactly one lap
             if (current < 2) {
-                if (rivalMask > (2 << finish)) {
+                if (rival.mask > (2 << finish)) {
                     return true;
                 }
 
-                for (int house = stop; house < finish; house++) {
+                for (int house = rival.left; house < finish; house++) {
                     if (state[house] > 1) {
                         return true;
                     }
                 }
             }
         } else if (current == 0) { // Two or more laps happening
-            return (rivalMask > (2 << finish)) || rivalHasSeeds();
+            return (rival.mask > (2 << finish)) || rivalHasSeeds();
         }
 
         return false;
@@ -731,13 +728,13 @@ public class OwareGame extends BaseGame {
         // thus we want to iterate them first.
 
         if (stage == ATTACKING_MOVES) {
-            while (next > left) { next--;
+            while (next > player.left) { next--;
                 if (feedsRival(next) && isCapture(next)) {
                     return next;
                 }
             }
 
-            next = 1 + right;
+            next = 1 + player.right;
             stage = rivalHasSeeds() ?
                 DEFENSIVE_MOVES : MANDATORY_MOVES;
         }
@@ -746,7 +743,7 @@ public class OwareGame extends BaseGame {
         // that sow on the opponent houses are legal.
 
         if (stage == MANDATORY_MOVES) {
-            while (next > left) { next--;
+            while (next > player.left) { next--;
                 if (feedsRival(next) && !isCapture(next)) {
                     return next;
                 }
@@ -759,20 +756,20 @@ public class OwareGame extends BaseGame {
         // from capturing seeds. This also improves the cutouts.
 
         if (stage == DEFENSIVE_MOVES) {
-            while (next > left) { next--;
+            while (next > player.left) { next--;
                 if (defendsAttack(next) && !isCapture(next)) {
                     return next;
                 }
             }
 
-            next = 1 + right;
+            next = 1 + player.right;
             stage = REMAINING_MOVES;
         }
 
         // Iterate the remaining moves last; those that do not capture
         // seeds or are less likely to prevent captures.
 
-        while (next > left) { next--;
+        while (next > player.left) { next--;
             if (state[next] > 2 && !isCapture(next)) {
                 return next;
             }
