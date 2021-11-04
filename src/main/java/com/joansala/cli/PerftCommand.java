@@ -23,11 +23,13 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.util.concurrent.Callable;
+import java.util.StringJoiner;
 import com.google.inject.Inject;
 import picocli.CommandLine.*;
 
 import com.joansala.engine.*;
 import com.joansala.util.bench.*;
+import com.joansala.util.suites.Suite;
 import com.joansala.util.suites.SuiteReader;
 import static com.joansala.engine.Game.NULL_MOVE;
 
@@ -93,7 +95,8 @@ public class PerftCommand implements Callable<Integer> {
 
         try (SuiteReader reader = new SuiteReader(input)) {
             reader.stream().forEach((suite) -> {
-                System.out.format("%nGame: %s%n", ellipsis(suite, 53));
+                String format = formatSuite(suite);
+                System.out.format("%n%s%n", ellipsis(format, 59));
                 System.out.format("%s%n", horizontalRule('-'));
 
                 Board board = parser.toBoard(suite.diagram());
@@ -225,6 +228,17 @@ public class PerftCommand implements Callable<Integer> {
             stats.visitsPerSecond(),
             stats.visits.count()
         );
+    }
+
+
+    /**
+     * String representation of a game suite.
+     */
+    private static String formatSuite(Suite suite) {
+        StringJoiner joiner = new StringJoiner(" ");
+        joiner.add(suite.notation());
+        joiner.add(suite.diagram());
+        return joiner.toString();
     }
 
 

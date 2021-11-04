@@ -23,6 +23,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.util.concurrent.Callable;
+import java.util.StringJoiner;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.ConfigurationException;
@@ -30,6 +31,7 @@ import picocli.CommandLine.*;
 
 import com.joansala.engine.*;
 import com.joansala.util.bench.*;
+import com.joansala.util.suites.Suite;
 import com.joansala.util.suites.SuiteReader;
 
 /**
@@ -112,7 +114,8 @@ public class BenchCommand implements Callable<Integer> {
 
         try (SuiteReader reader = new SuiteReader(input)) {
             reader.stream().forEach((suite) -> {
-                System.out.format("Game: %s%n", ellipsis(suite, 53));
+                String format = formatSuite(suite);
+                System.out.format("%s%n", ellipsis(format, 59));
 
                 Board board = parser.toBoard(suite.diagram());
                 int[] moves = board.toMoves(suite.notation());
@@ -308,6 +311,17 @@ public class BenchCommand implements Callable<Integer> {
             stats.cache.percentage(),
             stats.leaves.percentage()
         );
+    }
+
+
+    /**
+     * String representation of a game suite.
+     */
+    private static String formatSuite(Suite suite) {
+        StringJoiner joiner = new StringJoiner(" ");
+        joiner.add(suite.notation());
+        joiner.add(suite.diagram());
+        return joiner.toString();
     }
 
 
