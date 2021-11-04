@@ -71,6 +71,7 @@ public abstract class BaseGame implements Game {
      * @param capacity      Initial capacity
      */
     public BaseGame(int capacity) {
+        this.initialize();
         this.index = -1;
         this.turn = Game.SOUTH;
         this.move = Game.NULL_MOVE;
@@ -79,6 +80,12 @@ public abstract class BaseGame implements Game {
         this.setBoard(defaultBoard());
         this.hash = computeHash();
     }
+
+
+    /**
+     * Invoked by the constuctor to initialize objects.
+     */
+    protected void initialize() {}
 
 
     /**
