@@ -78,7 +78,6 @@ public abstract class BaseGame implements Game {
         this.moves = new int[capacity];
         this.capacity = capacity;
         this.setBoard(defaultBoard());
-        this.hash = computeHash();
     }
 
 
