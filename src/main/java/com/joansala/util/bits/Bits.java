@@ -47,6 +47,17 @@ public final class Bits {
 
 
     /**
+     * Index of the leftmost bit that is set on a bitboard.
+     *
+     * @param bitboard      Bitboard
+     * @return              Bit index
+     */
+    public static final int last(long bitboard) {
+        return Long.numberOfLeadingZeros(bitboard) ^ 63;
+    }
+
+
+    /**
      * Index of the next rightmost bit that is set on a bitboard.
      *
      * @param bitboard      Bitboard
