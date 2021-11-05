@@ -23,6 +23,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.*;
 import com.joansala.cli.util.CommandFactory;
 import com.joansala.cli.book.BookCommand;
+import com.joansala.cli.test.TestCommand;
 
 
 /**
@@ -32,13 +33,11 @@ import com.joansala.cli.book.BookCommand;
   name = "main",
   mixinStandardHelpOptions = true,
   subcommands = {
-      BattleCommand.class,
-      BenchCommand.class,
       BookCommand.class,
       MatchCommand.class,
-      PerftCommand.class,
       ServiceCommand.class,
-      ShellCommand.class
+      ShellCommand.class,
+      TestCommand.class
   }
 )
 public class MainCommand {

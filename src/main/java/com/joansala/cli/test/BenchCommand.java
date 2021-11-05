@@ -1,4 +1,4 @@
-package com.joansala.cli;
+package com.joansala.cli.test;
 
 /*
  * Aalina oware engine.
