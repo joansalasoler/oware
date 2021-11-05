@@ -17,7 +17,7 @@ import com.joansala.util.suites.SuiteReader;
 public class OwareBoardTest implements BoardContract {
 
     /** Test suite file path */
-    private static String SUITE_PATH = "/oware-test.suite";
+    private static String SUITE_PATH = "/oware-bench.suite";
 
 
     /**
