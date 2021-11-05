@@ -341,7 +341,7 @@ public class UCIService {
 
             if (ponderMove != Game.NULL_MOVE) {
                 response.append(" ponder ");
-                response.append(board.toCoordinates(ponderMove));
+                response.append(game.toBoard().toCoordinates(ponderMove));
             }
 
             output(response.toString());
@@ -381,6 +381,7 @@ public class UCIService {
             }
 
             if (variation.length > 0) {
+                Board board = game.toBoard();
                 response.append(" pv ");
                 response.append(board.toNotation(variation));
             }

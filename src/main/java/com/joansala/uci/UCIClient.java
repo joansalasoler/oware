@@ -691,7 +691,7 @@ public class UCIClient {
 
         if (!game.isLegal(best)) {
             throw new IllegalMoveException(
-                "The returned move is not legal");
+                "Best move is not legal");
         }
 
         game.ensureCapacity(2 + game.length());
@@ -699,15 +699,16 @@ public class UCIClient {
 
         try {
             if (ponderMove != null) {
-                ponder = board.toMove(ponderMove);
+                ponder = game.toBoard().toMove(ponderMove);
 
                 if (!game.isLegal(ponder)) {
                     throw new IllegalMoveException(
-                        "The returned move is not legal");
+                        "Ponder move is not legal");
                 }
             }
         } catch (Exception e) {
-            throw e;
+            String message = e.getMessage();
+            logger.warning(String.format("%s ! %s", name, message));
         }
 
         game.unmakeMove();
