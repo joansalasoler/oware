@@ -197,7 +197,7 @@ public class OwareGame extends BaseGame {
 
 
     /**
-     * Adds a new history entry with the current game state.
+     * Store game state on the history.
      */
     private void pushState() {
         index++;
@@ -212,7 +212,7 @@ public class OwareGame extends BaseGame {
 
 
     /**
-     * Retrieve the current game state from the history.
+     * Restore game state from the history.
      */
     private void popState() {
         System.arraycopy(states, index << 4, state, 0, 4 + BOARD_SIZE);
@@ -560,33 +560,38 @@ public class OwareGame extends BaseGame {
 
 
     /**
-     * Performs a move on the board.
-     *
-     * @param move      A move indentifier
-     * @throws IndexOutOfBoundsException
+     * {@inheritDoc}
      */
     @Override
     public void makeMove(int move) {
         pushState();
-
-        final boolean isCapture = isCapture(move);
-        final int house = sowSeeds(move);
-        if (isCapture) captureSeeds(house);
-
+        movePieces(move);
         switchTurn();
         resetCursor();
-        this.move = move;
         this.hash = computeHash();
+        this.move = move;
     }
 
 
     /**
-     * Undoes the last performed move.
+     * {@inheritDoc}
      */
     @Override
     public void unmakeMove() {
-        switchTurn();
         popState();
+        switchTurn();
+    }
+
+
+    /**
+     * Plays a move on the board.
+     *
+     * @param move      Move to perform
+     */
+    private void movePieces(int move) {
+        final boolean isCapture = isCapture(move);
+        final int house = sowSeeds(move);
+        if (isCapture) captureSeeds(house);
     }
 
 
