@@ -62,22 +62,8 @@ public interface BoardContract {
         String notation = suite.notation();
         int[] moves = instance.toMoves(notation);
         String converted = instance.toNotation(moves);
-        assertEquals(notation, converted);
-    }
-
-
-    @ParameterizedTest()
-    @MethodSource("suites")
-    @DisplayName("coordinates to move is commutative")
-    default void ToCoordinateIsCommutative(Suite suite) {
-        Board instance = newInstance();
-        String notation = suite.notation();
-
-        for (int move : instance.toMoves(notation)) {
-            String coordinate = instance.toCoordinates(move);
-            int converted = instance.toMove(coordinate);
-            assertEquals(move, converted);
-        }
+        int[] result = instance.toMoves(converted);
+        assertArrayEquals(moves, result);
     }
 
 
