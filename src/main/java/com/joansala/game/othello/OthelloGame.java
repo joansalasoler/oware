@@ -267,8 +267,6 @@ public class OthelloGame extends BaseGame {
      */
     @Override
     public void makeMove(int move) {
-        assert isLegal(move); // TODO: Remove
-
         pushState();
         movePieces(move);
         setTurn(-turn);
