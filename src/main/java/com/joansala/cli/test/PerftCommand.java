@@ -55,10 +55,15 @@ public class PerftCommand implements Callable<Integer> {
 
     @Option(
       names = "--depth",
-      description = "Depth limit per move (plies)"
+      description = "Maximum depth limit per move (plies)"
     )
     private int maxDepth = Engine.DEFAULT_DEPTH;
 
+    @Option(
+      names = "--min-depth",
+      description = "Minimum depth limit per move (plies)"
+    )
+    private int minDepth = 1;
 
     @Option(
       names = "--file",
@@ -91,55 +96,63 @@ public class PerftCommand implements Callable<Integer> {
      */
     public void runBenchmark() throws IOException {
         System.out.format("%s", formatSetup());
-        InputStream input = getInputStream();
 
-        try (SuiteReader reader = new SuiteReader(input)) {
-            reader.stream().forEach((suite) -> {
-                String format = formatSuite(suite);
-                System.out.format("%n%s%n", ellipsis(format, 59));
-                System.out.format("%s%n", horizontalRule('-'));
+        if (file instanceof File == false) {
+            String diagram = parser.toDiagram();
+            System.out.format("%n%s%n", ellipsis(diagram, 59));
+            System.out.format("%s%n", horizontalRule('-'));
+            System.out.format("%s%n", formatHeader());
 
-                Board board = parser.toBoard(suite.diagram());
-                int[] moves = board.toMoves(suite.notation());
+            game.setBoard(parser);
+            benchmark(game, minDepth, maxDepth);
+        } else {
+            InputStream input = new FileInputStream(file);
 
-                game.ensureCapacity(moves.length);
-                game.setBoard(board);
+            try (SuiteReader reader = new SuiteReader(input)) {
+                reader.stream().forEach((suite) -> {
+                    String format = formatSuite(suite);
+                    System.out.format("%n%s%n", ellipsis(format, 59));
+                    System.out.format("%s%n", horizontalRule('-'));
+                    System.out.format("%s%n", formatHeader());
 
-                for (int move : moves) {
-                    if (game.hasEnded() == false) {
-                        game.makeMove(move);
+                    Board board = parser.toBoard(suite.diagram());
+                    int[] moves = board.toMoves(suite.notation());
+
+                    game.ensureCapacity(moves.length);
+                    game.setBoard(parser);
+
+                    for (int move : moves) {
+                        if (game.hasEnded() == false) {
+                            game.makeMove(move);
+                        }
                     }
-                }
 
-                final int cursor = game.getCursor();
-
-                for (int depth = 1; depth <= maxDepth; depth++) {
-                    benchmark(game, depth);
-                    game.setCursor(cursor);
-                    System.out.format("%s%n", formatResults());
-                }
-            });
-
-            System.out.format("%n%s", formatStats());
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(1);
+                    benchmark(game, minDepth, maxDepth);
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
         }
+
+        System.out.format("%n%s", formatStats());
     }
 
 
     /**
-     * Obtain the input stream from which to read positions. That is,
-     * either from standard input or the specified file.
+     * Run multiple benchmark iterations and print the results.
+     *
+     * @param minDepth  Minimum depth
+     * @param maxDepth  Maximum depth
      */
-    private InputStream getInputStream() throws IOException {
-        InputStream input = System.in;
+    private void benchmark(Game game, int minDepth, int maxDepth) {
+        final int cursor = game.getCursor();
 
-        if (file instanceof File) {
-            input = new FileInputStream(file);
+        for (int depth = minDepth; depth <= maxDepth; depth++) {
+            if (benchmark(game, depth) == 0L) break;
+            System.out.format("%s%n", formatResults());
+            game.setCursor(cursor);
         }
-
-        return input;
     }
 
 
@@ -149,13 +162,14 @@ public class PerftCommand implements Callable<Integer> {
      * @param engine    Engine instance
      * @param game      Game instance
      */
-    private void benchmark(Game game, int depth) {
+    private long benchmark(Game game, int depth) {
         stats.terminal.clear();
         stats.depth.clear();
         stats.depth.aggregate(depth);
         stats.watch.start();
         expand(game, depth);
         stats.watch.stop();
+        return stats.terminal.count();
     }
 
 
@@ -163,11 +177,11 @@ public class PerftCommand implements Callable<Integer> {
      * Expands the game tree to the given depth.
      */
     private void expand(Game game, int depth) {
-        boolean terminal = game.hasEnded();
+        boolean endgame = game.hasEnded();
 
         if (depth == 0) {
-            stats.terminal.test(terminal);
-        } else if (terminal == false) {
+            stats.terminal.test(endgame);
+        } else if (endgame == false) {
             int move = NULL_MOVE;
 
             while ((move = game.nextMove()) != NULL_MOVE) {
@@ -205,10 +219,22 @@ public class PerftCommand implements Callable<Integer> {
      */
     private String formatResults() {
         return String.format(
-            "%,4.0f %,27d %,27d",
+            "%,5.0f %,24d %,18d %,10.2f",
             stats.depth.average(),
             stats.terminal.count(),
-            stats.terminal.success()
+            stats.terminal.success(),
+            stats.visitsPerSecond() / 1000.0D
+        );
+    }
+
+
+    /**
+     * Obtain a formatted header for the results.
+     */
+    private String formatHeader() {
+        return String.format(
+            "%5s %24s %18s %10s",
+            "depth", "leaves", "endgames", "kn/s"
         );
     }
 
@@ -236,8 +262,13 @@ public class PerftCommand implements Callable<Integer> {
      */
     private static String formatSuite(Suite suite) {
         StringJoiner joiner = new StringJoiner(" ");
-        joiner.add(suite.notation());
+
+        if (!suite.notation().isBlank()) {
+            joiner.add(suite.notation());
+        }
+
         joiner.add(suite.diagram());
+
         return joiner.toString();
     }
 
