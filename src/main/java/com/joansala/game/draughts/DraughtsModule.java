@@ -39,7 +39,7 @@ public class DraughtsModule extends AbstractModule {
     @Command(
       name = "draughts",
       version = "1.0.0",
-      description = "An international draughts game engine"
+      description = "International draughts is a strategy board game"
     )
     private static class DraughtsCommand extends MainCommand {}
 

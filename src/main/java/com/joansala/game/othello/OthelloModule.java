@@ -39,7 +39,7 @@ public class OthelloModule extends AbstractModule {
     @Command(
       name = "othello",
       version = "1.0.0",
-      description = "An othello game engine"
+      description = "Othello is a strategy board game"
     )
     private static class OthelloCommand extends MainCommand {}
 

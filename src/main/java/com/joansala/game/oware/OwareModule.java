@@ -37,9 +37,9 @@ public class OwareModule extends AbstractModule {
      * Command line interface.
      */
     @Command(
-      name = "aalina",
+      name = "oware",
       version = "2.0.0",
-      description = "Aalina is an Oware game engine"
+      description = "Oware (Abapa) is a mancala board game"
     )
     private static class OwareCommand extends MainCommand {}
 
