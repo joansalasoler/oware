@@ -519,6 +519,7 @@ public class DraughtsGenerator {
 
         store.remnants = remnants;
         store.moves = moves;
+        capacity = size;
         System.gc();
     }
 
