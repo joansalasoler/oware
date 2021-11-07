@@ -126,7 +126,7 @@ public class OthelloGame extends BaseGame {
         this.board = board;
         this.move = NULL_MOVE;
         this.stagnant = false;
-        this.state = board.position().clone();
+        this.state = board.position();
 
         setTurn(board.turn());
         this.hash = computeHash();

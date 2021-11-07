@@ -183,7 +183,7 @@ public class DraughtsGame extends BaseGame {
         this.advance = -1;
         this.board = board;
         this.move = NULL_MOVE;
-        this.state = board.position().clone();
+        this.state = board.position();
 
         setTurn(board.turn());
         this.clock = board.clock() | RESETABLE;
