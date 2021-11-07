@@ -19,7 +19,9 @@ package com.joansala.cli.util;
  */
 
 import java.nio.file.Paths;
+import com.google.inject.Module;
 import picocli.CommandLine.ITypeConverter;
+import com.joansala.cli.MainCommand;
 
 
 /**
@@ -37,10 +39,12 @@ public class ProcessConverter implements ITypeConverter<Process> {
      * @return          Command descriptor
      */
     private String[] getDefaultCommand() {
+        Module module = MainCommand.getCurrentModule();
         String home = System.getProperty("java.home");
         String path = System.getProperty("java.class.path");
         String bin = Paths.get(home, "/bin", "/java").toString();
-        String[] command = { bin, "-jar", path, "service" };
+        String main = module.getClass().getName();
+        String[] command = { bin, "-cp", path, main, "service" };
 
         return command;
     }

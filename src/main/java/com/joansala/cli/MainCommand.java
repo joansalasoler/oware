@@ -42,6 +42,18 @@ import com.joansala.cli.test.TestCommand;
 )
 public class MainCommand {
 
+    /** Current module in execution */
+    private static Module module;
+
+
+    /**
+     * Current module in execution.
+     */
+    public static final Module getCurrentModule() {
+        return module;
+    }
+
+
     /**
      * Execute a command line interface for a module.
      *
@@ -50,6 +62,7 @@ public class MainCommand {
      * @return              Exit code
      */
     public int execute(Module module, String[] args) {
+        MainCommand.module = module;
         CommandFactory factory = new CommandFactory(module);
         CommandLine main = new CommandLine(this, factory);
         return main.execute(args);
