@@ -76,7 +76,8 @@ public class BenchCommand implements Callable<Integer> {
 
     @Option(
       names = "--file",
-      description = "Benchmark suite file."
+      description = "Benchmark suite file.",
+      required = true
     )
     private File file;
 
@@ -110,7 +111,7 @@ public class BenchCommand implements Callable<Integer> {
     public void runBenchmark() throws IOException {
         System.out.format("%s%n", formatSetup());
         System.out.format("Running tests%n%s%n", horizontalRule('-'));
-        InputStream input = getInputStream();
+        InputStream input = new FileInputStream(file);
 
         try (SuiteReader reader = new SuiteReader(input)) {
             reader.stream().forEach((suite) -> {
@@ -206,21 +207,6 @@ public class BenchCommand implements Callable<Integer> {
         } catch (ConfigurationException e) {}
 
         return null;
-    }
-
-
-    /**
-     * Obtain the input stream from which to read positions. That is,
-     * either from standard input or the specified file.
-     */
-    private InputStream getInputStream() throws IOException {
-        InputStream input = System.in;
-
-        if (file instanceof File) {
-            input = new FileInputStream(file);
-        }
-
-        return input;
     }
 
 
