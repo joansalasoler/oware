@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import java.util.function.Consumer;
 import java.util.TimerTask;
 
+import com.joansala.util.StopWatch;
 import com.joansala.engine.*;
 import com.joansala.engine.base.*;
 
@@ -36,17 +37,17 @@ public class UCT extends BaseEngine implements HasLeaves {
     /** Factors the amount of exploration of the tree */
     public static final double DEFAULT_BIAS = 0.353;
 
-    /** Minimum number of node expansions */
-    private static final int MIN_PROBES = 1000;
-
-    /** Minimum number of expansions between reports */
-    private static final int REPORT_PROBES = 125000;
+    /** Minimum elapsed time between reports */
+    private static final int REPORT_INTERVAL = 350;
 
     /** Prune when less than this amount of memory is available */
     private static final int PRUNE_MEMORY_LIMIT = 2 << 21;
 
     /** Number of pruning iterations to run at once */
     private static final int PRUNE_ITERATIONS = 20;
+
+    /** Mesures elapsed time between reports */
+    private final StopWatch watch = new StopWatch();
 
     /** Fallback empty endgames instance */
     private final Leaves<Game> baseLeaves = new BaseLeaves();
@@ -204,34 +205,31 @@ public class UCT extends BaseEngine implements HasLeaves {
         root = rootNode(game);
 
         double bestScore = Game.DRAW_SCORE;
-        int reportCount = REPORT_PROBES;
-        int reportProbes = REPORT_PROBES;
+
+        watch.reset();
+        watch.start();
 
         if (root.parent != null) {
             root.parent.detachFromTree();
             System.gc();
         }
 
-        while (!aborted() || root.count < MIN_PROBES) {
+        while (!aborted() || root.child == null) {
             expand(root, maxDepth);
             pruneGarbage(root);
 
-            if (reportCount-- > 0) {
-                continue;
-            }
+            // Report search information periodically
 
-            // Create a report for the current search state
+            if (watch.current() >= REPORT_INTERVAL) {
+                watch.reset();
+                UCTNode child = pickBestChild(root);
+                double change = Math.abs(child.score - bestScore);
 
-            reportProbes = (int) (1.35 * reportProbes);
-            reportCount = reportProbes;
-
-            UCTNode child = pickBestChild(root);
-            double change = Math.abs(child.score - bestScore);
-
-            if (child != bestChild || change > 5.0) {
-                bestChild = child;
-                bestScore = child.score;
-                invokeConsumers(game);
+                if (child != bestChild || change > 5.0) {
+                    bestChild = child;
+                    bestScore = child.score;
+                    invokeConsumers(game);
+                }
             }
         }
 

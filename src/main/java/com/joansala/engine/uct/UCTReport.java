@@ -49,7 +49,7 @@ public class UCTReport implements Report {
      * @param root      Root node
      */
     public UCTReport(UCT engine, Game game, UCTNode root) {
-        if (root != null && root.expanded) {
+        if (root != null && root.child != null) {
             collectReport(engine, game, root);
         }
     }
