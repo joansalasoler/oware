@@ -19,19 +19,18 @@ package com.joansala.game.othello;
  */
 
 
-import com.google.inject.Module;
-import com.google.inject.AbstractModule;
 import picocli.CommandLine.Command;
 
 import com.joansala.cli.*;
 import com.joansala.engine.*;
+import com.joansala.engine.base.BaseModule;
 import com.joansala.engine.mcts.Montecarlo;
 
 
 /**
  * Binds together the components of the Othello engine.
  */
-public class OthelloModule extends AbstractModule {
+public class OthelloModule extends BaseModule {
 
     /**
      * Command line interface.
@@ -60,7 +59,7 @@ public class OthelloModule extends AbstractModule {
      * @param args      Command line parameters
      */
     public static void main(String[] args) throws Exception {
-        Module module = new OthelloModule();
+        BaseModule module = new OthelloModule();
         OthelloCommand main = new OthelloCommand();
         System.exit(main.execute(module, args));
     }

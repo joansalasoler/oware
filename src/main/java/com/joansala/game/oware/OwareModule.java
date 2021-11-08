@@ -19,19 +19,18 @@ package com.joansala.game.oware;
  */
 
 
-import com.google.inject.Module;
-import com.google.inject.AbstractModule;
 import picocli.CommandLine.Command;
 
 import com.joansala.cli.*;
 import com.joansala.engine.*;
+import com.joansala.engine.base.BaseModule;
 import com.joansala.engine.negamax.Negamax;
 
 
 /**
  * Binds together the components of the Oware engine.
  */
-public class OwareModule extends AbstractModule {
+public class OwareModule extends BaseModule {
 
     /**
      * Command line interface.
@@ -63,7 +62,7 @@ public class OwareModule extends AbstractModule {
      * @param args      Command line parameters
      */
     public static void main(String[] args) throws Exception {
-        Module module = new OwareModule();
+        BaseModule module = new OwareModule();
         OwareCommand main = new OwareCommand();
         System.exit(main.execute(module, args));
     }

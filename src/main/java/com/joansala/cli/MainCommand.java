@@ -18,9 +18,9 @@ package com.joansala.cli;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import com.google.inject.Module;
 import picocli.CommandLine;
 import picocli.CommandLine.*;
+import com.joansala.engine.base.BaseModule;
 import com.joansala.cli.util.CommandFactory;
 import com.joansala.cli.book.BookCommand;
 import com.joansala.cli.test.TestCommand;
@@ -43,13 +43,13 @@ import com.joansala.cli.test.TestCommand;
 public class MainCommand {
 
     /** Current module in execution */
-    private static Module module;
+    private static BaseModule module;
 
 
     /**
      * Current module in execution.
      */
-    public static final Module getCurrentModule() {
+    public static final BaseModule getCurrentModule() {
         return module;
     }
 
@@ -61,7 +61,7 @@ public class MainCommand {
      * @param args          Command line arguments
      * @return              Exit code
      */
-    public int execute(Module module, String[] args) {
+    public int execute(BaseModule module, String[] args) {
         MainCommand.module = module;
         CommandFactory factory = new CommandFactory(module);
         CommandLine main = new CommandLine(this, factory);

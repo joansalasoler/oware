@@ -19,19 +19,18 @@ package com.joansala.game.draughts;
  */
 
 
-import com.google.inject.Module;
-import com.google.inject.AbstractModule;
 import picocli.CommandLine.Command;
 
 import com.joansala.cli.*;
 import com.joansala.engine.*;
+import com.joansala.engine.base.BaseModule;
 import com.joansala.engine.mcts.Montecarlo;
 
 
 /**
  * Binds together the components of the Draughts engine.
  */
-public class DraughtsModule extends AbstractModule {
+public class DraughtsModule extends BaseModule {
 
     /**
      * Command line interface.
@@ -60,7 +59,7 @@ public class DraughtsModule extends AbstractModule {
      * @param args      Command line parameters
      */
     public static void main(String[] args) throws Exception {
-        Module module = new DraughtsModule();
+        BaseModule module = new DraughtsModule();
         DraughtsCommand main = new DraughtsCommand();
         System.exit(main.execute(module, args));
     }
