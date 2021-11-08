@@ -38,7 +38,7 @@ public class UCT extends BaseEngine implements HasLeaves {
     public static final double DEFAULT_BIAS = 0.353;
 
     /** Minimum elapsed time between reports */
-    private static final int REPORT_INTERVAL = 350;
+    private static final int REPORT_INTERVAL = 450;
 
     /** Prune when less than this amount of memory is available */
     private static final int PRUNE_MEMORY_LIMIT = 2 << 21;

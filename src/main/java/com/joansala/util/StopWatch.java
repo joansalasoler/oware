@@ -49,6 +49,7 @@ public class StopWatch {
      * Resets the watch without stopping it.
      */
     public void reset() {
+        start = System.currentTimeMillis();
         elapsed = 0;
     }
 
