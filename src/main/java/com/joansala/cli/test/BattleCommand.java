@@ -46,6 +46,9 @@ import static com.joansala.engine.Game.*;
 )
 public class BattleCommand implements Callable<Integer> {
 
+    /** Converts command strings to processes */
+    private ProcessConverter converter = new ProcessConverter();
+
     /** Game instance */
     private Game game;
 
@@ -74,10 +77,9 @@ public class BattleCommand implements Callable<Integer> {
     @Option(
       names = "--command",
       description = "Custom UCI engine commands (multiple).",
-      converter = ProcessConverter.class,
-      defaultValue = "<default>"
+      defaultValue = ProcessConverter.DEFAULT
     )
-    private Process[] services = null;
+    private String[] commands = null;
 
     @Option(
       names = "--matches",
@@ -121,7 +123,7 @@ public class BattleCommand implements Callable<Integer> {
      */
     @Override public Integer call() throws Exception {
         configureLoggers();
-        players = createPlayers(services);
+        players = createPlayers(commands);
         runTournament();
 
         for (BenchPlayer player : players) {
@@ -210,7 +212,8 @@ public class BattleCommand implements Callable<Integer> {
     /**
      * Initializes the UCI players for each service.
      */
-    private BenchPlayer[] createPlayers(Process[] services) throws Exception {
+    private BenchPlayer[] createPlayers(String[] commands) throws Exception {
+        Process[] services = createServices(commands);
         BenchPlayer[] players = new BenchPlayer[services.length];
 
         for (int i = 0; i < services.length; i++) {
@@ -225,6 +228,24 @@ public class BattleCommand implements Callable<Integer> {
         }
 
         return players;
+    }
+
+
+    /**
+     * Creates service processes for the given commands. This method
+     * returns at least two services.
+     */
+    private Process[] createServices(String[] commands) throws Exception {
+        int size = Math.max(2, commands.length);
+        Process[] services = new Process[size];
+
+        for (int i = 0; i < size; i++) {
+            services[i] = (i < commands.length) ?
+                converter.convert(commands[i]) :
+                converter.convert(commands[0]);
+        }
+
+        return services;
     }
 
 

@@ -30,7 +30,7 @@ import com.joansala.cli.MainCommand;
 public class ProcessConverter implements ITypeConverter<Process> {
 
     /** Default command string */
-    private static String DEFAULT_COMMAND = "<default>";
+    public static final String DEFAULT = "<default>";
 
 
     /**
@@ -56,7 +56,7 @@ public class ProcessConverter implements ITypeConverter<Process> {
      * @return          Command descriptor
      */
     private String[] getCommandFromPath(String path) {
-        return DEFAULT_COMMAND.equals(path) ?
+        return DEFAULT.equals(path) ?
             getDefaultCommand() : path.split("\\s+");
     }
 
