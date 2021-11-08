@@ -47,6 +47,15 @@
     <project.name>Aalina Abapa</project.name>
   </properties>
 
+  <!-- External repositories ============================================ -->
+
+  <repositories>
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
+    </repository>
+  </repositories>
+
   <!-- Build configuration ============================================== -->
 
   <build>
@@ -120,6 +129,11 @@
   <!-- Project dependencies ============================================= -->
 
   <dependencies>
+    <dependency>
+      <groupId>com.github.AlexLandau</groupId>
+      <artifactId>ggp-base</artifactId>
+      <version>master</version>
+    </dependency>
     <dependency>
       <groupId>berkeleydb</groupId>
       <artifactId>je</artifactId>
