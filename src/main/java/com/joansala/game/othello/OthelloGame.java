@@ -89,6 +89,7 @@ public class OthelloGame extends BaseGame {
         hashes = new long[CAPACITY];
         mobilities = new long[CAPACITY];
         states = new long[CAPACITY << 1];
+        setBoard(new OthelloBoard());
     }
 
 
@@ -159,15 +160,6 @@ public class OthelloGame extends BaseGame {
     @Override
     public OthelloBoard toBoard() {
         return new OthelloBoard(state, turn);
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public OthelloBoard defaultBoard() {
-        return new OthelloBoard();
     }
 
 

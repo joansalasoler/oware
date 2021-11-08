@@ -71,20 +71,12 @@ public abstract class BaseGame implements Game {
      * @param capacity      Initial capacity
      */
     public BaseGame(int capacity) {
-        this.initialize();
         this.index = -1;
         this.turn = Game.SOUTH;
         this.move = Game.NULL_MOVE;
         this.moves = new int[capacity];
         this.capacity = capacity;
-        this.setBoard(defaultBoard());
     }
-
-
-    /**
-     * Invoked by the constuctor to initialize objects.
-     */
-    protected void initialize() {}
 
 
     /**
@@ -93,14 +85,6 @@ public abstract class BaseGame implements Game {
      * @return          Unique hash code
      */
     protected abstract long computeHash();
-
-
-    /**
-     * Obtain the default start board of a game.
-     *
-     * @return      A board instance
-     */
-    public abstract Board defaultBoard();
 
 
     /**

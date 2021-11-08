@@ -122,21 +122,14 @@ public class DraughtsGame extends BaseGame {
      */
     public DraughtsGame(int capacity) {
         super(capacity);
+        movegen = new DraughtsGenerator();
         advances = new int[capacity];
         clocks = new int[capacity];
         cursors = new int[capacity];
         hashes = new long[capacity];
         mobilities = new long[capacity];
         states = new long[capacity << 2];
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void initialize() {
-        movegen = new DraughtsGenerator();
+        setBoard(new DraughtsBoard());
     }
 
 
@@ -239,15 +232,6 @@ public class DraughtsGame extends BaseGame {
     @Override
     public DraughtsBoard toBoard() {
         return new DraughtsBoard(state, player.turn, clock & 0x3F);
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DraughtsBoard defaultBoard() {
-        return new DraughtsBoard();
     }
 
 

@@ -111,6 +111,7 @@ public class OwareGame extends BaseGame {
         captures = new int[capacity];
         empties = new int[capacity];
         states = new int[capacity << 4];
+        setBoard(new OwareBoard());
         setTurn(SOUTH);
     }
 
@@ -223,15 +224,6 @@ public class OwareGame extends BaseGame {
         capture = captures[index];
         move = moves[index];
         index--;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public OwareBoard defaultBoard() {
-        return new OwareBoard();
     }
 
 
