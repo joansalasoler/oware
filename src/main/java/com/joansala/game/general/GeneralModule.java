@@ -31,6 +31,7 @@ import org.ggp.base.util.statemachine.CachedStateMachine;
 import com.joansala.cli.*;
 import com.joansala.engine.*;
 import com.joansala.engine.base.BaseModule;
+import com.joansala.engine.partner.Partner;
 import com.joansala.engine.mcts.Montecarlo;
 
 
@@ -70,7 +71,6 @@ public class GeneralModule extends BaseModule {
     @Override protected void configure() {
         bind(Game.class).to(GeneralGame.class);
         bind(Board.class).to(GeneralBoard.class);
-        bind(Engine.class).to(Montecarlo.class);
     }
 
 
@@ -87,11 +87,21 @@ public class GeneralModule extends BaseModule {
 
 
     /**
-     * State machine fot the requested game.
+     * State machine for the requested game.
      */
     @Provides
     public static StateMachine provideStateMachine() {
         return machine;
+    }
+
+
+    /**
+     * Engine for the requested game.
+     */
+    @Provides
+    public static Engine provideEngine(StateMachine machine) {
+        return (machine.getRoles().size() == 1) ?
+            new Partner() : new Montecarlo();
     }
 
 

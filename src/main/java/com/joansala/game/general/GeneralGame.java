@@ -19,7 +19,7 @@ package com.joansala.game.general;
  */
 
 import java.util.Arrays;
-import java.util.ArrayList;
+import java.util.AbstractList;
 import java.util.List;
 import com.google.inject.Inject;
 import org.ggp.base.util.gdl.grammar.GdlPool;
@@ -47,6 +47,9 @@ public class GeneralGame extends BaseGame {
 
     /** Cursor for an endgame state */
     private static final int ENDGAME_CURSOR = -2;
+
+    /** Maximum obtainable goal score */
+    private static final int MAX_GOAL = 100;
 
     /** State machine for the current game rules */
     private final StateMachine machine;
@@ -122,10 +125,18 @@ public class GeneralGame extends BaseGame {
 
         south.turn = SOUTH;
         north.turn = NORTH;
-        south.role = roles.get(0);
-        north.role = roles.get(1);
-        south.action = new MoveAction(SOUTH);
-        north.action = new MoveAction(NORTH);
+
+        if (roles.size() == 1) {
+            south.role = roles.get(0);
+            north.role = roles.get(0);
+            south.action = new MoveAction();
+            north.action = new MoveAction();
+        } else {
+            south.role = roles.get(0);
+            north.role = roles.get(1);
+            south.action = new MoveAction(SOUTH);
+            north.action = new MoveAction(NORTH);
+        }
     }
 
 
@@ -221,10 +232,17 @@ public class GeneralGame extends BaseGame {
      */
     @Override
     public int outcome() {
-        final int southGoal = goal(south);
-        final int northGoal = goal(north);
-        if (southGoal < northGoal) return -MAX_SCORE;
-        if (southGoal > northGoal) return MAX_SCORE;
+        if (south.role == north.role) {
+            final int goal = goal(south);
+            if (goal == MAX_GOAL) return MAX_SCORE;
+            return goal;
+        } else {
+            final int sgoal = goal(south);
+            final int ngoal = goal(north);
+            if (sgoal < ngoal) return -MAX_SCORE;
+            if (sgoal > ngoal) return MAX_SCORE;
+        }
+
         return DRAW_SCORE;
     }
 
@@ -426,22 +444,42 @@ public class GeneralGame extends BaseGame {
 
 
     /**
-     * A pair of moves where one of the players moves nothing. This
-     * is used to compute the next state from a player move because
-     * the state machine expects moves in pairs.
+     * A list of moves by one or two players that move sequentially.
      */
-    private final class MoveAction extends ArrayList<Move> {
-        private int index = 0;
+    private final class MoveAction extends AbstractList<Move> {
+        private final int size;
+        private final int index;
+        private Move move;
 
-        private MoveAction(int turn) {
-            super(2);
-            add(0, NOOP_MOVE);
-            add(1, NOOP_MOVE);
-            index = turn == SOUTH ? 0 : 1;
+        /** A move action in a one-player game */
+        private MoveAction() {
+            this.index = 0;
+            this.size = 1;
         }
 
-        private void set(Move move) {
-            set(index, move);
+        /** A move action in a two-player game */
+        private MoveAction(int turn) {
+            this.index = (turn == SOUTH) ? 0 : 1;
+            this.size = 2;
+        }
+
+
+        /** Sets the move to perform */
+        public void set(Move move) {
+            this.move = move;
+        }
+
+
+        /** {@inheritDoc} */
+        @Override public Move get(int index) {
+            return index == this.index ?
+                move : NOOP_MOVE;
+        }
+
+
+        /** {@inheritDoc} */
+        @Override public int size() {
+            return size;
         }
     }
 }
