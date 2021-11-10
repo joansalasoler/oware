@@ -23,41 +23,48 @@ import com.joansala.engine.Game;
 
 /**
  * A game state on a search tree.
+ *
+ * The search tree is stored as a left-child right-sibling binary tree
+ * for efficiency. To iterate the children of a node one must first check
+ * the first child and from there recursively iterate their siblings.
  */
-class UCTNode {
+public class UCTNode {
 
     /** Parent of this node */
-    UCTNode parent = null;
+    private UCTNode parent = null;
 
     /** First child of this node */
-    UCTNode child = null;
+    private UCTNode child = null;
 
     /** First sibling of this node */
-    UCTNode sibling = null;
+    private UCTNode sibling = null;
 
-    /** Unique hash code of the node */
-    long hash = 0x00;
+    /** Hash code of the node */
+    private long hash = 0x00;
+
+    /** Player to move on this node */
+    private int turn = Game.SOUTH;
 
     /** Performed move to reach the node */
-    int move = Game.NULL_MOVE;
+    private int move = Game.NULL_MOVE;
 
     /** Current move generation cursor */
-    int cursor = Game.NULL_MOVE;
+    private int cursor = Game.NULL_MOVE;
 
     /** Initial move generation cursor */
-    int reset = Game.NULL_MOVE;
+    private int reset = Game.NULL_MOVE;
 
     /** Whether it is fully expanded */
-    boolean expanded = false;
+    private boolean expanded = false;
 
     /** Whether it is an endgame position */
-    boolean terminal = false;
+    private boolean terminal = false;
 
     /** Number of played simulations */
-    long count = 0;
+    private long count = 0;
 
     /** Average score of the simulations */
-    double score = 0.0;
+    private double score = 0.0;
 
 
     /**
@@ -66,12 +73,93 @@ class UCTNode {
      * @param game      Game state
      * @param move      Performed move
      */
-    UCTNode(Game game, int move) {
+    protected UCTNode(Game game, int move) {
         hash = game.hash();
         cursor = game.getCursor();
         terminal = game.hasEnded();
+        this.turn = game.turn();
         this.reset = cursor;
         this.move = move;
+    }
+
+
+    /**
+     * Parent of this node if it is known.
+     */
+    public UCTNode parent() {
+        return parent;
+    }
+
+
+    /**
+     * Current first sibling of this node if it is known.
+     */
+    public UCTNode sibling() {
+        return sibling;
+    }
+
+
+    /**
+     * Current first child of this node if expanded.
+     */
+    public UCTNode child() {
+        return child;
+    }
+
+
+    /**
+     * Player to move on this node.
+     */
+    public int turn() {
+        return turn;
+    }
+
+
+    /**
+     * Performed move to reach the node.
+     */
+    public int move() {
+        return move;
+    }
+
+
+    /**
+     * Hash code of the node.
+     */
+    public long hash() {
+        return hash;
+    }
+
+
+    /**
+     * How many times this branch was expanded.
+     */
+    public long count() {
+        return count;
+    }
+
+
+    /**
+     * Average score of this node's branch.
+     */
+    public double score() {
+        return score;
+    }
+
+
+    /**
+     * Whether the exact score is known.
+     */
+    public boolean terminal() {
+        return terminal;
+    }
+
+
+    /**
+     * Whether all this node's childs were added to the tree.
+     */
+    public boolean expanded() {
+        return expanded;
     }
 
 
@@ -80,7 +168,7 @@ class UCTNode {
      *
      * @param game      State of this node
      */
-    int nextMove(Game game) {
+    protected int nextMove(Game game) {
         final int move;
 
         if (expanded) {
@@ -101,7 +189,7 @@ class UCTNode {
      *
      * @param node      Child node
      */
-    void pushChild(UCTNode node) {
+    protected void pushChild(UCTNode node) {
         node.parent = this;
         node.sibling = child;
         child = node;
@@ -111,7 +199,7 @@ class UCTNode {
     /**
      * Increase the number of simulations.
      */
-    void increaseCount() {
+    protected void increaseCount() {
         count++;
     }
 
@@ -121,7 +209,7 @@ class UCTNode {
      *
      * @param value     Node score
      */
-    void initScore(double value) {
+    protected void initScore(double value) {
         score = value;
         count = 1;
     }
@@ -132,7 +220,7 @@ class UCTNode {
      *
      * @param value     Terminal score
      */
-    void settleScore(double value) {
+    protected void settleScore(double value) {
         terminal = true;
         score = value;
         count++;
@@ -144,7 +232,7 @@ class UCTNode {
      *
      * @param value     Simulation score
      */
-    void updateScore(double value) {
+    protected void updateScore(double value) {
         score += (value - score) / ++count;
     }
 
@@ -158,7 +246,7 @@ class UCTNode {
      *
      * @param value     Terminal score
      */
-    void proveScore(double score) {
+    protected void proveScore(double score) {
         UCTNode child = this.child;
 
         do {
@@ -177,7 +265,7 @@ class UCTNode {
      * to this node from its children and resets the move cursor; so the
      * children subtrees can then be garbage collected.
      */
-    void detachChildren() {
+    protected void detachChildren() {
         if (child == null) {
             return;
         }
@@ -199,7 +287,7 @@ class UCTNode {
      * Detach this node from the tree. Removes all the references to the
      * node found on the tree; so the node can be garbage collected.
      */
-    void detachFromTree() {
+    protected void detachFromTree() {
         if (parent == null) {
             return;
         }
