@@ -19,11 +19,11 @@ package com.joansala.cli.util;
  */
 
 
-import java.util.function.Supplier;
 import com.joansala.engine.Engine;
 import com.joansala.engine.mcts.Montecarlo;
 import com.joansala.engine.mindless.Mindless;
 import com.joansala.engine.negamax.Negamax;
+import com.joansala.engine.partner.Partner;
 import com.joansala.engine.sampler.Sampler;
 import com.joansala.engine.uct.UCT;
 
@@ -41,6 +41,9 @@ public enum EngineType {
 
     /** A minimax engine with alpha-beta pruning */
     NEGAMAX(Negamax.class),
+
+    /** An engine that picks bad moves if playing as north */
+    PARTNER(Partner.class),
 
     /** An engine with pure random simulations */
     SAMPLER(Sampler.class),

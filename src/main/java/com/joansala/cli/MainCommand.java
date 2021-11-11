@@ -65,6 +65,7 @@ public class MainCommand {
         MainCommand.module = module;
         CommandFactory factory = new CommandFactory(module);
         CommandLine main = new CommandLine(this, factory);
+        main.setCaseInsensitiveEnumValuesAllowed(true);
         return main.execute(args);
     }
 }
