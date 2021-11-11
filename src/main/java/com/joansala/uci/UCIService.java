@@ -20,7 +20,6 @@ package com.joansala.uci;
 import java.util.Scanner;
 import java.util.StringJoiner;
 import java.util.regex.Pattern;
-import java.util.function.Consumer;
 import com.google.inject.Inject;
 
 import com.joansala.except.IllegalMoveException;
@@ -40,13 +39,13 @@ import com.joansala.engine.*;
 public class UCIService {
 
     /** Thread where the computations are performed */
-    private Brain brain = null;
+    private UCIBrain brain;
 
     /** Performs move computations for a game */
-    private Engine engine = null;
+    protected Engine engine = null;
 
     /** Game where the computations are performed */
-    private Game game = null;
+    protected Game game = null;
 
     /** Contains the current start position and turn */
     private Board board = null;
@@ -55,16 +54,16 @@ public class UCIService {
     private Board rootBoard = null;
 
     /** Opening book */
-    private Roots<Game> roots = null;
+    protected Roots<Game> roots = null;
+
+    /** Engine's endgames database */
+    protected Leaves<Game> leaves = null;
 
     /** Engine's transposition table */
     private Cache<Game> cache = null;
 
-    /** Engine's endgames database */
-    private Leaves<Game> leaves = null;
-
     /** Last info shown for the current computation */
-    private String lastInfo = null;
+    protected String lastInfo = null;
 
     /** Contains the performed moves for the next computation */
     private int[] moves = null;
@@ -94,13 +93,13 @@ public class UCIService {
     private volatile boolean drawSearch = false;
 
     /** If set to true the engine will use its own book */
-    private volatile boolean ownBook = true;
+    protected volatile boolean ownBook = true;
 
     /** If set the engine will use its endgames database */
-    private volatile boolean useLeaves = true;
+    protected volatile boolean useLeaves = true;
 
     /** If set to true the time for next computation will be infinite */
-    private volatile boolean infinite = false;
+    protected volatile boolean infinite = false;
 
 
     /**
@@ -176,7 +175,7 @@ public class UCIService {
 
         // Brain initialization
 
-        this.brain = new Brain();
+        this.brain = new UCIBrain(this);
         this.brain.start();
 
         // Remember current hash size and available memory
@@ -230,234 +229,6 @@ public class UCIService {
 
 
     /**
-     * The search thread where the computations are performed.
-     */
-    private class Brain extends Thread {
-
-        private volatile boolean thinking = false;
-
-
-        /**
-         * The main bucle for the brain.
-         */
-        @Override public void run() {
-            final Consumer<Report> consumer = createSearchConsumer();
-            engine.attachConsumer(consumer);
-
-            while (true) {
-                synchronized (this) {
-                    try {
-                        lastInfo = null;
-                        thinking = false;
-                        this.wait();
-                        findBestMove();
-                    } catch (InterruptedException e) {
-                        break;
-                    }
-                }
-            }
-
-            engine.detachConsumer(consumer);
-        }
-
-
-        /**
-         * Returns if the brain is currently computing a move.
-         *
-         * @return {@code true} if there is a move computation in progress
-         */
-        public boolean isThinking() {
-            return thinking;
-        }
-
-
-        /**
-         * Instructs the brain to start a new move calculation
-         */
-        public void startThinking() {
-            synchronized (this) {
-                thinking = true;
-                this.notify();
-            }
-        }
-
-
-        /**
-         * Instructs the brain to abort any move calculations
-         */
-        public void stopThinking() {
-            while (isThinking()) {
-                engine.abortComputation();
-                synchBrain();
-            }
-        }
-
-
-        /**
-         * Performs all the necessary computations to find a best move
-         * for the current game.
-         */
-        private void findBestMove() {
-            int bestMove = Game.NULL_MOVE;
-
-            // If the game has ended return a null move
-
-            if (game.hasEnded()) {
-                output("bestmove 0000");
-                return;
-            }
-
-            // Use the book to find a move
-
-            if (ownBook && !infinite) {
-                bestMove = getBookMove(game, false);
-            }
-
-            // Enable or disable the endgames database
-
-            if (engine instanceof HasLeaves) {
-                HasLeaves e = (HasLeaves) engine;
-                e.setLeaves(useLeaves ? leaves : null);
-            }
-
-            // Use the engine to compute a move
-
-            if (bestMove == Game.NULL_MOVE) {
-                bestMove = engine.computeBestMove(game);
-            } else {
-                output("info string A book move was chosen");
-            }
-
-            // Show the computed best and ponder moves
-
-            Board board = game.toBoard();
-            StringBuilder response = new StringBuilder();
-
-            response.append("bestmove ");
-            response.append(board.toCoordinates(bestMove));
-
-            performMove(game, bestMove);
-            int ponderMove = getPonderMove(game);
-
-            if (ponderMove != Game.NULL_MOVE) {
-                response.append(" ponder ");
-                response.append(game.toBoard().toCoordinates(ponderMove));
-            }
-
-            output(response.toString());
-        }
-
-
-        /**
-         * Prints information for an engine's search.
-         *
-         * @param report    Search report
-         * @return          Information string
-         */
-        private String formatReport(Report report) {
-            StringBuilder response = new StringBuilder();
-
-            int flag = report.getFlag();
-            int score = report.getScore();
-            int depth = report.getDepth();
-            int[] variation = report.getVariation();
-
-            response.append("info");
-
-            if (depth > 0) {
-                response.append(" depth ");
-                response.append(depth);
-            }
-
-            response.append(" score cp ");
-            response.append(score);
-
-            if (flag == Flag.LOWER) {
-                response.append(" lowerbound");
-            }
-
-            if (flag == Flag.UPPER) {
-                response.append(" upperbound");
-            }
-
-            if (variation.length > 0) {
-                Board board = game.toBoard();
-                response.append(" pv ");
-                response.append(board.toNotation(variation));
-            }
-
-            return response.toString();
-        }
-
-
-        /**
-         * A consumer that prints search information for the current state.
-         *
-         * @return      New search consumer instance
-         */
-        private Consumer<Report> createSearchConsumer() {
-            return (report) -> {
-                if (report.getFlag() != Flag.EMPTY) {
-                    String info = formatReport(report);
-
-                    if (!info.equals(lastInfo)) {
-                        lastInfo = info;
-                        output(info);
-                    }
-                }
-            };
-        }
-
-
-        /**
-         * Returns a move from the openings book.
-         *
-         * @param game  A game object
-         * @return      A move or {@code Game.NULL_MOVE}
-         */
-        private int getBookMove(Game game, boolean ponder) {
-            int move = Game.NULL_MOVE;
-
-            if (roots instanceof Roots == false) {
-                return move;
-            }
-
-            try {
-                move = (ponder == false) ?
-                       roots.pickBestMove(game) :
-                       roots.pickPonderMove(game);
-            } catch (Exception e) {
-                showError("Cannot select book move");
-                showError(e.getMessage());
-            }
-
-            return move;
-        }
-
-
-        /**
-         * Returns a move for pondering.
-         *
-         * @param game  A game object
-         * @return      A move or {@code Game.NULL_MOVE}
-         */
-        private int getPonderMove(Game game) {
-            int move = Game.NULL_MOVE;
-
-            if (ownBook == true) {
-                move = getBookMove(game, true);
-            }
-
-            if (move == Game.NULL_MOVE) {
-                move = engine.getPonderMove(game);
-            }
-
-            return move;
-        }
-    }
-
-
-    /**
      * Performs a move on the internal board. This method asserts that
      * the move is legal and ensures the game has enough capacity to
      * store it.
@@ -467,7 +238,7 @@ public class UCIService {
      * @throws IllegalMoveException  if the move cannot be
      *      performed on the provided game object
      */
-    private void performMove(Game game, int move) {
+    protected void performMove(Game game, int move) {
         if (game.isLegal(move)) {
             game.ensureCapacity(1 + game.length());
             game.makeMove(move);
@@ -482,7 +253,7 @@ public class UCIService {
      * Waits for the brain to be ready for at most one second. The
      * brain is ready when it's thinking state is false.
      */
-    private void synchBrain() {
+    protected void synchBrain() {
         for (int i = 0; brain.isThinking() && i < 50; i++) {
             try {
                 Thread.sleep(20);
@@ -899,7 +670,7 @@ public class UCIService {
      *
      * @param s     message
      */
-    private void showError(String s) {
+    protected void showError(String s) {
         if (debug == true)
             printString("Error: " + s);
     }
@@ -910,7 +681,7 @@ public class UCIService {
      *
      * @param s     message
      */
-    private static void printString(String s) {
+    private void printString(String s) {
         output("info string " + s);
     }
 
@@ -920,7 +691,7 @@ public class UCIService {
      *
      * @param message   engine message
      */
-    private static void output(String message) {
+    protected void output(String message) {
         synchronized (System.out) {
             System.out.println(message);
         }
