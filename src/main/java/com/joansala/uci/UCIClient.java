@@ -24,11 +24,13 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.Scanner;
+import java.util.StringJoiner;
 import com.google.inject.Inject;
 
 import com.joansala.except.IllegalMoveException;
 import com.joansala.except.IllegalPositionException;
 import com.joansala.engine.*;
+import static com.joansala.uci.UCI.*;
 
 
 /**
@@ -338,10 +340,10 @@ public class UCIClient {
             while (scanner.hasNext()) {
                 String token = scanner.next();
 
-                if (token.equals("on")) {
+                if (token.equals(ON)) {
                     debugSwitch = false;
                     debugValue = true;
-                } else if (token.equals("off")) {
+                } else if (token.equals(OFF)) {
                     debugSwitch = false;
                     debugValue = false;
                 }
@@ -363,28 +365,6 @@ public class UCIClient {
      */
     private void parseIsReady(String params) throws Exception {
         this.ready = false;
-    }
-
-
-    /**
-     * Parses the parameters of a 'setoption' command and sets the
-     * relevant engine state information.
-     *
-     * @param params    command parameters
-     */
-    private void parseSetOption(String params) throws Exception {
-        // Not implemented
-    }
-
-
-    /**
-     * Parses the parameters of a 'register' command and sets the
-     * relevant engine state information.
-     *
-     * @param params    command parameters
-     */
-    private void parseRegister(String params) throws Exception {
-        // Not implemented
     }
 
 
@@ -434,13 +414,13 @@ public class UCIClient {
         while (scanner.hasNext()) {
             String token = scanner.next();
 
-            if ("startpos".equals(token)) {
-                position = "startpos";
-            } else if ("fen".equals(token)) {
+            if (STARTPOS.equals(token)) {
+                position = STARTPOS;
+            } else if (FEN.equals(token)) {
                 if (scanner.hasNext()) {
                     position = consumeString(scanner, stop);
                 }
-            } else if ("moves".equals(token)) {
+            } else if (MOVES.equals(token)) {
                 notation = consumeString(scanner, stop);
             }
         }
@@ -454,7 +434,7 @@ public class UCIClient {
                 "No position was provided");
         }
 
-        board = ("startpos".equals(position)) ?
+        board = (STARTPOS.equals(position)) ?
             rootBoard : rootBoard.toBoard(position);
 
         game.setBoard(board);
@@ -513,9 +493,9 @@ public class UCIClient {
             while (scanner.hasNext()) {
                 String token = scanner.next();
 
-                if ("infinite".equals(token)) {
+                if (INFINITE.equals(token)) {
                     infinite = true;
-                } else if ("ponder".equals(token)) {
+                } else if (PONDER.equals(token)) {
                     ponder = true;
                     infinite = true;
                 }
@@ -667,7 +647,7 @@ public class UCIClient {
         while (scanner.hasNext()) {
             String token = scanner.next();
 
-            if ("ponder".equals(token)) {
+            if (PONDER.equals(token)) {
                 if (scanner.hasNext())
                     ponderMove = scanner.next();
             }
@@ -677,7 +657,7 @@ public class UCIClient {
 
         // Check if a null move was received
 
-        if ("0000".equals(bestMove)) {
+        if (NULLMOVE.equals(bestMove)) {
             this.bestMove = Game.NULL_MOVE;
             this.ponderMove = Game.NULL_MOVE;
             return;
@@ -721,50 +701,6 @@ public class UCIClient {
 
 
     /**
-     * Parses the parameters of a 'copyprotection' command and sets
-     * the relevant engine state information.
-     *
-     * @param params    command parameters
-     */
-    private void parseCopyProtection(String params) throws Exception {
-        // Not implemented
-    }
-
-
-    /**
-     * Parses the parameters of a 'registration' command and sets
-     * the relevant engine state information.
-     *
-     * @param params    command parameters
-     */
-    private void parseRegistration(String params) throws Exception {
-        // Not implemented
-    }
-
-
-    /**
-     * Parses the parameters of an 'info' command and sets the
-     * relevant engine state information.
-     *
-     * @param params    command parameters
-     */
-    private void parseInfo(String params) throws Exception {
-        // Not implemented
-    }
-
-
-    /**
-     * Parses the parameters of an 'option' command and sets the
-     * relevant engine state information.
-     *
-     * @param params    command parameters
-     */
-    private void parseOption(String params) throws Exception {
-        // Not implemented
-    }
-
-
-    /**
      * Builds a {@code String} from the {@code Scanner} concatenating
      * each token until it founds a token that matches the stop pattern
      * or the end of input is reached.
@@ -804,25 +740,14 @@ public class UCIClient {
         String command = matcher.group(1);
         String params = matcher.group(2);
 
-        if ("id".equals(command)) {
+        if (ID.equals(command)) {
             parseID(params);
-        } else if ("uciok".equals(command)) {
+        } else if (UCIOK.equals(command)) {
             parseUCIOk(params);
-        } else if ("readyok".equals(command)) {
+        } else if (READYOK.equals(command)) {
             parseReadyOk(params);
-        } else if ("bestmove".equals(command)) {
+        } else if (BESTMOVE.equals(command)) {
             parseBestMove(params);
-        } else if ("copyprotection".equals(command)) {
-            parseCopyProtection(params);
-        } else if ("registration".equals(command)) {
-            parseRegistration(params);
-        } else if ("info".equals(command)) {
-            parseInfo(params);
-        } else if ("option".equals(command)) {
-            parseOption(params);
-        } else {
-            throw new IllegalArgumentException(
-                "Unknown engine command: " + command);
         }
     }
 
@@ -854,33 +779,24 @@ public class UCIClient {
         String command = matcher.group(1);
         String params = matcher.group(2);
 
-        if ("uci".equals(command)) {
+        if (UCI.equals(command)) {
             parseUCI(params);
-        } else if ("debug".equals(command)) {
+        } else if (DEBUG.equals(command)) {
             parseDebug(params);
-        } else if ("moves".equals(command)) {
+        } else if (ISREADY.equals(command)) {
             parseIsReady(params);
-        } else if ("isready".equals(command)) {
-            parseIsReady(params);
-        } else if ("setoption".equals(command)) {
-            parseSetOption(params);
-        } else if ("register".equals(command)) {
-            parseRegister(params);
-        } else if ("ucinewgame".equals(command)) {
+        } else if (UCINEWGAME.equals(command)) {
             parseUCINewGame(params);
-        } else if ("position".equals(command)) {
+        } else if (POSITION.equals(command)) {
             parsePosition(params);
-        } else if ("go".equals(command)) {
+        } else if (GO.equals(command)) {
             parseGo(params);
-        } else if ("stop".equals(command)) {
+        } else if (STOP.equals(command)) {
             parseStop(params);
-        } else if ("ponderhit".equals(command)) {
+        } else if (PONDERHIT.equals(command)) {
             parsePonderHit(params);
-        } else if ("quit".equals(command)) {
+        } else if (QUIT.equals(command)) {
             parseQuit(params);
-        } else {
-            throw new IllegalArgumentException(
-                "Unknown UCI command: " + command);
         }
     }
 
@@ -897,6 +813,14 @@ public class UCIClient {
         logger.info(String.format("%s > %s", name, message));
         evaluateOutput(message);
         output.format("%s%n", message);
+    }
+
+
+    /**
+     * Evaluate and send a client-to-engine message.
+     */
+    public void send(Object... values) throws Exception {
+        send(toMessage(values));
     }
 
 
@@ -929,5 +853,19 @@ public class UCIClient {
         }
 
         return message;
+    }
+
+
+    /**
+     * Converts objects to a space sepparated string.
+     */
+    private String toMessage(Object... values) {
+        StringJoiner message = new StringJoiner(" ");
+
+        for (Object value : values) {
+            message.add(String.valueOf(value));
+        }
+
+        return message.toString();
     }
 }

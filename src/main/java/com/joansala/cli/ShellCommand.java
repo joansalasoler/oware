@@ -34,6 +34,7 @@ import static org.jline.builtins.Completers.TreeCompleter.node;
 import com.joansala.engine.Board;
 import com.joansala.cli.util.ProcessConverter;
 import com.joansala.uci.UCIClient;
+import static com.joansala.uci.UCI.*;
 
 
 /**
@@ -94,6 +95,12 @@ public class ShellCommand implements Callable<Integer> {
 
         printWelcome(writer);
 
+        try {
+            client.send(DEBUG, ON);
+        } catch (Exception e) {
+            writer.format("Warning: Cannot set debug mode%n");
+        }
+
         while (client.isRunning()) {
             try {
                 if (!client.getBoard().equals(board)) {
@@ -113,11 +120,7 @@ public class ShellCommand implements Callable<Integer> {
                     }
                 }
             } catch (Exception e) {
-                if (client.isDebugOn()) {
-                    e.printStackTrace(writer);
-                } else {
-                    writer.format("Error: %s%n", e.getMessage());
-                }
+                writer.format("Error: %s%n", e.getMessage());
             }
         }
     }

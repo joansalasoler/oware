@@ -17,9 +17,11 @@ package com.joansala.uci;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import java.util.StringJoiner;
 import java.util.function.Consumer;
 import com.joansala.engine.*;
 import static com.joansala.engine.Game.*;
+import static com.joansala.uci.UCI.*;
 
 
 /**
@@ -27,8 +29,35 @@ import static com.joansala.engine.Game.*;
  */
 public class UCIBrain extends Thread {
 
+    /** Search reports consumer */
+    private Consumer<Report> consumer;
+
     /** UCI service */
     private UCIService service;
+
+    /** Search engine instance */
+    private Engine engine;
+
+    /** Game instance */
+    private Game game;
+
+    /** Start state for computations */
+    private Board board;
+
+    /** State after moves are performed */
+    private Board parser;
+
+    /** Openings book instance */
+    private Roots<Game> roots;
+
+    /** Performed moves on the start state */
+    private int[] moves;
+
+    /** Last report that was sent */
+    private String info = null;
+
+    /** Stop searching only when stop is received */
+    private boolean infinite = false;
 
     /** Set to true while computing a move */
     private volatile boolean thinking = false;
@@ -38,38 +67,17 @@ public class UCIBrain extends Thread {
      * Create a new brain for a given sercice.
      */
     public UCIBrain(UCIService service) {
+        this.consumer = createSearchConsumer();
+        this.engine = service.getEngine();
+        this.game = service.getGame();
         this.service = service;
     }
 
 
     /**
-     * The main bucle for the brain.
-     */
-    @Override public void run() {
-        Consumer<Report> consumer = createSearchConsumer();
-        service.engine.attachConsumer(consumer);
-
-        while (true) {
-            synchronized (this) {
-                try {
-                    service.lastInfo = null;
-                    thinking = false;
-                    this.wait();
-                    findBestMove();
-                } catch (InterruptedException e) {
-                    break;
-                }
-            }
-        }
-
-        service.engine.detachConsumer(consumer);
-    }
-
-
-    /**
-     * Returns if the brain is currently computing a move.
+     * Check if this brain is computing a move.
      *
-     * @return {@code true} if there is a move computation in progress
+     * @return      If a search is in progress
      */
     public boolean isThinking() {
         return thinking;
@@ -77,166 +85,149 @@ public class UCIBrain extends Thread {
 
 
     /**
-     * Instructs the brain to start a new move calculation
+     * Sets a new state for future searches.
+     *
+     * @param board     Initial board state
+     * @param moves     Moves performed on the board
      */
-    public void startThinking() {
+    public void setState(Board board, int[] moves) {
         synchronized (this) {
-            thinking = true;
+            this.board = board;
+            this.moves = moves;
+        }
+    }
+
+
+    /**
+     * Instructs the brain to start searching.
+     */
+    public void startThinking(boolean infinite) {
+        synchronized (this) {
+            this.infinite = infinite;
+            this.thinking = true;
             this.notify();
         }
     }
 
 
     /**
-     * Instructs the brain to abort any move calculations
+     * Instructs the brain to stop searching.
      */
     public void stopThinking() {
         while (isThinking()) {
-            service.engine.abortComputation();
-            service.synchBrain();
+            engine.abortComputation();
+            synch();
         }
     }
 
 
     /**
-     * Performs all the necessary computations to find a best move
-     * for the current game.
+     * Waits for the brain to be ready for at most one second. The
+     * brain is ready when it's thinking state is false.
+     */
+    public void synch() {
+        try {
+            for (int i = 0; isThinking() && i < 50; i++) {
+                Thread.sleep(20);
+            }
+        } catch (InterruptedException e) {}
+    }
+
+
+    /**
+     * The main bucle for the brain.
+     */
+    @Override public void run() {
+        engine.attachConsumer(consumer);
+
+        while (true) {
+            synchronized (this) {
+                try {
+                    thinking = false;
+                    this.wait();
+                    setupGameState();
+                    setupSearchEngine();
+                    findBestMove();
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+        }
+
+        engine.detachConsumer(consumer);
+    }
+
+
+    /**
+     * Setup the search state on the game.
+     */
+    private void setupGameState() {
+        game.setBoard(board);
+        game.ensureCapacity(moves.length);
+
+        for (int move : moves) {
+            game.makeMove(move);
+        }
+
+        parser = game.toBoard();
+    }
+
+
+    /**
+     * Setup the search engine and roots.
+     */
+    private void setupSearchEngine() {
+        roots = service.getRoots();
+
+        if (engine instanceof HasCache) {
+            HasCache e = (HasCache) engine;
+            e.setCache(service.getCache());
+        }
+
+        if (engine instanceof HasLeaves) {
+            HasLeaves e = (HasLeaves) engine;
+            e.setLeaves(service.getLeaves());
+        }
+    }
+
+
+    /**
+     * Finds a best and ponder moves either from the engine or the
+     * openings book and sends a message with the result.
      */
     private void findBestMove() {
-        int bestMove = NULL_MOVE;
+        int move = NULL_MOVE;
+        int ponder = NULL_MOVE;
 
-        // If the game has ended return a null move
-
-        if (service.game.hasEnded()) {
-            service.output("bestmove 0000");
+        if (game.hasEnded()) {
+            service.send(BESTMOVE, NULLMOVE);
             return;
         }
 
-        // Use the book to find a move
+        // Pick a move from the book or engine
 
-        if (service.ownBook && !service.infinite) {
-            bestMove = getBookMove(service.game, false);
+        if (infinite == false) {
+            move = getBookMove(game);
         }
 
-        // Enable or disable the endgames database
-
-        if (service.engine instanceof HasLeaves) {
-            HasLeaves e = (HasLeaves) service.engine;
-            e.setLeaves(service.useLeaves ? service.leaves : null);
-        }
-
-        // Use the engine to compute a move
-
-        if (bestMove == NULL_MOVE) {
-            bestMove = service.engine.computeBestMove(service.game);
+        if (move == NULL_MOVE) {
+            move = engine.computeBestMove(game);
         } else {
-            service.output("info string A book move was chosen");
+            service.debug("A book move was chosen");
         }
 
-        // Show the computed best and ponder moves
+        // Reply with a best move and a ponder move if available.
+        // Notice move notations may be dependent on the game state.
 
-        Board board = service.game.toBoard();
-        StringBuilder response = new StringBuilder();
+        String mc = game.toBoard().toCoordinates(move);
+        game.makeMove(move);
 
-        response.append("bestmove ");
-        response.append(board.toCoordinates(bestMove));
-
-        service.performMove(service.game, bestMove);
-        int ponderMove = getPonderMove(service.game);
-
-        if (ponderMove != NULL_MOVE) {
-            response.append(" ponder ");
-            response.append(service.game.toBoard().toCoordinates(ponderMove));
+        if ((ponder = getPonderMove(game)) != NULL_MOVE) {
+            String pc = game.toBoard().toCoordinates(ponder);
+            service.send(BESTMOVE, mc, PONDER, pc);
+        } else {
+            service.send(BESTMOVE, mc);
         }
-
-        service.output(response.toString());
-    }
-
-
-    /**
-     * Prints information for an engine's search.
-     *
-     * @param report    Search report
-     * @return          Information string
-     */
-    private String formatReport(Report report) {
-        StringBuilder response = new StringBuilder();
-
-        int flag = report.getFlag();
-        int score = report.getScore();
-        int depth = report.getDepth();
-        int[] variation = report.getVariation();
-
-        response.append("info");
-
-        if (depth > 0) {
-            response.append(" depth ");
-            response.append(depth);
-        }
-
-        response.append(" score cp ");
-        response.append(score);
-
-        if (flag == Flag.LOWER) {
-            response.append(" lowerbound");
-        }
-
-        if (flag == Flag.UPPER) {
-            response.append(" upperbound");
-        }
-
-        if (variation.length > 0) {
-            Board board = service.game.toBoard();
-            response.append(" pv ");
-            response.append(board.toNotation(variation));
-        }
-
-        return response.toString();
-    }
-
-
-    /**
-     * A consumer that prints search information for the current state.
-     *
-     * @return      New search consumer instance
-     */
-    private Consumer<Report> createSearchConsumer() {
-        return (report) -> {
-            if (report.getFlag() != Flag.EMPTY) {
-                String info = formatReport(report);
-
-                if (!info.equals(service.lastInfo)) {
-                    service.lastInfo = info;
-                    service.output(info);
-                }
-            }
-        };
-    }
-
-
-    /**
-     * Returns a move from the openings book.
-     *
-     * @param game  A game object
-     * @return      A move or {@code Game.NULL_MOVE}
-     */
-    private int getBookMove(Game game, boolean ponder) {
-        int move = NULL_MOVE;
-
-        if (service.roots instanceof Roots == false) {
-            return move;
-        }
-
-        try {
-            move = (ponder == false) ?
-                   service.roots.pickBestMove(game) :
-                   service.roots.pickPonderMove(game);
-        } catch (Exception e) {
-            service.showError("Cannot select book move");
-            service.showError(e.getMessage());
-        }
-
-        return move;
     }
 
 
@@ -249,14 +240,105 @@ public class UCIBrain extends Thread {
     private int getPonderMove(Game game) {
         int move = NULL_MOVE;
 
-        if (service.ownBook == true) {
-            move = getBookMove(game, true);
-        }
-
-        if (move == NULL_MOVE) {
-            move = service.engine.getPonderMove(game);
+        if ((move = getBookPonderMove(game)) == NULL_MOVE) {
+            move = engine.getPonderMove(game);
         }
 
         return move;
+    }
+
+
+    /**
+     * Returns a move from the openings book.
+     *
+     * @param game  A game object
+     * @return      A move or {@code Game.NULL_MOVE}
+     */
+    private int getBookMove(Game game) {
+        try {
+            return roots.pickBestMove(game);
+        } catch (Exception e) {
+            service.debug("Cannot get move from book");
+            service.debug("Reason:", e.getMessage());
+        }
+
+        return NULL_MOVE;
+    }
+
+
+    /**
+     * Returns a ponder move from the openings book.
+     *
+     * @param game  A game object
+     * @return      A move or {@code Game.NULL_MOVE}
+     */
+    private int getBookPonderMove(Game game) {
+        try {
+            return roots.pickPonderMove(game);
+        } catch (Exception e) {
+            service.debug("Cannot get ponder move from book");
+            service.debug("Reason:", e.getMessage());
+        }
+
+        return NULL_MOVE;
+    }
+
+
+    /**
+     * Reports search information for the current state.
+     *
+     * @return      New consumer instance
+     */
+    private Consumer<Report> createSearchConsumer() {
+        return (report) -> {
+            if (report.getFlag() != Flag.EMPTY) {
+                String message = getReportMessage(report);
+
+                if (message.equals(info) == false) {
+                    service.send(INFO, message);
+                    info = message;
+                }
+            }
+        };
+    }
+
+
+    /**
+     * Formats a report as an information message.
+     *
+     * @param report    Search report
+     * @return          Information string
+     */
+    private String getReportMessage(Report report) {
+        StringJoiner message = new StringJoiner(" ");
+
+        int flag = report.getFlag();
+        int score = report.getScore();
+        int depth = report.getDepth();
+        int[] variation = report.getVariation();
+
+        if (depth > 0) {
+            message.add(DEPTH);
+            message.add(String.valueOf(depth));
+        }
+
+        message.add(SCORE);
+        message.add(CENTIPAWNS);
+        message.add(String.valueOf(score));
+
+        if (flag == Flag.LOWER) {
+            message.add(LOWERBOUND);
+        }
+
+        if (flag == Flag.UPPER) {
+            message.add(UPPERBOUND);
+        }
+
+        if (variation.length > 0) {
+            message.add(VARIATION);
+            message.add(parser.toNotation(variation));
+        }
+
+        return message.toString();
     }
 }
