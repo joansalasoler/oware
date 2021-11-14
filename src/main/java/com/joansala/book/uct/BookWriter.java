@@ -1,4 +1,4 @@
-package com.joansala.book.base;
+package com.joansala.book.uct;
 
 /*
  * Copyright (c) 2021 Joan Sala Soler <contact@joansala.com>

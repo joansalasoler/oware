@@ -1,4 +1,4 @@
 /**
- * Base opening book implementation.
+ * Base roots implementations.
  */
 package com.joansala.book.base;

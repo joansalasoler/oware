@@ -19,7 +19,7 @@ package com.joansala.game.oware;
  */
 
 import java.io.IOException;
-import com.joansala.book.base.BaseRoots;
+import com.joansala.book.uct.UCTRoots;
 import static com.joansala.game.oware.Oware.*;
 import static com.joansala.game.oware.OwareGame.*;
 
@@ -27,7 +27,7 @@ import static com.joansala.game.oware.OwareGame.*;
 /**
  * Opening book implementation for oware.
  */
-public class OwareRoots extends BaseRoots {
+public class OwareRoots extends UCTRoots {
 
     /** Default path of the book database */
     public static final String ROOTS_PATH = "/oware-roots.bin";
@@ -58,6 +58,6 @@ public class OwareRoots extends BaseRoots {
      * Obtain a path to the given resource file.
      */
     private static String getResourcePath(String path) {
-        return BaseRoots.class.getResource(path).getFile();
+        return UCTRoots.class.getResource(path).getFile();
     }
 }

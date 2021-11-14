@@ -17,256 +17,28 @@ package com.joansala.book.base;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.io.Closeable;
 import java.io.IOException;
-import java.util.Random;
-import java.util.List;
-import java.util.LinkedList;
 import com.joansala.engine.Game;
 import com.joansala.engine.Roots;
-import com.joansala.book.base.BookEntry;
-import com.joansala.book.base.BookReader;
-import static com.joansala.engine.Game.*;
 
 
 /**
- * Base opening book implementation.
+ * An opening book that does not contain any entries.
  */
-public class BaseRoots implements Closeable, Roots<Game> {
+public class BaseRoots implements Roots<Game> {
 
-    /** Reads the book data from a file */
-    private final BookReader reader;
-
-    /** Random number generator */
-    private final Random random;
-
-    /** Disturbance score */
-    private double disturbance = Game.DRAW_SCORE;
-
-    /** Threshold score */
-    private double threshold = Game.DRAW_SCORE;
-
-    /** If no more book moves can be found */
-    private boolean outOfBook = false;
-
-    /** Maximum evaluation score */
-    private int maxScore = Integer.MAX_VALUE;
-
-
-    /**
-     * Create a book for the given file path.
-     */
-     public BaseRoots(String path) throws IOException {
-         reader = new BookReader(path);
-         random = new Random();
-     }
-
-
-    /**
-     * Choose moves only if their score is above this distance from
-     * the best score found on its siblings.
-     *
-     * @param score     Disturbance score
-     */
-    public void setDisturbance(double score) {
-        disturbance = Math.abs(score);
+    /** {@inheritDoc} */
+    @Override public void newMatch() {
+        // Does nothing
     }
 
-
-    /**
-     * Minimum score a move must have to be playable.
-     *
-     * @param score     Threshold score
-     */
-    public void setThreshold(double score) {
-        threshold = score;
+    /** {@inheritDoc} */
+    @Override public int pickBestMove(Game game) throws IOException {
+        return Game.NULL_MOVE;
     }
 
-
-    /**
-     * Sets the maximum score a position can possibly be evaluated.
-     *
-     * @see Engine#setInfinity(int)
-     * @param score     Maximum score
-     */
-    public void setInfinity(int score) {
-        maxScore = Math.max(score, 1);
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void newMatch() {
-        outOfBook = false;
-    }
-
-
-    /**
-     * Compute the selection score of a node. This method returns an
-     * upper confidence bound on the score of the entry.
-     *
-     * @param node      A node
-     * @return          Score of the node
-     */
-    private double computeScore(BookEntry entry) {
-        final double bound = maxScore / Math.sqrt(entry.getCount());
-        final double score = entry.getScore() + bound;
-
-        return score;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int pickBestMove(Game game) throws IOException {
-        if (outOfBook == false) {
-            List<BookEntry> entries = readChildren(game);
-            BookEntry secure = pickSecureEntry(entries);
-            double minScore = disturbance + computeScore(secure);
-
-            entries.removeIf(e -> !game.isLegal(e.getMove()));
-            entries.removeIf(e -> computeScore(e) > minScore);
-            entries.removeIf(e -> computeScore(e) > -threshold);
-
-            if ((outOfBook = entries.isEmpty()) == false) {
-                return pickRandomEntry(entries).getMove();
-            }
-        }
-
-        return NULL_MOVE;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int pickPonderMove(Game game) throws IOException {
-        List<BookEntry> entries = readChildren(game);
-        entries.removeIf(e -> !game.isLegal(e.getMove()));
-
-        if (entries.isEmpty() == false) {
-            return pickMaxEntry(entries).getMove();
-        }
-
-        return NULL_MOVE;
-    }
-
-
-    /**
-     * Picks the entry which provides the best move. This is the
-     * entry for which its score's lowest bound is greater.
-     *
-     * @param entries       List of entries
-     * @return              Best entry on the list
-     */
-    protected BookEntry pickSecureEntry(List<BookEntry> entries) {
-        BookEntry bestEntry = entries.get(0);
-        double bestScore = computeScore(bestEntry);
-
-        for (BookEntry entry : entries) {
-            final double score = computeScore(entry);
-
-            if (score < bestScore) {
-                bestScore = score;
-                bestEntry = entry;
-            }
-        }
-
-        return bestEntry;
-    }
-
-
-    /**
-     * Picks the entry with the highest average score.
-     *
-     * @param entries       List of entries
-     * @return              Best entry on the list
-     */
-    protected BookEntry pickMaxEntry(List<BookEntry> entries) {
-        BookEntry bestEntry = entries.get(0);
-        double bestScore = bestEntry.getScore();
-
-        for (BookEntry entry : entries) {
-            final double score = entry.getScore();
-
-            if (score < bestScore) {
-                bestScore = score;
-                bestEntry = entry;
-            }
-        }
-
-        return bestEntry;
-    }
-
-
-    /**
-     * Picks a random element from a list of entries.
-     *
-     * @param entries       List of entries
-     * @return              An entry on the list
-     */
-    protected BookEntry pickRandomEntry(List<BookEntry> entries) {
-        return entries.get(random.nextInt(entries.size()));
-    }
-
-
-    /**
-     * Reads all the book entries for the given game state.
-     *
-     * @param game      Game state
-     * @return          Book entries
-     */
-    protected List<BookEntry> readChildren(Game game) throws IOException {
-        List<BookEntry> entries = new LinkedList<>();
-        long parent = game.hash();
-
-        for (long child : childHashes(game)) {
-            final BookEntry entry;
-
-            if ((entry = reader.readEntry(parent, child)) != null) {
-                entries.add(entry);
-            }
-        }
-
-        return entries;
-    }
-
-
-    /**
-     * Obtains the hash codes of each child state of a game state.
-     *
-     * @param game      Game state
-     * @return          A new hash array
-     */
-    private long[] childHashes(Game game) {
-        final int[] moves = game.legalMoves();
-        final long[] hashes = new long[moves.length];
-
-        int cursor = game.getCursor();
-        game.ensureCapacity(1 + game.length());
-
-        for (int i = 0; i < moves.length; i++) {
-            game.makeMove(moves[i]);
-            hashes[i] = game.hash();
-            game.unmakeMove();
-        }
-
-        game.setCursor(cursor);
-
-        return hashes;
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void close() throws IOException {
-        reader.close();
+    /** {@inheritDoc} */
+    @Override public int pickPonderMove(Game game) throws IOException {
+        return Game.NULL_MOVE;
     }
 }

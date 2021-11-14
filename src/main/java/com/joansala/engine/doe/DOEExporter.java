@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.Map;
 import java.util.HashMap;
-import com.joansala.book.base.BookEntry;
-import com.joansala.book.base.BookWriter;
+import com.joansala.book.uct.BookEntry;
+import com.joansala.book.uct.BookWriter;
 
 
 /**

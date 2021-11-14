@@ -1,4 +1,4 @@
-package com.joansala.book.base;
+package com.joansala.book.uct;
 
 /*
  * Copyright (c) 2021 Joan Sala Soler <contact@joansala.com>
@@ -23,7 +23,7 @@ import java.io.RandomAccessFile;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.joansala.book.base.BookEntry.*;
+import static com.joansala.book.uct.BookEntry.*;
 
 
 /**
