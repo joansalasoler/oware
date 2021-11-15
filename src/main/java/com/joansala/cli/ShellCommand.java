@@ -102,12 +102,12 @@ public class ShellCommand implements Callable<Integer> {
         }
 
         while (client.isRunning()) {
-            try {
-                if (!client.getBoard().equals(board)) {
-                    board = client.getBoard();
-                    printBoard(writer);
-                }
+            if (!client.getBoard().equals(board)) {
+                board = client.getBoard();
+                printBoard(writer);
+            }
 
+            try {
                 client.send(nextCommand(reader));
 
                 while (!client.isReady() || !client.isUCIReady()) {
