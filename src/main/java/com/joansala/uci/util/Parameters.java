@@ -29,25 +29,44 @@ import java.util.Scanner;
  */
 public class Parameters {
 
-    /** */
-    private String params;
+    /** Map of matched parameters */
+    private Map<String, String> params;
 
 
     /**
      * Creates a new instance.
+     *
+     * @param args      Arguments string
+     * @param names     Valid parameter names
      */
-    public Parameters(String params) {
-        this.params = params;
+    public Parameters(String args, String[] names) {
+        this.params = match(args, names);
+    }
+
+
+    /**
+     * Check if a value with the given name exists.
+     */
+    public boolean contains(String name) {
+        return params.containsKey(name);
+    }
+
+
+    /**
+     * Value for a name or {@code null} if not present.
+     */
+    public String get(String name) {
+        return params.get(name);
     }
 
 
     /**
      * {@inheritDoc}
      */
-    public Map<String, String> match(String... keywords) {
-        Map<String, String> matches = new LinkedHashMap<>();
+    private static Map<String, String> match(String args, String[] keywords) {
+        Map<String, String> params = new LinkedHashMap<>();
         Pattern pattern = compilePattern(keywords);
-        Scanner scanner = new Scanner(params);
+        Scanner scanner = new Scanner(args);
 
         while (scanner.hasNext()) {
             boolean isKeyword = scanner.hasNext(pattern);
@@ -55,13 +74,13 @@ public class Parameters {
 
             if (isKeyword == true) {
                 String value = findValue(scanner, pattern);
-                matches.put(keyword, value);
+                params.put(keyword, value);
             }
         }
 
         scanner.close();
 
-        return matches;
+        return params;
     }
 
 
@@ -69,7 +88,7 @@ public class Parameters {
      * Scan all the tokens while a pattern does not match. Returns
      * the matched tokens concatenated with spaces.
      */
-    private String findValue(Scanner scanner, Pattern pattern) {
+    private static String findValue(Scanner scanner, Pattern pattern) {
         StringJoiner tokens = new StringJoiner(" ");
 
         while (scanner.hasNext() && !scanner.hasNext(pattern)) {
@@ -83,7 +102,7 @@ public class Parameters {
     /**
      * Compiles a pattern that matches any of the given keywords.
      */
-    private Pattern compilePattern(String[] keywords) {
+    private static Pattern compilePattern(String[] keywords) {
         StringJoiner values = new StringJoiner("|");
 
         for (String keyword : keywords) {

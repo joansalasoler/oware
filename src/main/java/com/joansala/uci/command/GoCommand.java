@@ -17,7 +17,6 @@ package com.joansala.uci.command;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.util.Map;
 import com.joansala.engine.Engine;
 import com.joansala.uci.UCIBrain;
 import com.joansala.uci.UCICommand;
@@ -30,14 +29,23 @@ import static com.joansala.uci.UCI.*;
  * Instructs the service to start searching for a move.
  */
 public class GoCommand implements UCICommand {
+
+    /**
+     * {@inheritDoc}
+     */
+    public String[] parameterNames() {
+        return new String[] { DEPTH, MOVETIME, INFINITE, PONDER };
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
     public void accept(UCIService service, Parameters params) {
         if (service.isReady() == false) {
             throw new IllegalStateException(
                 "Engine is not ready");
         }
-
-        String[] keywords = { DEPTH, MOVETIME, INFINITE, PONDER };
-        Map<String, String> values = params.match(keywords);
 
         UCIBrain brain = service.getBrain();
         Engine engine = service.getEngine();
@@ -45,18 +53,18 @@ public class GoCommand implements UCICommand {
         int depth = Engine.DEFAULT_DEPTH;
         boolean infinite = false;
 
-        if (values.containsKey(DEPTH)) {
-            String value = values.get(DEPTH);
+        if (params.contains(DEPTH)) {
+            String value = params.get(DEPTH);
             depth = Integer.parseInt(value);
         }
 
-        if (values.containsKey(MOVETIME)) {
-            String value = values.get(MOVETIME);
+        if (params.contains(MOVETIME)) {
+            String value = params.get(MOVETIME);
             movetime = Integer.parseInt(value);
         }
 
-        if (values.containsKey(PONDER) ||
-            values.containsKey(INFINITE)) {
+        if (params.contains(PONDER) ||
+            params.contains(INFINITE)) {
             infinite = true;
             depth = Integer.MAX_VALUE;
             movetime = Integer.MAX_VALUE;

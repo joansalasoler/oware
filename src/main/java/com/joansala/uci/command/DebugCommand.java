@@ -17,7 +17,6 @@ package com.joansala.uci.command;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.util.Map;
 import com.joansala.uci.UCICommand;
 import com.joansala.uci.UCIService;
 import com.joansala.uci.util.Parameters;
@@ -28,11 +27,22 @@ import static com.joansala.uci.UCI.*;
  * Switches the service debug mode on and off.
  */
 public class DebugCommand implements UCICommand {
+
+    /**
+     * {@inheritDoc}
+     */
+    public String[] parameterNames() {
+        return new String[] { ON, OFF };
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
     public void accept(UCIService service, Parameters params) {
-        Map<String, String> values = params.match(ON, OFF);
         boolean active = (false == service.getDebug());
-        active = values.containsKey(ON) ? true : active;
-        active = values.containsKey(OFF) ? false : active;
+        active = params.contains(ON) ? true : active;
+        active = params.contains(OFF) ? false : active;
         service.setDebug(active);
     }
 }

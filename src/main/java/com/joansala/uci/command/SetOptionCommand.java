@@ -29,15 +29,26 @@ import static com.joansala.uci.UCI.*;
  * Sets the specified option to the given value.
  */
 public class SetOptionCommand implements UCICommand {
+
+    /**
+     * {@inheritDoc}
+     */
+    public String[] parameterNames() {
+        return new String[] { NAME, VALUE };
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
     public void accept(UCIService service, Parameters params) {
         if (service.isReady() == false) {
             throw new IllegalStateException(
                 "Engine is not ready");
         }
 
-        Map<String, String> values = params.match(NAME, VALUE);
         Map<String, UCIOption> options = service.getOptions();
-        UCIOption option = options.get(values.get(NAME));
-        option.accept(service, values.get(VALUE));
+        UCIOption option = options.get(params.get(NAME));
+        option.accept(service, params.get(VALUE));
     }
 }

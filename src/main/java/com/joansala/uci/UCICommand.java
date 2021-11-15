@@ -24,4 +24,12 @@ import com.joansala.uci.util.Parameters;
 /**
  * Functional interface for UCI commands.
  */
-public interface UCICommand extends BiConsumer<UCIService, Parameters> {}
+public interface UCICommand extends BiConsumer<UCIService, Parameters> {
+
+    /**
+     * Array of accepted parameter names.
+     */
+    default String[] parameterNames() {
+        return new String[0];
+    }
+}

@@ -290,9 +290,9 @@ public class UCIService {
 
             try {
                 UCICommand command = commands.get(token);
-                String values = scanner.nextLine();
-                Parameters params = new Parameters(values);
-                command.accept(this, params);
+                String args = scanner.nextLine();
+                String[] names = command.parameterNames();
+                command.accept(this, new Parameters(args, names));
             } catch (Exception e) {
                 debug("Command failure:", e.getMessage());
             }

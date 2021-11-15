@@ -17,7 +17,6 @@ package com.joansala.uci.command;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.util.Map;
 import com.joansala.engine.Board;
 import com.joansala.uci.UCIBrain;
 import com.joansala.uci.UCICommand;
@@ -30,25 +29,35 @@ import static com.joansala.uci.UCI.*;
  * Sets a new game state given a position and a set of moves.
  */
 public class PositionCommand implements UCICommand {
+
+    /**
+     * {@inheritDoc}
+     */
+    public String[] parameterNames() {
+        return new String[] { STARTPOS, FEN, MOVES };
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
     public void accept(UCIService service, Parameters params) {
         if (service.isReady() == false) {
             throw new IllegalStateException(
                 "Engine is not ready");
         }
 
-        String[] keywords = { STARTPOS, FEN, MOVES };
-        Map<String, String> values = params.match(keywords);
         UCIBrain brain = service.getBrain();
         Board board = service.getBoard();
         int[] moves = new int[0];
 
-        if (values.containsKey(FEN)) {
-            String diagram = values.get(FEN);
+        if (params.contains(FEN)) {
+            String diagram = params.get(FEN);
             board = board.toBoard(diagram);
         }
 
-        if (values.containsKey(MOVES)) {
-            String notation = values.get(MOVES);
+        if (params.contains(MOVES)) {
+            String notation = params.get(MOVES);
             moves = board.toMoves(notation);
         }
 
