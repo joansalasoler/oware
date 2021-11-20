@@ -136,6 +136,22 @@ public class ZobristHash implements HashFunction {
 
 
     /**
+     * Update a hash by removing a value from an index and adding.
+     * it to another index.
+     *
+     * @param hash      Hash to update
+     * @param from      Index to remove from
+     * @param to        Index to insert to
+     * @param value     Value on the state array
+     *
+     * @return          Updated hash
+     */
+    public final long toggle(long hash, int from, int to, int value) {
+        return hash ^ keys[value][from] ^ keys[value][to];
+    }
+
+
+    /**
      * Update a hash by xoring the given value at the given index.
      */
     private long update(long hash, int index, int value) {

@@ -74,7 +74,7 @@ public final class Bits {
      *
      * @param bitboard      Bitboard to check
      * @param bits          Bits to check
-     * @return              True if the bit is set
+     * @return              If one or more bits are set
      */
     public static final boolean contains(long bitboard, long bits) {
         return (bitboard & bits) != 0L;

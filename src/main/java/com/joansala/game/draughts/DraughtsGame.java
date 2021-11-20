@@ -217,7 +217,7 @@ public class DraughtsGame extends BaseGame {
 
 
     /**
-     *
+     * Precompute bitboards.
      */
     private void updateBitboards() {
         friends = state[player.man] | state[player.king];
@@ -712,7 +712,7 @@ public class DraughtsGame extends BaseGame {
             cursors = Arrays.copyOf(cursors, size);
             hashes = Arrays.copyOf(hashes, size);
             mobilities = Arrays.copyOf(mobilities, size);
-            states = Arrays.copyOf(states, size << 4);
+            states = Arrays.copyOf(states, size * PIECE_COUNT);
             capacity = size;
 
             System.gc();

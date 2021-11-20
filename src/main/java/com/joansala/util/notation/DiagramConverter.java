@@ -53,7 +53,7 @@ public class DiagramConverter {
     /**
      * Check if the given piece identifier is valid.
      */
-    private boolean isPiece(int piece) {
+    public boolean isPiece(int piece) {
         return piece >= 0 && piece < pieces.length;
     }
 

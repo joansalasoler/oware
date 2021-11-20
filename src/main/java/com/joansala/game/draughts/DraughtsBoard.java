@@ -92,7 +92,7 @@ public class DraughtsBoard extends BaseBoard<long[]> {
 
 
     /**
-     * Plies since the last capture or man move.
+     * Draw countdown clock.
      */
     public int clock() {
         return clock;
