@@ -119,7 +119,7 @@ public class PerftCommand implements Callable<Integer> {
                     int[] moves = board.toMoves(suite.notation());
 
                     game.ensureCapacity(moves.length);
-                    game.setBoard(parser);
+                    game.setBoard(board);
 
                     for (int move : moves) {
                         if (game.hasEnded() == false) {
