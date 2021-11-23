@@ -31,6 +31,7 @@ import picocli.CommandLine.*;
   subcommands = {
       BattleCommand.class,
       BenchCommand.class,
+      DivideCommand.class,
       PerftCommand.class
   }
 )
