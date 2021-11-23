@@ -134,8 +134,6 @@ public class PerftCommand implements Callable<Integer> {
                 System.exit(1);
             }
         }
-
-        System.out.format("%n%s", formatStats());
     }
 
 
@@ -149,10 +147,14 @@ public class PerftCommand implements Callable<Integer> {
         final int cursor = game.getCursor();
 
         for (int depth = minDepth; depth <= maxDepth; depth++) {
+            stats.watch.reset();
+            stats.visits.clear();
             if (benchmark(game, depth) == 0L) break;
             System.out.format("%s%n", formatResults());
             game.setCursor(cursor);
         }
+
+        System.out.format("%n%s", formatStats());
     }
 
 
