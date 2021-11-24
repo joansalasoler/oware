@@ -96,6 +96,7 @@ public class DivideCommand implements Callable<Integer> {
             System.out.format("%s%n", horizontalRule('-'));
 
             game.setBoard(parser);
+            game.ensureCapacity(depth);
             benchmark(game, depth - 1);
         } else {
             InputStream input = new FileInputStream(file);
@@ -109,8 +110,8 @@ public class DivideCommand implements Callable<Integer> {
                     Board board = parser.toBoard(suite.diagram());
                     int[] moves = board.toMoves(suite.notation());
 
-                    game.ensureCapacity(moves.length);
                     game.setBoard(board);
+                    game.ensureCapacity(moves.length + depth);
 
                     for (int move : moves) {
                         if (game.hasEnded() == false) {

@@ -104,6 +104,7 @@ public class PerftCommand implements Callable<Integer> {
             System.out.format("%s%n", formatHeader());
 
             game.setBoard(parser);
+            game.ensureCapacity(1 + maxDepth);
             benchmark(game, minDepth, maxDepth);
         } else {
             InputStream input = new FileInputStream(file);
@@ -118,8 +119,8 @@ public class PerftCommand implements Callable<Integer> {
                     Board board = parser.toBoard(suite.diagram());
                     int[] moves = board.toMoves(suite.notation());
 
-                    game.ensureCapacity(moves.length);
                     game.setBoard(board);
+                    game.ensureCapacity(1 + moves.length + maxDepth);
 
                     for (int move : moves) {
                         if (game.hasEnded() == false) {
