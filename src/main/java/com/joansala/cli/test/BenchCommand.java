@@ -136,6 +136,11 @@ public class BenchCommand implements Callable<Integer> {
             });
         } catch (Exception e) {
             e.printStackTrace();
+
+            String diagram = game.toBoard().toDiagram();
+            System.err.println("Benchmark exception:");
+            System.err.println("\tat " + diagram);
+
             System.exit(1);
         }
 
