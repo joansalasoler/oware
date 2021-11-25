@@ -26,24 +26,27 @@ import static com.joansala.game.chess.Chess.*;
 
 
 /**
- * Move generator for international chess.
+ * Move generator for chess.
  */
 public class ChessGenerator {
 
     /** First move generation cursor */
     public static final int UNGENERATED = 0;
 
-    /** Generate king moves stage */
-    public static final int KING_STAGE = 0;
-
-    /** Move generation was completed */
-    public static final int END_STAGE = 8;
-
     /** Default number of slots */
     private static final int DEFAULT_CAPACITY = 255;
 
-    /** Maximum possible distinct moves per slot */
-    private static final int MAX_MOVES = 255;
+    /** Maximum possible moves by a single stage */
+    private static final int MAX_MOVES = 218;
+
+    /** No move generation was performed */
+    private static final int START_STAGE = -1;
+
+    /** Generate king moves stage */
+    private static final int KING_STAGE = 0;
+
+    /** Move generation was completed */
+    private static final int END_STAGE = 8;
 
     /** Current capacity */
     private int capacity = DEFAULT_CAPACITY;
@@ -87,18 +90,6 @@ public class ChessGenerator {
 
 
     /**
-     * Check if there aren't any legal moves for a slot.
-     *
-     * @param slot      Storage slot
-     * @return          If no moves are legal
-     */
-    public boolean cannotMove(int slot) {
-        final Entry entry = store[slot];
-        return entry.stage == END_STAGE && entry.moves[0] == NULL_MOVE;
-    }
-
-
-    /**
      * Next move generation cursor for a slot.
      *
      * @param slot      Storage slot
@@ -106,24 +97,20 @@ public class ChessGenerator {
      * @return          Next generation cursor
      */
     public int nextCursor(int slot, int cursor) {
+        final Entry entry = store[slot];
+
         int index = (cursor & 0xFF);
-        int move = store[slot].moves[index];
-        int stage = nextStage(slot, index, (cursor >> 8) & 0xF);
-        return (move << 12) | (stage << 8) | (1 + index);
-    }
+        int stage = (cursor >> 8) & 0xF;
+        int move = entry.moves[index];
 
+        if (index == entry.length - 1) {
+            stage = entry.nextStage;
+            index = 0;
+        } else {
+            index++;
+        }
 
-    /**
-     * Obtain the next generation stage for the move at index.
-     *
-     * @param slot      String slot
-     * @param index     Move index
-     * @param stage     Previous stage
-     */
-    private int nextStage(int slot, int index, int stage) {
-        final int nextStage = store[slot].stage;
-        final int move = store[slot].moves[1 + index];
-        return (move == NULL_MOVE) ? nextStage : stage;
+        return (move << 12) | (stage << 8) | (index);
     }
 
 
@@ -136,9 +123,12 @@ public class ChessGenerator {
      */
     public void initialize(int slot, long[] state, Player player) {
         final long evasions = computeEvasions(state, player);
-        store[slot].evasions = evasions;
-        store[slot].stage = KING_STAGE;
-        store[slot].index = 0;
+        final Entry entry = store[slot];
+
+        entry.evasions = evasions;
+        entry.currentStage = START_STAGE;
+        entry.nextStage = KING_STAGE;
+        entry.length = 0;
     }
 
 
@@ -151,22 +141,23 @@ public class ChessGenerator {
      * @param state     Position bitboards
      * @param player    Player to move
      */
-    public void generate(int slot, int cursor, long[] state, Player player) {
+    public int generate(int slot, int cursor, long[] state, Player player) {
         final Entry entry = store[slot];
         int stage = (cursor >> 8) & 0xF;
 
-        if (stage < entry.stage) {
-            return;
+        if (stage >= entry.currentStage && stage < entry.nextStage) {
+            return entry.length;
         }
 
+        this.index = 0;
         this.state = state;
         this.player = player;
         this.moves = entry.moves;
-        this.index = entry.index;
         this.evasions = entry.evasions;
+        entry.currentStage = stage;
 
         if (isInDoubleCheck()) {
-            if (stage <= KING_STAGE) {
+            if (stage == KING_STAGE) {
                 storeStageMoves(stage, evasions);
                 stage = END_STAGE;
             }
@@ -176,9 +167,11 @@ public class ChessGenerator {
             }
         }
 
-        entry.stage = stage;
-        entry.index = index;
+        entry.length = index;
+        entry.nextStage = stage;
         moves[index] = NULL_MOVE;
+
+        return index;
     }
 
 
@@ -721,8 +714,9 @@ public class ChessGenerator {
      * An entry on the store.
      */
     private class Entry {
-        int stage = 0;
-        int index = 0;
+        int length = 0;
+        int nextStage = 0;
+        int currentStage = 0;
         int[] moves = new int[MAX_MOVES];
         long evasions = FULL_BOARD;
     }

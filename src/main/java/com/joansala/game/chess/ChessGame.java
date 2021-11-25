@@ -315,18 +315,18 @@ public class ChessGame extends BaseGame {
 
 
     /**
-     * Generate the next set of moves on the given slot.
-     */
-    private void generateMoves(int slot, int cursor) {
-        movegen.generate(slot, cursor, state, player);
-    }
-
-
-    /**
      * Obtain the next move cursor from the generator.
      */
     private int nextCursor(int slot, int cursor) {
         return movegen.nextCursor(slot, cursor);
+    }
+
+
+    /**
+     * Generate the next set of moves on the given slot.
+     */
+    private int generateMoves(int slot, int cursor) {
+        return movegen.generate(slot, cursor, state, player);
     }
 
 
@@ -347,8 +347,8 @@ public class ChessGame extends BaseGame {
         clearEnPassant();
 
         if (CASTLING == (move & CASTLING)) {
-            castle(move);
             clearCastlings();
+            castle(move);
             return;
         }
 
@@ -528,8 +528,7 @@ public class ChessGame extends BaseGame {
      * @return      If the player cannot move
      */
     private boolean cannotMove() {
-        generateMoves(1 + index, UNGENERATED);
-        return movegen.cannotMove(1 + index);
+        return generateMoves(1 + index, UNGENERATED) == 0;
     }
 
 

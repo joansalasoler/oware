@@ -399,7 +399,7 @@ public class ChessBoard extends BaseBoard<long[]> {
      * Converts an en-passant coodinate to a target checker.
      */
     private static int toEnPassantChecker(String coordinate) {
-        return "-".equals(coordinate) ? -1 : Integer.parseInt(coordinate);
+        return "-".equals(coordinate) ? -1 : algebraic.toIndex(coordinate);
     }
 
 
