@@ -236,7 +236,23 @@ public class ChessGame extends BaseGame {
      */
     @Override
     public int score() {
-        return 0;
+        int score = 0;
+
+        final long white = state[WHITE];
+        score += BISHOP_WEIGHT * count(white & state[BISHOP]);
+        score += KNIGHT_WEIGHT * count(white & state[KNIGHT]);
+        score += PAWN_WEIGHT * count(white & state[PAWN]);
+        score += QUEEN_WEIGHT * count(white & state[QUEEN]);
+        score += ROOK_WEIGHT * count(white & state[ROOK]);
+
+        final long black = state[BLACK];
+        score -= BISHOP_WEIGHT * count(black & state[BISHOP]);
+        score -= KNIGHT_WEIGHT * count(black & state[KNIGHT]);
+        score -= PAWN_WEIGHT * count(black & state[PAWN]);
+        score -= QUEEN_WEIGHT * count(black & state[QUEEN]);
+        score -= ROOK_WEIGHT * count(black & state[ROOK]);
+
+        return score;
     }
 
 

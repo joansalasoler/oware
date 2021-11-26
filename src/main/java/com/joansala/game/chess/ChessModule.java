@@ -24,7 +24,7 @@ import picocli.CommandLine.Command;
 import com.joansala.cli.*;
 import com.joansala.engine.*;
 import com.joansala.engine.base.BaseModule;
-import com.joansala.engine.mcts.Montecarlo;
+import com.joansala.engine.uct.UCT;
 
 
 /**
@@ -49,7 +49,7 @@ public class ChessModule extends BaseModule {
     @Override protected void configure() {
         bind(Game.class).to(ChessGame.class);
         bind(Board.class).to(ChessBoard.class);
-        bind(Engine.class).to(Montecarlo.class);
+        bind(Engine.class).to(UCT.class);
     }
 
 

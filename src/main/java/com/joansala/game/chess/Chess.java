@@ -148,6 +148,16 @@ final class Chess {
     static final long BLACK_SIGN =  0xD2B7ADEEDED1F73FL;
 
     // -------------------------------------------------------------------
+    // Heuristic evaluation weights
+    // -------------------------------------------------------------------
+
+    static final int QUEEN_WEIGHT =  100;
+    static final int ROOK_WEIGHT =    54;
+    static final int BISHOP_WEIGHT =  46;
+    static final int KNIGHT_WEIGHT =  31;
+    static final int PAWN_WEIGHT =     8;
+
+    // -------------------------------------------------------------------
     // Board definitions
     // -------------------------------------------------------------------
 
