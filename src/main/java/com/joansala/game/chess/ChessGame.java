@@ -270,7 +270,7 @@ public class ChessGame extends BaseGame {
      */
     @Override
     public void setCursor(int cursor) {
-        initGenerator(1 + index);
+        movegen.clear(1 + index);
         this.cursor = cursor;
     }
 
@@ -313,36 +313,12 @@ public class ChessGame extends BaseGame {
     @Override
     public int nextMove() {
         if (cursor != NULL_MOVE) {
-            generateMoves(1 + index, cursor);
-            cursor = nextCursor(1 + index, cursor);
+            movegen.generate(1 + index, cursor, state, player);
+            cursor = movegen.nextCursor(1 + index, cursor);
             return (cursor >> 12);
         }
 
         return NULL_MOVE;
-    }
-
-
-    /**
-     * Initialize the move generator on the given slot.
-     */
-    private void initGenerator(int slot) {
-        movegen.initialize(slot, state, player);
-    }
-
-
-    /**
-     * Obtain the next move cursor from the generator.
-     */
-    private int nextCursor(int slot, int cursor) {
-        return movegen.nextCursor(slot, cursor);
-    }
-
-
-    /**
-     * Generate the next set of moves on the given slot.
-     */
-    private int generateMoves(int slot, int cursor) {
-        return movegen.generate(slot, cursor, state, player);
     }
 
 
@@ -544,7 +520,7 @@ public class ChessGame extends BaseGame {
      * @return      If the player cannot move
      */
     private boolean cannotMove() {
-        return generateMoves(1 + index, UNGENERATED) == 0;
+        return 0 == movegen.generate(1 + index, UNGENERATED, state, player);
     }
 
 

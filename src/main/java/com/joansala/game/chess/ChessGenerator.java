@@ -115,20 +115,14 @@ public class ChessGenerator {
 
 
     /**
-     * Initialize the given slot.
+     * Clear moves from the given slot.
      *
      * @param slot      Storage slot
-     * @param state     Position bitboards
-     * @param player    Player to move
      */
-    public void initialize(int slot, long[] state, Player player) {
-        final long evasions = computeEvasions(state, player);
+    public void clear(int slot) {
         final Entry entry = store[slot];
-
-        entry.evasions = evasions;
         entry.currentStage = START_STAGE;
         entry.nextStage = KING_STAGE;
-        entry.length = 0;
     }
 
 
@@ -147,6 +141,10 @@ public class ChessGenerator {
 
         if (stage >= entry.currentStage && stage < entry.nextStage) {
             return entry.length;
+        }
+
+        if (entry.currentStage == START_STAGE) {
+            entry.evasions = computeEvasions(state, player);
         }
 
         this.index = 0;
@@ -715,8 +713,8 @@ public class ChessGenerator {
      */
     private class Entry {
         int length = 0;
-        int nextStage = 0;
-        int currentStage = 0;
+        int nextStage = KING_STAGE;
+        int currentStage = START_STAGE;
         int[] moves = new int[MAX_MOVES];
         long evasions = FULL_BOARD;
     }
