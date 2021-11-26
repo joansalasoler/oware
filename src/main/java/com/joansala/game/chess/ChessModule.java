@@ -24,7 +24,8 @@ import picocli.CommandLine.Command;
 import com.joansala.cli.*;
 import com.joansala.engine.*;
 import com.joansala.engine.base.BaseModule;
-import com.joansala.engine.uct.UCT;
+import com.joansala.engine.negamax.Negamax;
+import com.joansala.cache.GameCache;
 
 
 /**
@@ -49,7 +50,8 @@ public class ChessModule extends BaseModule {
     @Override protected void configure() {
         bind(Game.class).to(ChessGame.class);
         bind(Board.class).to(ChessBoard.class);
-        bind(Engine.class).to(UCT.class);
+        bind(Engine.class).to(Negamax.class);
+        bind(Cache.class).to(GameCache.class);
     }
 
 

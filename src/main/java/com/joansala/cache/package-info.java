@@ -1,4 +1,4 @@
 /**
- * Opening book implementations.
+ * Transposition table implementations.
  */
-package com.joansala.book;
+package com.joansala.cache;
