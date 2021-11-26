@@ -171,7 +171,7 @@ public class OwareCache implements Cache<OwareGame> {
 
             move = (int) (cdata >>> 35 & 0x0F);
             flag = (int) (cdata >>> 39 & 0x03);
-            depth = (int) (cdata >>> 41 & 0x7F);
+            depth = (int) (cdata >>> 41 & 0x3FF);
             score = (int) (cdata >> 52);
 
             return true;
@@ -211,7 +211,7 @@ public class OwareCache implements Cache<OwareGame> {
         // The first slot is a depth tier and the second is an always
         // replace slot. If the first slot is empty (depth = 0) use it.
 
-        if (depth <= (data[index] >> 41 & 0x7F)) {
+        if (depth <= (data[index] >> 41 & 0x3FF)) {
             if (reset != (data[index] & mask))
                 index++;
         }
@@ -308,7 +308,7 @@ public class OwareCache implements Cache<OwareGame> {
         slots = (int) Math.pow(2, (int) (Math.log(slots) / Math.log(2)));
 
         // Each entry has two slots of size SLOT_SIZE and the minimal
-        // allowed size is 4096 (12 bits, the part of the hash which
+        // allowed size is 4096 (11 bits, the part of the hash which
         // is not explicitly stored)
 
         return Math.max(MIN_CAPACITY, slots);
