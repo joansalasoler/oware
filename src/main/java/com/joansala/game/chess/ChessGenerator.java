@@ -81,11 +81,30 @@ public class ChessGenerator {
 
 
     /**
-     * Returns if the king is in check on a slot.
+     * Move generation stage for a cursor.
      */
-    public boolean isInCheck(int slot) {
-        final long evasions = store[slot].evasions;
+    public int getStage(int cursor) {
+        return (cursor >> 8) & 0xF;
+    }
+
+
+    /**
+     * Returns if a player's king is in check on a game state.
+     */
+    public boolean isInCheck(long[] state, Player player) {
+        final long evasions = computeEvasions(state, player);
         return evasions != FULL_BOARD;
+    }
+
+
+    /**
+     * Returns if a game state contains legal moves. This method generates
+     * the first set of moves and returns true if it is empty.
+     */
+    public boolean cannotMove(int slot, long[] state, Player player) {
+        final Entry entry = store[slot];
+        generate(slot, UNGENERATED, state, player);
+        return 0 == entry.length;
     }
 
 
@@ -99,8 +118,8 @@ public class ChessGenerator {
     public int nextCursor(int slot, int cursor) {
         final Entry entry = store[slot];
 
+        int stage = getStage(cursor);
         int index = (cursor & 0xFF);
-        int stage = (cursor >> 8) & 0xF;
         int move = entry.moves[index];
 
         if (index == entry.length - 1) {
@@ -120,9 +139,7 @@ public class ChessGenerator {
      * @param slot      Storage slot
      */
     public void clear(int slot) {
-        final Entry entry = store[slot];
-        entry.currentStage = START_STAGE;
-        entry.nextStage = KING_STAGE;
+        store[slot].clear();
     }
 
 
@@ -135,26 +152,28 @@ public class ChessGenerator {
      * @param state     Position bitboards
      * @param player    Player to move
      */
-    public int generate(int slot, int cursor, long[] state, Player player) {
+    public void generate(int slot, int cursor, long[] state, Player player) {
         final Entry entry = store[slot];
-        int stage = (cursor >> 8) & 0xF;
+        long evasions = entry.evasions;
+        int stage = getStage(cursor);
 
-        if (stage >= entry.currentStage && stage < entry.nextStage) {
-            return entry.length;
+        if (entry.isCurrentStage(stage)) {
+            return;
         }
 
-        if (entry.currentStage == START_STAGE) {
-            entry.evasions = computeEvasions(state, player);
+        if (entry.isStartStage()) {
+            evasions = computeEvasions(state, player);
+            entry.evasions = evasions;
         }
 
         this.index = 0;
         this.state = state;
         this.player = player;
+        this.evasions = evasions;
         this.moves = entry.moves;
-        this.evasions = entry.evasions;
         entry.currentStage = stage;
 
-        if (isInDoubleCheck()) {
+        if (isKingInDoubleCheck()) {
             if (stage == KING_STAGE) {
                 storeStageMoves(stage, evasions);
                 stage = END_STAGE;
@@ -168,8 +187,6 @@ public class ChessGenerator {
         entry.length = index;
         entry.nextStage = stage;
         moves[index] = NULL_MOVE;
-
-        return index;
     }
 
 
@@ -196,7 +213,7 @@ public class ChessGenerator {
         // all the rival pieces can be captured except for the king.
 
         final long checkers = ~(friends | state[KING]);
-        final long mask = isInCheck() ? evasions : checkers;
+        final long mask = isKingInCheck() ? evasions : checkers;
 
         switch (stage) {
             case 0: storeKingMoves(king, taken, checkers); break;
@@ -313,7 +330,7 @@ public class ChessGenerator {
      * @param flags     Bitboard of rooks that can castle
      */
     private void storeCastlings(long taken, long flags) {
-        if (isInCheck()) return;
+        if (isKingInCheck()) return;
 
         for (Castle castle : player.castlings) {
             final boolean hasRight = contains(flags, castle.flag);
@@ -337,7 +354,7 @@ public class ChessGenerator {
         final long mask = shift(evasions, player.sense);
         final long target = (flags & ~CASTLE_MASK);
 
-        if (!isInCheck() || contains(mask, target)) {
+        if (!isKingInCheck() || contains(mask, target)) {
             final int to = first(target);
             long attackers = pawns & Pawn.attacks(to, 64 ^ player.sense);
 
@@ -485,7 +502,7 @@ public class ChessGenerator {
     /**
      * Returns if the king is currently in check.
      */
-    private boolean isInCheck() {
+    private boolean isKingInCheck() {
         return evasions != FULL_BOARD;
     }
 
@@ -493,7 +510,7 @@ public class ChessGenerator {
     /**
      * Returns if the king is currently in double check.
      */
-    private boolean isInDoubleCheck() {
+    private boolean isKingInDoubleCheck() {
         return evasions == EMPTY_BOARD;
     }
 
@@ -717,5 +734,30 @@ public class ChessGenerator {
         int currentStage = START_STAGE;
         int[] moves = new int[MAX_MOVES];
         long evasions = FULL_BOARD;
+
+
+        /**
+         * Check if moves were  generated.
+         */
+        boolean isCurrentStage(int stage) {
+            return stage >= currentStage && stage < nextStage;
+        }
+
+
+        /**
+         * Check if no moves were generated for an entry.
+         */
+        boolean isStartStage() {
+            return currentStage == START_STAGE;
+        }
+
+
+        /**
+         * Reset this entry to its initial state.
+         */
+        void clear() {
+            currentStage = START_STAGE;
+            nextStage = KING_STAGE;
+        }
     }
 }

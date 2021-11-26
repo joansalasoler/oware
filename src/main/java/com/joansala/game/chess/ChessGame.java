@@ -141,6 +141,7 @@ public class ChessGame extends BaseGame {
         this.state = board.position();
 
         setTurn(board.turn());
+        movegen.clear(1 + index);
         hash = computeHash();
         resetCursor();
     }
@@ -226,7 +227,7 @@ public class ChessGame extends BaseGame {
      */
     @Override
     public int outcome() {
-        final boolean inCheck = movegen.isInCheck(1 + index);
+        final boolean inCheck = movegen.isInCheck(state, player);
         return inCheck ? rival.turn * MAX_SCORE : DRAW_SCORE;
     }
 
@@ -270,7 +271,6 @@ public class ChessGame extends BaseGame {
      */
     @Override
     public void setCursor(int cursor) {
-        movegen.clear(1 + index);
         this.cursor = cursor;
     }
 
@@ -280,7 +280,7 @@ public class ChessGame extends BaseGame {
      */
     @Override
     public void resetCursor() {
-        setCursor(UNGENERATED);
+        this.cursor = UNGENERATED;
     }
 
 
@@ -293,6 +293,7 @@ public class ChessGame extends BaseGame {
         movePieces(move);
         switchTurn();
         resetCursor();
+        movegen.clear(1 + index);
         this.move = move;
     }
 
@@ -520,7 +521,7 @@ public class ChessGame extends BaseGame {
      * @return      If the player cannot move
      */
     private boolean cannotMove() {
-        return 0 == movegen.generate(1 + index, UNGENERATED, state, player);
+        return movegen.cannotMove(1 + index, state, player);
     }
 
 
