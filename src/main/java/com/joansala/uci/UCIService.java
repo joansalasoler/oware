@@ -284,7 +284,7 @@ public class UCIService {
             String token = scanner.next();
 
             if (commands.containsKey(token) == false) {
-                debug("info string Unknown command: " + token);
+                debug("Unknown command:", token);
                 continue;
             }
 
@@ -293,6 +293,7 @@ public class UCIService {
                 String args = scanner.nextLine();
                 String[] names = command.parameterNames();
                 command.accept(this, new Parameters(args, names));
+                debug("Received:", token + args);
             } catch (Exception e) {
                 debug("Command failure:", e.getMessage());
             }
