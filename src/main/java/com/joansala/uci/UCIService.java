@@ -117,6 +117,7 @@ public class UCIService {
         commands.put(DEBUG, new DebugCommand());
         commands.put(GO, new GoCommand());
         commands.put(ISREADY, new SynchCommand());
+        commands.put(PONDERHIT, new PonderHitCommand());
         commands.put(POSITION, new PositionCommand());
         commands.put(QUIT, new QuitCommand());
         commands.put(SETOPTION, new SetOptionCommand());
