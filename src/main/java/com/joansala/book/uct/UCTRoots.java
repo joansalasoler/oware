@@ -125,15 +125,18 @@ public class UCTRoots implements Closeable, Roots<Game> {
     public int pickBestMove(Game game) throws IOException {
         if (outOfBook == false) {
             List<BookEntry> entries = readChildren(game);
-            BookEntry secure = pickSecureEntry(entries);
-            double minScore = disturbance + computeScore(secure);
-
             entries.removeIf(e -> !game.isLegal(e.getMove()));
-            entries.removeIf(e -> computeScore(e) > minScore);
-            entries.removeIf(e -> computeScore(e) > -threshold);
 
             if ((outOfBook = entries.isEmpty()) == false) {
-                return pickRandomEntry(entries).getMove();
+                BookEntry secure = pickSecureEntry(entries);
+                double minScore = disturbance + computeScore(secure);
+
+                entries.removeIf(e -> computeScore(e) > minScore);
+                entries.removeIf(e -> computeScore(e) > -threshold);
+
+                if ((outOfBook = entries.isEmpty()) == false) {
+                    return pickRandomEntry(entries).getMove();
+                }
             }
         }
 
