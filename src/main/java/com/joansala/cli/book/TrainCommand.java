@@ -18,8 +18,8 @@ package com.joansala.cli.book;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.util.Queue;
-import java.util.ArrayDeque;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -120,7 +120,7 @@ public class TrainCommand implements Callable<Integer> {
 
         // Initialize the evaluation engines
 
-        Queue<Evaluator> evaluators = new ArrayDeque<>(poolSize);
+        BlockingQueue<Evaluator> evaluators = new ArrayBlockingQueue<>(poolSize);
 
         for (int i = 0; i < poolSize; i++) {
             evaluators.add(new Evaluator());
@@ -149,18 +149,20 @@ public class TrainCommand implements Callable<Integer> {
         // Evaluate postions as they arrive
 
         trainer.train(nodeSize, rootGame, (moves) -> {
-            Evaluator evaluator = evaluators.poll();
+            try{
+                Evaluator evaluator = evaluators.take​();
+                final int score = evaluator.computeScore(moves);
+                final int centis = rootGame.toCentiPawns(score);
+                final long count = store.count();
 
-            final int score = evaluator.computeScore(moves);
-            final int centis = rootGame.toCentiPawns(score);
-            final long count = store.count();
+                String result = formatResult(moves, centis, count);
+                System.out.format("- %s%n", result);
 
-            String result = formatResult(moves, centis, count);
-            System.out.format("- %s%n", result);
-
-            evaluators.offer(evaluator);
-
-            return score;
+                evaluators.put(evaluator);
+                return score;
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
         });
 
         return 0;
