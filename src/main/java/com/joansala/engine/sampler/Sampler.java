@@ -18,7 +18,6 @@ package com.joansala.engine.sampler;
  */
 
 import java.util.Random;
-import java.util.TimerTask;
 import com.joansala.engine.Game;
 import com.joansala.engine.base.BaseEngine;
 
@@ -65,7 +64,7 @@ public class Sampler extends BaseEngine {
             return Game.NULL_MOVE;
         }
 
-        final TimerTask countDown = scheduleCountDown();
+        scheduleCountDown(moveTime);
         game.ensureCapacity(MAX_DEPTH + game.length());
 
         int[] moves = game.legalMoves();
@@ -103,7 +102,7 @@ public class Sampler extends BaseEngine {
         }
 
         bestScore = (int) bestOutcome;
-        countDown.cancel();
+        cancelCountDown();
 
         return bestMove;
     }

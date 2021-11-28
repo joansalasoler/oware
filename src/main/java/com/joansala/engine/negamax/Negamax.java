@@ -19,7 +19,6 @@ package com.joansala.engine.negamax;
 
 import com.google.inject.Inject;
 import java.util.function.Consumer;
-import java.util.TimerTask;
 
 import com.joansala.engine.*;
 import com.joansala.engine.base.*;
@@ -219,7 +218,7 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
 
         // Get ready for the move computation
 
-        final TimerTask countDown = scheduleCountDown();
+        scheduleCountDown(moveTime);
         game.ensureCapacity(MAX_DEPTH + game.length());
         cache.discharge();
 
@@ -307,7 +306,7 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
         }
 
         invokeConsumers(game, bestMove);
-        countDown.cancel();
+        cancelCountDown();
 
         return bestMove;
     }

@@ -38,6 +38,9 @@ public class BaseEngine implements Engine {
     /** Search count-down timer */
     protected final Timer timer;
 
+    /* */
+    protected TimerTask countDown;
+
     /** Abort computation mutex */
     private ReentrantLock abortLock = new ReentrantLock();
 
@@ -206,6 +209,19 @@ public class BaseEngine implements Engine {
      * {@inheritDoc}
      */
     @Override
+    public void abortComputation(long delay) {
+        try {
+            countDown.cancel();
+        } finally {
+            scheduleCountDown(Math.max(delay, 1));
+        }
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public synchronized int computeBestScore(Game game) {
         return 0;
     }
@@ -222,21 +238,29 @@ public class BaseEngine implements Engine {
 
     /**
      * Schedules a timer task that sets the aborted flag to true
-     * when the time per move of the engine is elapsed.
+     * when the given delay has elapsed.
+     *
+     * @param delay         Delay in milliseconds
      */
-    protected TimerTask scheduleCountDown() {
+    protected void scheduleCountDown(long delay) {
         if (abortLock.isLocked() == false) {
             aborted = false;
         }
 
-        TimerTask countDown = new TimerTask() {
+        countDown = new TimerTask() {
             @Override public void run() {
                 aborted = true;
             }
         };
 
-        timer.schedule(countDown, moveTime);
+        timer.schedule(countDown, delay);
+    }
 
-        return countDown;
+
+    /**
+     * Cancel the task sheduled with {@code #scheduleCountDown}.
+     */
+    protected void cancelCountDown() {
+        countDown.cancel();
     }
 }

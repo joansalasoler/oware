@@ -164,4 +164,12 @@ public interface Engine {
      * @see Engine#computeBestMove(Game)
      */
     void abortComputation();
+
+
+    /**
+     * Stop the current search after a specified delay.
+     *
+     * @param delay      Delay in milliseconds
+     */
+    void abortComputation(long delay);
 }

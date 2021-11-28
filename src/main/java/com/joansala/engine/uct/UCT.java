@@ -19,7 +19,6 @@ package com.joansala.engine.uct;
 
 import com.google.inject.Inject;
 import java.util.function.Consumer;
-import java.util.TimerTask;
 
 import com.joansala.util.StopWatch;
 import com.joansala.engine.*;
@@ -200,7 +199,7 @@ public class UCT extends BaseEngine implements HasLeaves {
             return Game.NULL_MOVE;
         }
 
-        final TimerTask countDown = scheduleCountDown();
+        scheduleCountDown(moveTime);
         game.ensureCapacity(MAX_DEPTH + game.length());
         root = rootNode(game);
 
@@ -235,7 +234,7 @@ public class UCT extends BaseEngine implements HasLeaves {
 
         bestChild = pickBestChild(root);
         invokeConsumers(game);
-        countDown.cancel();
+        cancelCountDown();
 
         return bestChild.move();
     }
