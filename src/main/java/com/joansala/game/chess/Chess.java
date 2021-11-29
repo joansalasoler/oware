@@ -158,6 +158,16 @@ final class Chess {
     static final int PAWN_WEIGHT =     8;
 
     // -------------------------------------------------------------------
+    // Openings book
+    // -------------------------------------------------------------------
+
+    /** Minimum score for an opening move to be choosen */
+    static final double ROOT_THRESHOLD = -250.0D;
+
+    /** Threshold on the highest opening move reward */
+    static final double ROOT_DISTURBANCE = 100.0D;
+
+    // -------------------------------------------------------------------
     // Board definitions
     // -------------------------------------------------------------------
 

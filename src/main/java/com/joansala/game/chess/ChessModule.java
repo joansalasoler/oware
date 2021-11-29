@@ -52,6 +52,7 @@ public class ChessModule extends BaseModule {
         bind(Board.class).to(ChessBoard.class);
         bind(Engine.class).to(Negamax.class);
         bind(Cache.class).to(GameCache.class);
+        bind(Roots.class).to(ChessRoots.class);
     }
 
 
