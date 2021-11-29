@@ -123,20 +123,22 @@ public class UCTRoots implements Closeable, Roots<Game> {
      */
     @Override
     public int pickBestMove(Game game) throws IOException {
-        if (outOfBook == false) {
-            List<BookEntry> entries = readChildren(game);
-            entries.removeIf(e -> !game.isLegal(e.getMove()));
+        if (outOfBook == true) {
+            return NULL_MOVE;
+        }
+
+        List<BookEntry> entries = readChildren(game);
+        entries.removeIf(e -> !game.isLegal(e.getMove()));
+
+        if ((outOfBook = entries.isEmpty()) == false) {
+            BookEntry secure = pickSecureEntry(entries);
+            double minScore = disturbance + computeScore(secure);
+
+            entries.removeIf(e -> computeScore(e) > minScore);
+            entries.removeIf(e -> computeScore(e) > -threshold);
 
             if ((outOfBook = entries.isEmpty()) == false) {
-                BookEntry secure = pickSecureEntry(entries);
-                double minScore = disturbance + computeScore(secure);
-
-                entries.removeIf(e -> computeScore(e) > minScore);
-                entries.removeIf(e -> computeScore(e) > -threshold);
-
-                if ((outOfBook = entries.isEmpty()) == false) {
-                    return pickRandomEntry(entries).getMove();
-                }
+                return pickRandomEntry(entries).getMove();
             }
         }
 
@@ -208,13 +210,22 @@ public class UCTRoots implements Closeable, Roots<Game> {
 
 
     /**
-     * Picks a random element from a list of entries.
+     * Picks a random element from a list of entries. This performs
+     * a weighted random choice using entry counts as weights.
      *
      * @param entries       List of entries
      * @return              An entry on the list
      */
     protected BookEntry pickRandomEntry(List<BookEntry> entries) {
-        return entries.get(random.nextInt(entries.size()));
+        double distance = count(entries) * Math.random();
+
+        for (BookEntry entry : entries) {
+            if ((distance -= entry.getCount()) < 0.0D) {
+                return entry;
+            }
+        }
+
+        return entries.get(0);
     }
 
 
@@ -262,6 +273,23 @@ public class UCTRoots implements Closeable, Roots<Game> {
         game.setCursor(cursor);
 
         return hashes;
+    }
+
+
+    /**
+     * Sum expansion counts of a list of entries.
+     *
+     * @param entries       List of entries
+     * @return              Sum counts
+     */
+    private long count(List<BookEntry> entries) {
+        long count = 0L;
+
+        for (BookEntry entry : entries) {
+            count += entry.getCount();
+        }
+
+        return count;
     }
 
 
