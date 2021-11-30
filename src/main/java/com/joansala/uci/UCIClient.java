@@ -547,6 +547,7 @@ public class UCIClient {
         }
 
         state = State.THINKING;
+        infinite = false;
     }
 
 
