@@ -46,7 +46,7 @@ public class ChessGenerator {
     private static final int KING_STAGE = 0;
 
     /** Move generation was completed */
-    private static final int END_STAGE = 8;
+    private static final int END_STAGE = 14;
 
     /** Current capacity */
     private int capacity = DEFAULT_CAPACITY;
@@ -84,7 +84,15 @@ public class ChessGenerator {
      * Move generation stage for a cursor.
      */
     public int getStage(int cursor) {
-        return (cursor >> 8) & 0xF;
+        return (cursor >> 8) & 0x1F;
+    }
+
+
+    /**
+     * Generated move for a cursor.
+     */
+    public int getMove(int cursor) {
+        return (cursor >> 14);
     }
 
 
@@ -129,7 +137,7 @@ public class ChessGenerator {
             index++;
         }
 
-        return (move << 12) | (stage << 8) | (index);
+        return (move << 14) | (stage << 8) | (index);
     }
 
 
@@ -216,25 +224,30 @@ public class ChessGenerator {
         final long mask = isKingInCheck() ? evasions : checkers;
 
         switch (stage) {
-            case 0: storeKingMoves(king, taken, checkers); break;
-            case 1: storePromotions(pawns, taken, rivals, mask); break;
-            case 2: storePawnMoves(pawns, taken, rivals, mask); break;
-            case 3: storeRookMoves(rooks, taken, mask); break;
-            case 4: storeQueenMoves(queens, taken, mask); break;
-            case 5: storeBishopMoves(bishops, taken, mask); break;
-            case 6: storeKnightMoves(knights, taken, mask); break;
-            case 7: storeEnPassants(pawns, taken, flags);
-                    storeCastlings(taken, flags);
+            case  0: storeKingMoves(king, taken, checkers); break;
+            case  1: storeCastlings(taken, flags); break;
+            case  2: storePromotions(pawns, taken, rivals, mask); break;
+            case  3: storePawnCaptures(pawns, taken, mask & rivals); break;
+            case  4: storeKnightMoves(knights, taken, mask & rivals); break;
+            case  5: storeBishopMoves(bishops, taken, mask & rivals); break;
+            case  6: storeRookMoves(rooks, taken, mask & rivals); break;
+            case  7: storeQueenMoves(queens, taken, mask & rivals); break;
+            case  8: storeEnPassants(pawns, taken, flags); break;
+            case  9: storeKnightMoves(knights, taken, mask & ~rivals); break;
+            case 10: storeBishopMoves(bishops, taken, mask & ~rivals); break;
+            case 11: storeRookMoves(rooks, taken, mask & ~rivals); break;
+            case 12: storeQueenMoves(queens, taken, mask & ~rivals); break;
+            case 13: storePawnMoves(pawns, taken, mask); break;
         }
     }
 
 
     /**
-     * Generate the pseudo-legal moves of the King.
+     * Generate the legal moves of the King.
      *
      * @param king      Player king bitboard
      * @param taken     Board of occupied checkers
-     * @param mask      Bitboard of forbbiden checkers
+     * @param mask      Bitboard of allowed checkers
      */
     private void storeKingMoves(long king, long taken, long mask) {
         final int from = first(king);
@@ -252,11 +265,11 @@ public class ChessGenerator {
 
 
     /**
-     * Generate the pseudo-legal moves of knights.
+     * Generate the legal moves of knights.
      *
      * @param knights   Player knights bitboard
      * @param taken     Bitboard of occupied checkers
-     * @param mask      Bitboard of forbbiden checkers
+     * @param mask      Bitboard of allowed checkers
      */
     private void storeKnightMoves(long knights, long taken, long mask) {
         while (empty(knights) == false) {
@@ -270,11 +283,11 @@ public class ChessGenerator {
 
 
     /**
-     * Generate the pseudo-legal moves of bishops.
+     * Generate the legal moves of bishops.
      *
      * @param bishops   Player bishops bitboard
      * @param taken     Bitboard of occupied checkers
-     * @param mask      Bitboard of forbbiden checkers
+     * @param mask      Bitboard of allowed checkers
      */
     private void storeBishopMoves(long bishops, long taken, long mask) {
         while (empty(bishops) == false) {
@@ -288,11 +301,11 @@ public class ChessGenerator {
 
 
     /**
-     * Generate the pseudo-legal moves of rooks.
+     * Generate the legal moves of rooks.
      *
      * @param rooks     Player rooks bitboard
      * @param taken     Bitboard of occupied checkers
-     * @param mask      Bitboard of forbbiden checkers
+     * @param mask      Bitboard of allowed checkers
      */
     private void storeRookMoves(long rooks, long taken, long mask) {
         while (empty(rooks) == false) {
@@ -306,11 +319,11 @@ public class ChessGenerator {
 
 
     /**
-     * Generate the pseudo-legal moves of queens.
+     * Generate the legal moves of queens.
      *
      * @param queens    Player queens bitboard
      * @param taken     Bitboard of occupied checkers
-     * @param mask      Bitboard of forbbiden checkers
+     * @param mask      Bitboard of allowed checkers
      */
     private void storeQueenMoves(long queens, long taken, long mask) {
         while (empty(queens) == false) {
@@ -324,7 +337,7 @@ public class ChessGenerator {
 
 
     /**
-     * Generate the pseudo-legal castling moves.
+     * Generate the legal castling moves.
      *
      * @param taken     Bitboard of occupied checkers
      * @param flags     Bitboard of rooks that can castle
@@ -344,7 +357,7 @@ public class ChessGenerator {
 
 
     /**
-     * Generate the pseudo-legal en-passant pawn captures.
+     * Generate the legal en-passant pawn captures.
      *
      * @param pawns     Player pawns bitboard
      * @param taken     Bitboard of occupied checkers
@@ -372,24 +385,19 @@ public class ChessGenerator {
 
 
     /**
-     * Generate the pseudo-legal moves of pawns.
+     * Generate the legal capture moves of pawns.
      *
      * @param pawns     Player pawns bitboard
      * @param taken     Bitboard of occupied checkers
-     * @param rivals    Bitboard of rival pieces
-     * @param mask      Bitboard of forbbiden checkers
+     * @param mask      Bitboard of allowed checkers
      */
-    private void storePawnMoves(long pawns, long taken, long rivals, long mask) {
+    private void storePawnCaptures(long pawns, long taken, long mask) {
         if (empty(pawns = pawns & ~player.seventh) == false) {
             final int sense = player.sense;
             final int oneRow = player.turn << 3;
-            final int twoRows = player.turn << 4;
-            final long bases = pawns & player.base;
 
-            long lefts = Pawn.lefts(pawns, sense) & rivals & mask;
-            long rights = Pawn.rights(pawns, sense) & rivals & mask;
-            long doubles = Pawn.doubles(bases, taken, sense) & mask;
-            long singles = Pawn.singles(pawns, taken, sense) & mask;
+            long lefts = Pawn.lefts(pawns, sense) & mask;
+            long rights = Pawn.rights(pawns, sense) & mask;
 
             while (empty(lefts) == false) {
                 final int to = first(lefts);
@@ -412,6 +420,26 @@ public class ChessGenerator {
                     store(UNFLAGGED, PAWN, from, to);
                 }
             }
+        }
+    }
+
+
+    /**
+     * Generate the legal non-capturing moves of pawns.
+     *
+     * @param pawns     Player pawns bitboard
+     * @param taken     Bitboard of occupied checkers
+     * @param mask      Bitboard of allowed checkers
+     */
+    private void storePawnMoves(long pawns, long taken, long mask) {
+        if (empty(pawns = pawns & ~player.seventh) == false) {
+            final int sense = player.sense;
+            final int oneRow = player.turn << 3;
+            final int twoRows = player.turn << 4;
+            final long bases = pawns & player.base;
+
+            long doubles = Pawn.doubles(bases, taken, sense) & mask;
+            long singles = Pawn.singles(pawns, taken, sense) & mask;
 
             while (empty(doubles) == false) {
                 final int to = first(doubles);
@@ -439,12 +467,12 @@ public class ChessGenerator {
 
 
     /**
-     * Generate the pseudo-legal pawn promotion moves.
+     * Generate the legal pawn promotion moves.
      *
      * @param pawns     Player pawns bitboard
      * @param taken     Bitboard of occupied checkers
      * @param taken     Bitboard of rival pieces
-     * @param mask      Bitboard of forbbiden checkers
+     * @param mask      Bitboard of allowed checkers
      */
     private void storePromotions(long pawns, long taken, long rivals, long mask) {
         if (empty(pawns = pawns & player.seventh) == false) {

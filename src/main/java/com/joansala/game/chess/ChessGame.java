@@ -316,7 +316,7 @@ public class ChessGame extends BaseGame {
         if (cursor != NULL_MOVE) {
             movegen.generate(1 + index, cursor, state, player);
             cursor = movegen.nextCursor(1 + index, cursor);
-            return (cursor >> 12);
+            return movegen.getMove(cursor);
         }
 
         return NULL_MOVE;
