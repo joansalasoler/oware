@@ -20,6 +20,7 @@ package com.joansala.cli;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -29,11 +30,14 @@ import org.jline.terminal.*;
 import picocli.CommandLine.*;
 
 import org.jline.builtins.Completers.TreeCompleter;
+import org.jline.builtins.Completers.TreeCompleter.Node;
 import static org.jline.builtins.Completers.TreeCompleter.node;
 
 import com.joansala.engine.Board;
 import com.joansala.cli.util.ProcessConverter;
 import com.joansala.uci.UCIClient;
+import com.joansala.uci.UCICommand;
+import com.joansala.uci.UCIService;
 import static com.joansala.uci.UCI.*;
 
 
@@ -50,13 +54,17 @@ public class ShellCommand implements Callable<Integer> {
     /** UCI client instance */
     private UCIClient client;
 
+    /** Command completer */
+    private Completer completer;
+
+
     @Option(
       names = "--command",
       description = "Custom UCI engine command",
       converter = ProcessConverter.class,
       defaultValue = "<default>"
     )
-    private Process service = null;
+    private Process process = null;
 
 
     @Option(
@@ -69,7 +77,8 @@ public class ShellCommand implements Callable<Integer> {
     /**
      * Creates a new service.
      */
-    @Inject public ShellCommand(UCIClient client) {
+    @Inject public ShellCommand(UCIService service, UCIClient client) {
+        this.completer = createCompleter(service);
         this.client = client;
     }
 
@@ -79,7 +88,7 @@ public class ShellCommand implements Callable<Integer> {
      */
     @Override public Integer call() throws Exception {
         configureLoggers();
-        client.setService(service);
+        client.setService(process);
         runInterpreter();
         return 0;
     }
@@ -202,26 +211,30 @@ public class ShellCommand implements Callable<Integer> {
      *
      * @return          New reader
      */
-    private static LineReader newLineReader() throws IOException {
+    private LineReader newLineReader() throws IOException {
         Terminal terminal = newTerminal();
         LineReaderBuilder builder = LineReaderBuilder.builder();
-        return builder.terminal(terminal).completer(COMPLETER).build();
+        return builder.terminal(terminal).completer(completer).build();
     }
 
 
     /**
-     * Provides keyword completions for the shell.
+     * Create a command completer from the UCI service.
      */
-    private static final Completer COMPLETER = new TreeCompleter(
-        node("debug", node("on", "off")),
-        node("go", node("ponder", "infinite", "movetime", "depth")),
-        node("position", node("fen"), node("startpos", node("moves"))),
-        node("setoption", node("name", "value")),
-        node("ucinewgame"),
-        node("isready"),
-        node("ponderhit"),
-        node("quit"),
-        node("stop"),
-        node("uci")
-    );
+    private static Completer createCompleter(UCIService service) {
+        Map<String, UCICommand> commands = service.getCommands();
+        Node[] nodes = new Node[commands.size()];
+        int i = 0;
+
+        for (String token : commands.keySet()) {
+            UCICommand command = commands.get(token);
+            Object[] params = command.parameterNames();
+
+            nodes[i++] = (params.length > 0) ?
+                node(token, node(params)) :
+                node(token);
+        }
+
+        return new TreeCompleter(nodes);
+    }
 }
