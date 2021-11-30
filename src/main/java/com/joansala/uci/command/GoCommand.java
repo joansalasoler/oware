@@ -22,6 +22,8 @@ import com.joansala.uci.UCIBrain;
 import com.joansala.uci.UCICommand;
 import com.joansala.uci.UCIService;
 import com.joansala.uci.util.Parameters;
+import com.joansala.uci.util.TimeManager;
+import static com.joansala.engine.Game.*;
 import static com.joansala.uci.UCI.*;
 
 
@@ -34,7 +36,10 @@ public class GoCommand implements UCICommand {
      * {@inheritDoc}
      */
     public String[] parameterNames() {
-        return new String[] { DEPTH, MOVETIME, INFINITE, PONDER };
+        return new String[] {
+            DEPTH, MOVETIME, INFINITE, PONDER, MOVESTOGO,
+            BINC, BTIME, WINC, WTIME
+        };
     }
 
 
@@ -49,8 +54,12 @@ public class GoCommand implements UCICommand {
 
         UCIBrain brain = service.getBrain();
         Engine engine = service.getEngine();
-        long movetime = Engine.DEFAULT_MOVETIME;
+        TimeManager manager = service.getTimeManager();
+
+        resetTimeManager(manager);
+        int turn = brain.getSearchTurn();
         int depth = Engine.DEFAULT_DEPTH;
+        long moveTime = Engine.DEFAULT_MOVETIME;
         boolean infinite = false;
 
         if (params.contains(DEPTH)) {
@@ -58,20 +67,72 @@ public class GoCommand implements UCICommand {
             depth = Integer.parseInt(value);
         }
 
+        if (params.contains(BTIME)) {
+            String value = params.get(BTIME);
+            long timeLeft = Long.parseLong(value);
+            manager.setTimeLeft(NORTH, timeLeft);
+        }
+
+        if (params.contains(WTIME)) {
+            String value = params.get(WTIME);
+            long timeLeft = Long.parseLong(value);
+            manager.setTimeLeft(SOUTH, timeLeft);
+        }
+
+        if (params.contains(BINC)) {
+            String value = params.get(BINC);
+            long timeInc = Long.parseLong(value);
+            manager.setTimeIncrement(NORTH, timeInc);
+        }
+
+        if (params.contains(WINC)) {
+            String value = params.get(WINC);
+            long timeInc = Long.parseLong(value);
+            manager.setTimeIncrement(SOUTH, timeInc);
+        }
+
+        if (params.contains(MOVESTOGO)) {
+            String value = params.get(MOVESTOGO);
+            int movesLeft = Integer.parseInt(value);
+            manager.setMovesLeft(movesLeft);
+        }
+
         if (params.contains(MOVETIME)) {
             String value = params.get(MOVETIME);
-            movetime = Integer.parseInt(value);
+            moveTime = Integer.parseInt(value);
+            manager.setFixedTimeActive(true);
+            manager.setMoveTime(moveTime);
         }
+
+        moveTime = manager.getMoveTimeAdvice(turn);
 
         if (params.contains(PONDER) ||
             params.contains(INFINITE)) {
             infinite = true;
             depth = Integer.MAX_VALUE;
-            movetime = Integer.MAX_VALUE;
+            moveTime = Integer.MAX_VALUE;
         }
 
         engine.setDepth(depth - 1);
-        engine.setMoveTime(movetime);
+        engine.setMoveTime(moveTime);
         brain.startThinking(infinite);
+    }
+
+
+    /**
+     * Reset the time manager to its default values.
+     *
+     * @param manager       Time manager instance
+     */
+    private void resetTimeManager(TimeManager manager) {
+        long moveTime = Engine.DEFAULT_MOVETIME;
+
+        manager.setTimeLeft(SOUTH, 0);
+        manager.setTimeLeft(NORTH, 0);
+        manager.setTimeIncrement(SOUTH, 0);
+        manager.setTimeIncrement(NORTH, 0);
+        manager.setFixedTimeActive(false);
+        manager.setMoveTime(moveTime);
+        manager.setMovesLeft(0);
     }
 }

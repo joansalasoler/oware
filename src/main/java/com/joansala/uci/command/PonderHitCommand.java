@@ -18,9 +18,11 @@ package com.joansala.uci.command;
  */
 
 import com.joansala.engine.Engine;
+import com.joansala.uci.UCIBrain;
 import com.joansala.uci.UCICommand;
 import com.joansala.uci.UCIService;
 import com.joansala.uci.util.Parameters;
+import com.joansala.uci.util.TimeManager;
 
 
 /**
@@ -32,8 +34,12 @@ public class PonderHitCommand implements UCICommand {
      * {@inheritDoc}
      */
     public void accept(UCIService service, Parameters params) {
+        UCIBrain brain = service.getBrain();
         Engine engine = service.getEngine();
-        long movetime = Engine.DEFAULT_MOVETIME;
-        engine.abortComputation(movetime);
+        TimeManager manager = service.getTimeManager();
+
+        int turn = brain.getSearchTurn();
+        long moveTime = manager.getMoveTimeAdvice(turn);
+        engine.abortComputation(moveTime);
     }
 }

@@ -59,6 +59,9 @@ public class UCIBrain extends Thread {
     /** Stop searching only when stop is received */
     private boolean infinite = false;
 
+    /** When the current search was initiated */
+    private long startTime = 0L;
+
     /** Set to true while computing a move */
     private volatile boolean thinking = false;
 
@@ -85,6 +88,27 @@ public class UCIBrain extends Thread {
 
 
     /**
+     * Player that is currently to move.
+     *
+     * @return      Turn identifier for the player to move
+     */
+    public int getSearchTurn() {
+        return board.turn();
+    }
+
+
+    /**
+     * Time elapsed since the last {@code startThinking} was invoked.
+     *
+     * @return      Milliseconds spent searching
+     */
+    public long getSearchTime() {
+        long endTime = System.currentTimeMillis();
+        return endTime - startTime;
+    }
+
+
+    /**
      * Sets a new state for future searches.
      *
      * @param board     Initial board state
@@ -103,6 +127,7 @@ public class UCIBrain extends Thread {
      */
     public void startThinking(boolean infinite) {
         synchronized (this) {
+            this.startTime = System.currentTimeMillis();
             this.infinite = infinite;
             this.thinking = true;
             this.notify();

@@ -23,6 +23,7 @@ import com.joansala.engine.Roots;
 import com.joansala.uci.UCICommand;
 import com.joansala.uci.UCIService;
 import com.joansala.uci.util.Parameters;
+import com.joansala.uci.util.TimeManager;
 
 
 /**
@@ -38,11 +39,14 @@ public class NewGameCommand implements UCICommand {
 
         Engine engine = service.getEngine();
         Roots<Game> roots = service.getRoots();
+        TimeManager timeManager = service.getTimeManager();
 
         if (roots instanceof Roots) {
+            timeManager.newMatch();
             engine.newMatch();
             roots.newMatch();
         } else {
+            timeManager.newMatch();
             engine.newMatch();
         }
     }

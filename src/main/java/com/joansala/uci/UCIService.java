@@ -27,6 +27,7 @@ import com.joansala.engine.base.BaseCache;
 import com.joansala.engine.base.BaseLeaves;
 import com.joansala.book.base.BaseRoots;
 import com.joansala.uci.util.Parameters;
+import com.joansala.uci.util.TimeManager;
 import com.joansala.uci.option.*;
 import com.joansala.uci.command.*;
 import com.joansala.engine.*;
@@ -46,6 +47,9 @@ public class UCIService {
 
     /** Thread where the computations are performed */
     private UCIBrain brain;
+
+    /** Search time manager */
+    private TimeManager timeManager;
 
     /** Search algorithm */
     private Engine engine;
@@ -91,6 +95,7 @@ public class UCIService {
     public UCIService(Game game, Engine engine) {
         registerExceptionHandler();
 
+        this.timeManager = new TimeManager();
         this.board = game.getBoard();
         this.engine = engine;
         this.game = game;
@@ -162,6 +167,14 @@ public class UCIService {
      */
     public UCIBrain getBrain() {
         return brain;
+    }
+
+
+    /**
+     * Time manager of this service.
+     */
+    public TimeManager getTimeManager() {
+        return timeManager;
     }
 
 

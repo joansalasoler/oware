@@ -57,6 +57,8 @@ public class UCI {
     // -------------------------------------------------------------------
 
     public static final String AUTHOR =         "author";
+    public static final String BINC =           "binc";
+    public static final String BTIME =          "btime";
     public static final String CENTIPAWNS =     "cp";
     public static final String DEFAULT =        "default";
     public static final String DEPTH =          "depth";
@@ -64,12 +66,15 @@ public class UCI {
     public static final String MAX =            "max";
     public static final String MIN =            "min";
     public static final String MOVES =          "moves";
+    public static final String MOVESTOGO =      "movestogo";
     public static final String MOVETIME =       "movetime";
     public static final String NAME =           "name";
     public static final String SCORE =          "score";
     public static final String TYPE =           "type";
     public static final String VALUE =          "value";
     public static final String VAR =            "var";
+    public static final String WINC =           "winc";
+    public static final String WTIME =          "wtime";
 
     // -------------------------------------------------------------------
     // Option types
