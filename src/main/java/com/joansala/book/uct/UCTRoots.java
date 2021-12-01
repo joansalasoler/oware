@@ -19,7 +19,6 @@ package com.joansala.book.uct;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.Random;
 import java.util.List;
 import java.util.LinkedList;
 import com.joansala.engine.Game;
@@ -36,9 +35,6 @@ public class UCTRoots implements Closeable, Roots<Game> {
 
     /** Reads the book data from a file */
     private final BookReader reader;
-
-    /** Random number generator */
-    private final Random random;
 
     /** Disturbance score */
     private double disturbance = Game.DRAW_SCORE;
@@ -58,7 +54,6 @@ public class UCTRoots implements Closeable, Roots<Game> {
      */
      public UCTRoots(String path) throws IOException {
          reader = new BookReader(path);
-         random = new Random();
      }
 
 
