@@ -47,9 +47,6 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
     /** Fallback empty endgames instance */
     private final Leaves<Game> baseLeaves = new BaseLeaves();
 
-    /** References the {@code Game} to search */
-    protected Game game = null;
-
     /** The transpositions table */
     protected Cache<Game> cache = null;
 
@@ -206,8 +203,6 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
      */
     @Override
     public synchronized int computeBestMove(Game game) {
-        this.game = game;
-
         // If the game ended on that position return a null move
         // and set the best score acordingly
 
@@ -255,7 +250,7 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
         while (!aborted() || depth == MIN_DEPTH) {
             for (int move : rootMoves) {
                 game.makeMove(move);
-                score = search(minScore, beta, depth);
+                score = search(game, minScore, beta, depth);
                 game.unmakeMove();
 
                 if (aborted() && depth > MIN_DEPTH) {
@@ -315,12 +310,12 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
     /**
      * Performs a recursive search for a best move
      *
-     * @param alpha  The propagated alpha value
-     * @param beta   The propagated beta value
-     * @param depth  Search depth of the node. Defines the maximum number
-     *               of recursive calls that could be made for the node
+     * @param game      Initial game state
+     * @param alpha     Propagated alpha value
+     * @param beta      Propagated beta value
+     * @param depth     Depth limit
      */
-    private int search(int alpha, int beta, int depth) {
+    private int search(Game game, int alpha, int beta, int depth) {
         if (aborted() && depth > MIN_DEPTH) {
             return minScore;
         }
@@ -385,7 +380,7 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
 
         if (hashMove != Game.NULL_MOVE) {
             game.makeMove(hashMove);
-            score = -search(-beta, -alpha, depth - 1);
+            score = -search(game, -beta, -alpha, depth - 1);
             game.unmakeMove();
 
             if (score >= beta && aborted() == false) {
@@ -408,7 +403,7 @@ public class Negamax extends BaseEngine implements HasLeaves, HasCache {
                 continue;
 
             game.makeMove(cmove);
-            score = -search(-beta, -alpha, depth - 1);
+            score = -search(game, -beta, -alpha, depth - 1);
             game.unmakeMove();
 
             if (score >= beta) {

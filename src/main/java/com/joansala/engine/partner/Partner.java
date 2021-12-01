@@ -62,7 +62,7 @@ public class Partner extends UCT {
      * {@inheritDoc}
      */
     @Override
-    protected int simulateMatch(int maxDepth) {
+    protected int simulateMatch(Game game, int maxDepth) {
         int depth = 0;
 
         while (depth < maxDepth && !game.hasEnded()) {

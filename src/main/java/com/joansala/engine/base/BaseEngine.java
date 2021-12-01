@@ -38,7 +38,7 @@ public class BaseEngine implements Engine {
     /** Search count-down timer */
     protected final Timer timer;
 
-    /* */
+    /* Timer task to stop a search */
     protected TimerTask countDown;
 
     /** Abort computation mutex */

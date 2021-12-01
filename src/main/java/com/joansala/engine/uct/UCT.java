@@ -57,9 +57,6 @@ public class UCT extends BaseEngine implements HasLeaves {
     /** Best child found so far */
     protected UCTNode bestChild;
 
-    /** References the {@code Game} to search */
-    protected Game game = null;
-
     /** Endgame database */
     protected Leaves<Game> leaves = null;
 
@@ -193,8 +190,6 @@ public class UCT extends BaseEngine implements HasLeaves {
      */
     @Override
     public synchronized int computeBestMove(Game game) {
-        this.game = game;
-
         if (game.hasEnded()) {
             return Game.NULL_MOVE;
         }
@@ -214,7 +209,7 @@ public class UCT extends BaseEngine implements HasLeaves {
         }
 
         while (!aborted() || root.child() == null) {
-            expand(root, maxDepth);
+            expand(root, game, maxDepth);
             pruneGarbage(root);
 
             // Report search information periodically
@@ -401,11 +396,12 @@ public class UCT extends BaseEngine implements HasLeaves {
      * Scores the current game position for the given node.
      *
      * @param node      Tree node to evaluate
+     * @param game      Game state for the node
      * @param depth     Maximum search depth
      *
      * @return          Score of the game
      */
-    private int score(UCTNode node, int depth) {
+    private int score(UCTNode node, Game game, int depth) {
         int score;
 
         if (node.terminal()) {
@@ -413,7 +409,7 @@ public class UCT extends BaseEngine implements HasLeaves {
         } else if (leaves.find(game)) {
             score = leaves.getScore();
         } else {
-            score = simulateMatch(depth);
+            score = simulateMatch(game, depth);
         }
 
         if (score == Game.DRAW_SCORE) {
@@ -427,10 +423,11 @@ public class UCT extends BaseEngine implements HasLeaves {
     /**
      * Simulates a match and return its final score.
      *
+     * @param game      Initial game state
      * @param depth     Maximum simulation depth
      * @return          Outcome of the simulation
      */
-    protected int simulateMatch(int maxDepth) {
+    protected int simulateMatch(Game game, int maxDepth) {
         return game.score();
     }
 
@@ -439,12 +436,13 @@ public class UCT extends BaseEngine implements HasLeaves {
      * Evaluate a node and return its score.
      *
      * @param node      Node to evaluate
+     * @param game      Game state for the node
      * @param depth     Maximum search depth
      *
      * @return          Score of the node
      */
-    private double evaluate(UCTNode node, int depth) {
-        final double score = score(node, depth);
+    private double evaluate(UCTNode node, Game game, int depth) {
+        final double score = score(node, game, depth);
         node.initScore(score);
 
         return score;
@@ -455,11 +453,12 @@ public class UCT extends BaseEngine implements HasLeaves {
      * Expands a node with a new child and returns its score.
      *
      * @param node      Node to expand
+     * @param game      Game state
      * @param move      Move to perform
      *
      * @return          New child node
      */
-    private UCTNode appendChild(UCTNode parent, int move) {
+    private UCTNode appendChild(UCTNode parent, Game game, int move) {
         final UCTNode node = new UCTNode(game, move);
         parent.pushChild(node);
 
@@ -470,10 +469,11 @@ public class UCT extends BaseEngine implements HasLeaves {
     /**
      * Expands the most prioritary tree node.
      *
-     * @param game      Game
-     * @param node      Root node
+     * @param node      State node
+     * @param game      Game state
+     * @param depth     Depth limit
      */
-    private double expand(UCTNode node, int depth) {
+    private double expand(UCTNode node, Game game, int depth) {
         final int move;
         final UCTNode child;
         final double score;
@@ -489,13 +489,13 @@ public class UCT extends BaseEngine implements HasLeaves {
 
         if (move != Game.NULL_MOVE) {
             game.makeMove(move);
-            child = appendChild(node, move);
-            score = -evaluate(child, depth - 1);
+            child = appendChild(node, game, move);
+            score = -evaluate(child, game, depth - 1);
             game.unmakeMove();
         } else {
             child = pickLeadChild(node);
             game.makeMove(child.move());
-            score = -expand(child, depth - 1);
+            score = -expand(child, game, depth - 1);
             game.unmakeMove();
         }
 
