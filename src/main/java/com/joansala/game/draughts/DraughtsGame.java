@@ -143,10 +143,42 @@ public class DraughtsGame extends BaseGame {
 
 
     /**
+     * Bitboard of free checkers.
+     */
+    protected long free() {
+        return free;
+    }
+
+
+    /**
      * Bitboard of rival pieces.
      */
     protected long rivals() {
         return rivals;
+    }
+
+
+    /**
+     * Bitboard of pieces that can move.
+     */
+    protected long mobility() {
+        return mobility;
+    }
+
+
+    /**
+     * Bitboard of player kings.
+     */
+    protected long kings() {
+        return state[player.king];
+    }
+
+
+    /**
+     * Player to move.
+     */
+    protected Player player() {
+        return player;
     }
 
 
@@ -355,9 +387,7 @@ public class DraughtsGame extends BaseGame {
      */
     private void generateMoves(int slot) {
         if (empty(mobility & GENERATED)) {
-            final int sense = player.sense;
-            final long kings = state[player.king];
-            movegen.generate(slot, sense, mobility, free, rivals, kings);
+            movegen.generate(slot, this);
             mobility ^= GENERATED;
         }
     }
@@ -370,9 +400,7 @@ public class DraughtsGame extends BaseGame {
      * @return          Traveled checker indices
      */
     protected int[] traceCaptures(int move) {
-        final int sense = player.sense;
-        final long kings = state[player.king];
-        return movegen.trace(move, sense, mobility, free, rivals, kings);
+        return movegen.trace(move, this);
     }
 
 

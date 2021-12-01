@@ -104,31 +104,29 @@ public class DraughtsGenerator {
      * Generate moves and store them on the given slot.
      *
      * @param slot      Storage slot
-     * @param sense     Sense of movement
-     * @param mobility  Mobility bitboard
-     * @param free      Unoccupied checkers
-     * @param rivals    Pieces that can be captured
-     * @param kings     King of the player to move
+     * @param game      Game state
      */
-    public void generate(int slot, int sense, long mobility, long free, long rivals, long kings) {
+    public void generate(int slot, DraughtsGame game) {
         this.moves = store[slot].moves;
         this.remnants = store[slot].remnants;
-        generate(sense, mobility, free, rivals, kings);
+        generate(game);
     }
 
 
     /**
      * Generate moves and store them on the moves array.
      *
-     * @param sense     Sense of movement
-     * @param mobility  Mobility bitboard
-     * @param free      Unoccupied checkers
-     * @param rivals    Pieces that can be captured
-     * @param kings     King of the player to move
+     * @param game      Game state
      */
-    private void generate(int sense, long mobility, long free, long rivals, long kings) {
+    private void generate(DraughtsGame game) {
         this.index = 1;
         this.threshold = MAX_CAPTURES;
+
+        final long free = game.free();
+        final long kings = game.kings();
+        final long rivals = game.rivals();
+        final long mobility = game.mobility();
+        final Player player = game.player();
 
         if (mobility < 0L) {
             final long pieces = mobility & BOARD_BITS;
@@ -136,7 +134,7 @@ public class DraughtsGenerator {
             storeManCaptures(pieces & ~kings, free, rivals);
         } else {
             final long pieces = mobility & BOARD_BITS;
-            storeManSliders(pieces & ~kings, free, sense);
+            storeManSliders(pieces & ~kings, free, player.sense);
             storeKingSliders(pieces & kings, free);
         }
 
@@ -148,19 +146,15 @@ public class DraughtsGenerator {
      * Traces a path of captures for the given move.
      *
      * @param move      Move to trace
-     * @param sense     Sense of movement
-     * @param mobility  Mobility bitboard
-     * @param free      Unoccupied checkers
-     * @param rivals    Pieces that can be captured
-     * @param kings     King of the player to move
+     * @param game      Game state
      */
-    public int[] trace(int move, int sense, long mobility, long free, long rivals, long kings) {
+    public int[] trace(int move, DraughtsGame game) {
         this.moves = trace.moves;
         this.remnants = trace.remnants;
 
         trace.move = move;
         Arrays.fill(trace.path, Game.NULL_MOVE);
-        generate(sense, mobility, free, rivals, kings);
+        generate(game);
         trace.move = Game.NULL_MOVE;
 
         return toCheckers(trace.path);
