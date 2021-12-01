@@ -754,13 +754,23 @@ public class ChessGenerator {
 
 
     /**
-     * An entry on the store.
+     * An entry on the generated moves store.
      */
     private class Entry {
+
+        /** Number of moves generated */
         int length = 0;
-        int nextStage = KING_STAGE;
-        int currentStage = START_STAGE;
+
+        /** Moves generated on current stage */
         int[] moves = new int[MAX_MOVES];
+
+        /** Next generation stage */
+        int nextStage = KING_STAGE;
+
+        /** Current generation stage */
+        int currentStage = START_STAGE;
+
+        /** Bitboard of check evasions */
         long evasions = FULL_BOARD;
 
 
