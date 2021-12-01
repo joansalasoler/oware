@@ -39,7 +39,7 @@ public class DraughtsGenerator {
     private static final int MAX_CAPTURES = 20;
 
     /** Stores moves and remnants for each slot */
-    private Store store = new Store();
+    private Entry[] store = new Entry[DEFAULT_CAPACITY];
 
     /** Stores moves, remnants and the path of a traced move */
     private Trace trace = new Trace();
@@ -67,6 +67,16 @@ public class DraughtsGenerator {
 
 
     /**
+     * Create a new move generator.
+     */
+    public DraughtsGenerator() {
+        for (int i = 0; i < store.length; i++) {
+            store[i] = new Entry();
+        }
+    }
+
+
+    /**
      * Move stored at the given index.
      *
      * @param slot      Storage slot
@@ -74,7 +84,7 @@ public class DraughtsGenerator {
      * @return          Move identifier
      */
     public int getMove(int slot, int cursor) {
-        return store.moves[slot][cursor];
+        return store[slot].moves[cursor];
     }
 
 
@@ -86,7 +96,7 @@ public class DraughtsGenerator {
      * @return          Bitboard
      */
     public long getRemnants(int slot, int cursor) {
-        return store.remnants[slot][cursor];
+        return store[slot].remnants[cursor];
     }
 
 
@@ -101,8 +111,8 @@ public class DraughtsGenerator {
      * @param kings     King of the player to move
      */
     public void generate(int slot, int sense, long mobility, long free, long rivals, long kings) {
-        this.moves = store.moves[slot];
-        this.remnants = store.remnants[slot];
+        this.moves = store[slot].moves;
+        this.remnants = store[slot].remnants;
         generate(sense, mobility, free, rivals, kings);
     }
 
@@ -505,31 +515,25 @@ public class DraughtsGenerator {
      * @param size          New slot size
      */
     public void ensureCapacity(int size) {
-        if (size < capacity) {
-            return;
+        if (size > capacity) {
+            store = Arrays.copyOf(store, size);
+
+            for (int slot = capacity; slot < size; slot++) {
+                store[slot] = new Entry();
+            }
+
+            capacity = size;
+            System.gc();
         }
-
-        int[][] moves = new int[size][MAX_MOVES];
-        long[][] remnants = new long[size][MAX_MOVES];
-
-        for (int slot = 0; slot < store.moves.length; slot++) {
-            remnants[slot] = store.remnants[slot];
-            moves[slot] = store.moves[slot];
-        }
-
-        store.remnants = remnants;
-        store.moves = moves;
-        capacity = size;
-        System.gc();
     }
 
 
     /**
-     * Store of generated moves at each slot
+     * An entry on the generated moves store.
      */
-    private class Store {
-        int[][] moves = new int[DEFAULT_CAPACITY][MAX_MOVES];
-        long[][] remnants = new long[DEFAULT_CAPACITY][MAX_MOVES];
+    private class Entry {
+        int[] moves = new int[MAX_MOVES];
+        long[] remnants = new long[MAX_MOVES];
     }
 
 
