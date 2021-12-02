@@ -30,7 +30,10 @@ public final class BenchAverage implements Comparable<BenchAverage> {
     private double average = 0.0;
 
     /** Value offset */
-    private int offset = 0;
+    private long offset = 0;
+
+    /** Maximum aggregate value */
+    private long maximum = 0;
 
 
     /**
@@ -50,9 +53,17 @@ public final class BenchAverage implements Comparable<BenchAverage> {
 
 
     /**
+     * Highest aggregated value.
+     */
+    public long maximum() {
+        return maximum;
+    }
+
+
+    /**
      * Sets an offset for the aggregated values.
      */
-    public void offset(int value) {
+    public void offset(long value) {
         offset = value;
     }
 
@@ -60,7 +71,8 @@ public final class BenchAverage implements Comparable<BenchAverage> {
     /**
      * Adds a new value to the average.
      */
-    public int aggregate(int value) {
+    public long aggregate(long value) {
+        maximum = Math.max(maximum, value);
         average += (value - offset - average) / ++count;
         return value;
     }

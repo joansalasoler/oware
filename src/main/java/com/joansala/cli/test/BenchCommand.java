@@ -223,11 +223,16 @@ public class BenchCommand implements Callable<Integer> {
      * @param game      Game instance
      */
     private void benchmark(Engine engine, Game game) {
+        long start = stats.watch.elapsed();
+
         stats.depth.offset(game.length());
         stats.moves.increment();
         stats.watch.start();
         engine.computeBestMove(game);
         stats.watch.stop();
+
+        long elapsed = stats.watch.elapsed() - start;
+        stats.movetime.aggregate(elapsed);
     }
 
 
@@ -286,6 +291,8 @@ public class BenchCommand implements Callable<Integer> {
             "%s%n" +
             "Average branching factor: %,28.2f nodes%n" +
             "Average evaluation depth: %,28.2f plies%n" +
+            "Average time per move:    %,28.2f ms   %n" +
+            "Maximum time per move:      %,26d ms   %n" +
             "Node visits per second:   %,28.0f nps%n" +
             "Node visits count:          %,26d nodes%n" +
             "Heuristic evaluations:      %,26d nodes%n" +
@@ -295,6 +302,8 @@ public class BenchCommand implements Callable<Integer> {
             horizontalRule('-'),
             stats.branchingFactor(),
             stats.depth.average(),
+            stats.movetime.average(),
+            stats.movetime.maximum(),
             stats.visitsPerSecond(),
             stats.visits.count(),
             stats.heuristic.count(),
