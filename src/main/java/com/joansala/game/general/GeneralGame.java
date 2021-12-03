@@ -305,8 +305,22 @@ public class GeneralGame extends BaseGame {
      */
     @Override
     public void unmakeMove() {
-        popState();
+        popState(index);
         switchTurn();
+        index--;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void unmakeMoves(int length) {
+        if (length > 0) {
+            index -= length;
+            setTurn((length & 1) == 0 ? turn() : -turn());
+            popState(1 + index);
+        }
     }
 
 
@@ -344,12 +358,11 @@ public class GeneralGame extends BaseGame {
     /**
      * Restore game state from the history.
      */
-    private void popState() {
+    private void popState(int index) {
         state = states[index];
         move = moves[index];
         hash = hashes[index];
         cursor = cursors[index];
-        index--;
     }
 
 

@@ -273,7 +273,20 @@ public class OthelloGame extends BaseGame {
      */
     @Override
     public void unmakeMove() {
-        popState();
+        popState(index);
+        index--;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void unmakeMoves(int length) {
+        if (length > 0) {
+            index -= length;
+            popState(1 + index);
+        }
     }
 
 
@@ -414,14 +427,13 @@ public class OthelloGame extends BaseGame {
     /**
      * Retrieve the current game state from the history.
      */
-    private void popState() {
+    private void popState(int index) {
         System.arraycopy(states, index << 1, state, 0, PIECE_COUNT);
         setTurn(turns[index]);
         cursor = cursors[index];
         mobility = mobilities[index];
         hash = hashes[index];
         move = moves[index];
-        index--;
     }
 
 

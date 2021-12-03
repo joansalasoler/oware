@@ -303,8 +303,22 @@ public class ChessGame extends BaseGame {
      */
     @Override
     public void unmakeMove() {
-        popState();
+        popState(index);
         switchTurn();
+        index--;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void unmakeMoves(int length) {
+        if (length > 0) {
+            index -= length;
+            setTurn((length & 1) == 0 ? turn() : -turn());
+            popState(1 + index);
+        }
     }
 
 
@@ -570,13 +584,12 @@ public class ChessGame extends BaseGame {
     /**
      * Restore game state from the history.
      */
-    private void popState() {
+    private void popState(int index) {
         System.arraycopy(states, index * STATE_SIZE, state, 0, STATE_SIZE);
         advance = advances[index];
         cursor = cursors[index];
         hash = hashes[index];
         move = moves[index];
-        index--;
     }
 
 

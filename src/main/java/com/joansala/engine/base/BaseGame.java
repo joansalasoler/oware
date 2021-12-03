@@ -306,6 +306,17 @@ public abstract class BaseGame implements Game {
      * {@inheritDoc}
      */
     @Override
+    public void unmakeMoves(int length) {
+        for (int i = 0; i < length; i++) {
+            unmakeMove();
+        }
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void ensureCapacity(int size) {
         System.gc();
     }

@@ -224,6 +224,15 @@ public interface Game {
 
 
     /**
+     * Unmakes a certain number of moves from the game.
+     *
+     * @see Game#unmakeMove()
+     * @param length        Number of moves to undo
+     */
+    void unmakeMoves(int length);
+
+
+    /**
      * Returns the next legal move for the current position and turn.
      *
      * <p>This method is provided for efficiency, so it is not necessary

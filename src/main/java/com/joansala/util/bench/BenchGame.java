@@ -156,6 +156,12 @@ public final class BenchGame implements Game {
 
 
     /** {@inheritDoc} */
+    @Override public void unmakeMoves(int length) {
+        game.unmakeMoves(length);
+    }
+
+
+    /** {@inheritDoc} */
     @Override public int nextMove() {
         return game.nextMove();
     }

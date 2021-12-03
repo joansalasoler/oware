@@ -215,7 +215,7 @@ public class OwareGame extends BaseGame {
     /**
      * Restore game state from the history.
      */
-    private void popState() {
+    private void popState(int index) {
         System.arraycopy(states, index << 4, state, 0, 4 + BOARD_SIZE);
         stage = state[3 + BOARD_SIZE];
         next = state[POSITION_SIZE];
@@ -223,7 +223,6 @@ public class OwareGame extends BaseGame {
         hash = hashes[index];
         capture = captures[index];
         move = moves[index];
-        index--;
     }
 
 
@@ -570,8 +569,22 @@ public class OwareGame extends BaseGame {
      */
     @Override
     public void unmakeMove() {
-        popState();
+        popState(index);
         switchTurn();
+        index--;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void unmakeMoves(int length) {
+        if (length > 0) {
+            index -= length;
+            setTurn((length & 1) == 0 ? turn() : -turn());
+            popState(1 + index);
+        }
     }
 
 
