@@ -61,10 +61,19 @@ public class UCT extends BaseEngine implements HasLeaves {
     protected Leaves<Game> leaves = null;
 
     /** Exploration bias parameter */
-    public double biasFactor = DEFAULT_BIAS;
+    private double biasFactor = DEFAULT_BIAS;
 
     /** Exploration priority multiplier */
     private double bias = DEFAULT_BIAS * maxScore;
+
+    /** Path of traversed nodes during expansion */
+    private int[] queue = new int[MAX_DEPTH];
+
+    /** Traversed nodes queue offset */
+    private int offset = 0;
+
+    /** Next slot on the traversed nodes queue */
+    private int index = 0;
 
 
     /**
@@ -208,7 +217,10 @@ public class UCT extends BaseEngine implements HasLeaves {
             System.gc();
         }
 
+        offset = game.length();
+
         while (!aborted() || root.child() == null) {
+            clearMovesQueue();
             expand(root, game, maxDepth);
             pruneGarbage(root);
 
@@ -227,6 +239,7 @@ public class UCT extends BaseEngine implements HasLeaves {
             }
         }
 
+        game.unmakeMoves(game.length() - offset);
         bestChild = pickBestChild(root);
         invokeConsumers(game);
         cancelCountDown();
@@ -474,7 +487,6 @@ public class UCT extends BaseEngine implements HasLeaves {
      * @param depth     Depth limit
      */
     private double expand(UCTNode node, Game game, int depth) {
-        final int move;
         final UCTNode child;
         final double score;
 
@@ -485,18 +497,21 @@ public class UCT extends BaseEngine implements HasLeaves {
             return score;
         }
 
-        move = node.nextMove(game);
+        int move = Game.NULL_MOVE;
+
+        if (node.expanded() == false) {
+            dequeueMoves(game);
+            move = node.nextMove(game);
+        }
 
         if (move != Game.NULL_MOVE) {
             game.makeMove(move);
             child = appendChild(node, game, move);
             score = -evaluate(child, game, depth - 1);
-            game.unmakeMove();
         } else {
             child = pickLeadChild(node);
-            game.makeMove(child.move());
+            queueMove(child.move());
             score = -expand(child, game, depth - 1);
-            game.unmakeMove();
         }
 
         if (child.terminal() == false) {
@@ -569,5 +584,57 @@ public class UCT extends BaseEngine implements HasLeaves {
                 }
             }
         } while ((node = node.sibling()) != null);
+    }
+
+
+    /**
+     * Perform the queued traveled path on a game object.
+     *
+     * @param game      Game where to perform the moves
+     */
+    private void dequeueMoves(Game game) {
+        int[] moves = game.moves();
+        int floor = floor(moves, queue, offset);
+        int length = offset + index;
+
+        game.unmakeMoves(moves.length - floor);
+
+        for (int i = floor; i < length; i++) {
+            game.makeMove(queue[i - offset]);
+        }
+    }
+
+
+    /**
+     * Obtain the index of the first move that differs between a
+     * list of moves and a traveled path queue.
+     *
+     * @param moves     Game moves
+     * @param queue     Moves queue
+     * @param offset    First moves index to compare
+     */
+    private int floor(int[] moves, int[] queue, int offset) {
+        int i = offset;
+        int ceil = Math.min(moves.length - offset, index);
+        while (i < ceil && moves[i] == queue[i - offset]) i++;
+        return i;
+    }
+
+
+    /**
+     * Adds a move to the traveled path queue.
+     *
+     * @param move      Move to append to the queue
+     */
+    private void queueMove(int move) {
+        queue[index++] = move;
+    }
+
+
+    /**
+     * Remove all nodes from the traveled path queue.
+     */
+    private void clearMovesQueue() {
+        index = 0;
     }
 }

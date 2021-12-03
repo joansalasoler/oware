@@ -171,14 +171,10 @@ public class UCTNode {
     protected int nextMove(Game game) {
         final int move;
 
-        if (expanded) {
-            move = Game.NULL_MOVE;
-        } else {
-            game.setCursor(cursor);
-            move = game.nextMove();
-            cursor = game.getCursor();
-            expanded = (move == Game.NULL_MOVE);
-        }
+        game.setCursor(cursor);
+        move = game.nextMove();
+        cursor = game.getCursor();
+        expanded = (move == Game.NULL_MOVE);
 
         return move;
     }
