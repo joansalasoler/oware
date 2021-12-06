@@ -307,7 +307,6 @@ public class UCIService {
                 String args = scanner.nextLine();
                 String[] names = command.parameterNames();
                 command.accept(this, new Parameters(args, names));
-                debug("Received:", token + args);
             } catch (Exception e) {
                 debug("Command failure:", e.getMessage());
             }
