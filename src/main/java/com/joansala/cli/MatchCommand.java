@@ -21,6 +21,8 @@ package com.joansala.cli;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.concurrent.Callable;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 import com.google.inject.Inject;
 import org.jline.reader.*;
 import org.jline.terminal.*;
@@ -48,8 +50,8 @@ public class MatchCommand implements Callable<Integer> {
     /** Game being played */
     private Game game;
 
-    /** Initial board of the game */
-    private Board parser;
+    /** Current board */
+    private Board board;
 
     /** Turn of the human player */
     private int turn = Game.SOUTH;
@@ -75,11 +77,17 @@ public class MatchCommand implements Callable<Integer> {
     private Process service = null;
 
 
+    @Option(
+      names = "--debug",
+      description = "Log debug messages."
+    )
+    private boolean debug = false;
+
+
     /**
      * Creates a new service.
      */
     @Inject public MatchCommand(UCIPlayer player, Game game) {
-        this.parser = player.getClient().getBoard();
         this.player = player;
         this.game = game;
     }
@@ -89,6 +97,7 @@ public class MatchCommand implements Callable<Integer> {
      * {@inheritDoc}
      */
     @Override public Integer call() throws Exception {
+        configureLoggers();
         player.setService(service);
         runMatch();
         return 0;
@@ -111,6 +120,7 @@ public class MatchCommand implements Callable<Integer> {
             printWelcome(writer);
             printBoard(writer);
 
+            board = game.toBoard();
             turn = askForTurn(reader);
 
             while (player.isRunning() && !game.hasEnded()) {
@@ -120,11 +130,13 @@ public class MatchCommand implements Callable<Integer> {
                     if (isUserTurn == true) {
                         int move = askForMove(reader);
                         makeMove(game, move);
+                        board = game.toBoard();
                         printBoard(writer);
                     } else {
                         player.stopPondering();
                         int move = askForMove(writer);
                         makeMove(game, move);
+                        board = game.toBoard();
                         player.startPondering(game);
                         printMove(writer, move);
                         printBoard(writer);
@@ -182,7 +194,7 @@ public class MatchCommand implements Callable<Integer> {
      */
     private int askForMove(LineReader reader) throws Exception {
         String notation = reader.readLine("Your move? ");
-        return parser.toMove(notation.trim());
+        return board.toMove(notation.trim());
     }
 
 
@@ -228,7 +240,7 @@ public class MatchCommand implements Callable<Integer> {
      * @param writer    Terminal writer
      */
     private void printBoard(PrintWriter writer) {
-        writer.format("%n%s%n%n", game.board());
+        writer.format("%n%s%n%n", board);
         writer.flush();
     }
 
@@ -239,7 +251,7 @@ public class MatchCommand implements Callable<Integer> {
      * @param writer    Terminal writer
      */
     private void printMove(PrintWriter writer, int move) {
-        String notation = parser.toAlgebraic(move);
+        String notation = board.toCoordinates(move);
         writer.format("My move is: %s%n", notation);
         writer.flush();
     }
@@ -258,6 +270,15 @@ public class MatchCommand implements Callable<Integer> {
         } else {
             writer.println("You lost this match.");
         }
+    }
+
+
+    /**
+     * Configure the application loggers.
+     */
+    private void configureLoggers() {
+        Logger logger = Logger.getLogger("com.joansala.uci");
+        logger.setLevel(debug ? Level.ALL : Level.OFF);
     }
 
 

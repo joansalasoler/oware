@@ -49,6 +49,9 @@ public final class BenchStats {
     /** Cache probes */
     public BenchCounter leaves = new BenchCounter();
 
+    /** Average search time per move */
+    public BenchAverage movetime = new BenchAverage();
+
 
     /**
      * Number of visited nodes per second.

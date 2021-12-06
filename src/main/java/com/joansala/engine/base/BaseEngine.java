@@ -17,6 +17,7 @@ package com.joansala.engine.base;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.HashSet;
 import java.util.Set;
@@ -36,6 +37,12 @@ public class BaseEngine implements Engine {
 
     /** Search count-down timer */
     protected final Timer timer;
+
+    /* Timer task to stop a search */
+    protected TimerTask countDown;
+
+    /** Abort computation mutex */
+    private ReentrantLock abortLock = new ReentrantLock();
 
     /** Consumer of best moves */
     protected Set<Consumer<Report>> consumers = new HashSet<>();
@@ -185,11 +192,38 @@ public class BaseEngine implements Engine {
      */
     @Override
     public void abortComputation() {
-        aborted = true;
+        try {
+            abortLock.lock();
+            aborted = true;
 
-        synchronized (this) {
-            aborted = false;
+            synchronized (this) {
+                aborted = false;
+            }
+        } finally {
+            abortLock.unlock();
         }
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void abortComputation(long delay) {
+        try {
+            countDown.cancel();
+        } finally {
+            scheduleCountDown(Math.max(delay, 1));
+        }
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public synchronized int computeBestScore(Game game) {
+        return 0;
     }
 
 
@@ -204,18 +238,29 @@ public class BaseEngine implements Engine {
 
     /**
      * Schedules a timer task that sets the aborted flag to true
-     * when the time per move of the engine is elapsed.
+     * when the given delay has elapsed.
+     *
+     * @param delay         Delay in milliseconds
      */
-    protected TimerTask scheduleCountDown() {
-        TimerTask countDown = new TimerTask() {
+    protected void scheduleCountDown(long delay) {
+        if (abortLock.isLocked() == false) {
+            aborted = false;
+        }
+
+        countDown = new TimerTask() {
             @Override public void run() {
                 aborted = true;
             }
         };
 
-        aborted = false;
-        timer.schedule(countDown, moveTime);
+        timer.schedule(countDown, delay);
+    }
 
-        return countDown;
+
+    /**
+     * Cancel the task sheduled with {@code #scheduleCountDown}.
+     */
+    protected void cancelCountDown() {
+        countDown.cancel();
     }
 }

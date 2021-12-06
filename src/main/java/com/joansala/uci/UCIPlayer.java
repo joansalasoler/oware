@@ -19,6 +19,7 @@ package com.joansala.uci;
 
 import com.google.inject.Inject;
 import com.joansala.engine.*;
+import static com.joansala.uci.UCI.*;
 
 
 /**
@@ -92,7 +93,7 @@ public class UCIPlayer {
      * Asks the engine process to quit.
      */
     public void quitEngine() throws Exception {
-        client.send("quit");
+        client.send(QUIT);
     }
 
 
@@ -100,7 +101,7 @@ public class UCIPlayer {
      * Asks the engine process to start its UCI mode.
      */
     public void startEngine() throws Exception {
-        client.send("uci");
+        client.send(UCI);
 
         while (!client.isUCIReady()) {
             client.receive();
@@ -112,8 +113,8 @@ public class UCIPlayer {
      * Asks the engine process to get ready for a new game.
      */
     public void startNewGame() throws Exception {
-        client.send("ucinewgame");
-        client.send("isready");
+        client.send(UCINEWGAME);
+        client.send(ISREADY);
 
         while (!client.isReady()) {
             client.receive();
@@ -129,7 +130,7 @@ public class UCIPlayer {
      */
     public int startThinking(Game game) throws Exception {
         client.send(toUCIPosition(game));
-        client.send(toUCIGo(moveTime, depth));
+        client.send(GO, MOVETIME, moveTime, DEPTH, depth);
 
         while (client.isThinking()) {
             client.receive();
@@ -160,7 +161,7 @@ public class UCIPlayer {
         }
 
         client.send(position);
-        client.send("go ponder");
+        client.send(GO, PONDER);
     }
 
 
@@ -169,7 +170,7 @@ public class UCIPlayer {
      */
     public void stopPondering() throws Exception {
         if (client.isPondering()) {
-            client.send("stop");
+            client.send(STOP);
 
             while (client.isPondering()) {
                 client.receive();
@@ -185,22 +186,8 @@ public class UCIPlayer {
      * @return          UCI command string
      */
     private String toUCIPosition(Game game) {
-        String command = "position startpos";
-        String moves = parser.toAlgebraic(game.moves());
-        String params = moves.isEmpty() ? moves : " moves " + moves;
-        return String.format("%s%s", command, params);
-    }
-
-
-    /**
-     * Format a UCI go command for the given parameters.
-     *
-     * @param moveTime  Time limit
-     * @param depth     Depth limit
-     * @return          UCI command string
-     */
-    private String toUCIGo(long moveTime, int depth) {
-        String command = "go movetime %d depth %d";
-        return String.format(command, moveTime, depth);
+        String moves = parser.toNotation(game.moves());
+        String params = moves.isEmpty() ? moves : " " + MOVES + " " + moves;
+        return String.format("%s %s%s", POSITION, STARTPOS, params);
     }
 }

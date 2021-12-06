@@ -50,7 +50,7 @@ public class Montecarlo extends UCT {
      * {@inheritDoc}
      */
     @Override
-    protected int simulateMatch(int maxDepth) {
+    protected int simulateMatch(Game game, int maxDepth) {
         int depth = 0;
 
         while (depth < maxDepth && !game.hasEnded()) {
@@ -59,13 +59,7 @@ public class Montecarlo extends UCT {
             depth++;
         }
 
-        final int score = game.outcome();
-
-        for (int i = 0; i < depth; i++) {
-            game.unmakeMove();
-        }
-
-        return score;
+        return game.outcome();
     }
 
 

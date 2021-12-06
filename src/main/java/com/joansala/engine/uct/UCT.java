@@ -19,8 +19,8 @@ package com.joansala.engine.uct;
 
 import com.google.inject.Inject;
 import java.util.function.Consumer;
-import java.util.TimerTask;
 
+import com.joansala.util.StopWatch;
 import com.joansala.engine.*;
 import com.joansala.engine.base.*;
 
@@ -36,11 +36,8 @@ public class UCT extends BaseEngine implements HasLeaves {
     /** Factors the amount of exploration of the tree */
     public static final double DEFAULT_BIAS = 0.353;
 
-    /** Minimum number of node expansions */
-    private static final int MIN_PROBES = 1000;
-
-    /** Minimum number of expansions between reports */
-    private static final int REPORT_PROBES = 125000;
+    /** Minimum elapsed time between reports */
+    private static final int REPORT_INTERVAL = 450;
 
     /** Prune when less than this amount of memory is available */
     private static final int PRUNE_MEMORY_LIMIT = 2 << 21;
@@ -48,23 +45,35 @@ public class UCT extends BaseEngine implements HasLeaves {
     /** Number of pruning iterations to run at once */
     private static final int PRUNE_ITERATIONS = 20;
 
+    /** Mesures elapsed time between reports */
+    private final StopWatch watch = new StopWatch();
+
     /** Fallback empty endgames instance */
     private final Leaves<Game> baseLeaves = new BaseLeaves();
 
     /** Current computation root node */
     protected UCTNode root;
 
-    /** References the {@code Game} to search */
-    protected Game game = null;
+    /** Best child found so far */
+    protected UCTNode bestChild;
 
     /** Endgame database */
     protected Leaves<Game> leaves = null;
 
     /** Exploration bias parameter */
-    public double biasFactor = DEFAULT_BIAS;
+    private double biasFactor = DEFAULT_BIAS;
 
     /** Exploration priority multiplier */
     private double bias = DEFAULT_BIAS * maxScore;
+
+    /** Path of traversed nodes during expansion */
+    private int[] queue = new int[MAX_DEPTH];
+
+    /** Traversed nodes queue offset */
+    private int offset = 0;
+
+    /** Next slot on the traversed nodes queue */
+    private int index = 0;
 
 
     /**
@@ -97,14 +106,18 @@ public class UCT extends BaseEngine implements HasLeaves {
      * {@inheritDoc}
      */
     @Override
-    public int getPonderMove(Game game) {
-        long hash = game.hash();
+    public synchronized int getPonderMove(Game game) {
+        if (root == null) {
+            return Game.NULL_MOVE;
+        }
+
         UCTNode node = null;
+        long hash = game.hash();
 
         if ((node = findNode(root, hash, 1)) != null) {
-            if (node.expanded && !node.terminal) {
+            if (node.expanded() && !node.terminal()) {
                 if ((node = pickBestChild(node)) != null) {
-                    return node.move;
+                    return node.move();
                 }
             }
         }
@@ -161,6 +174,18 @@ public class UCT extends BaseEngine implements HasLeaves {
 
 
     /**
+     * Computes the best move for a game and returns its score.
+     *
+     * @param game      Game instance
+     * @return          Average outcome score
+     */
+    public synchronized int computeBestScore(Game game) {
+        computeBestMove(game);
+        return (int) -bestChild.score();
+    }
+
+
+    /**
      * Computes a best move for the current position of a game.
      *
      * <p>Note that the search is performed on the provided game object,
@@ -174,54 +199,52 @@ public class UCT extends BaseEngine implements HasLeaves {
      */
     @Override
     public synchronized int computeBestMove(Game game) {
-        this.game = game;
-
         if (game.hasEnded()) {
             return Game.NULL_MOVE;
         }
 
-        final TimerTask countDown = scheduleCountDown();
+        scheduleCountDown(moveTime);
         game.ensureCapacity(MAX_DEPTH + game.length());
         root = rootNode(game);
 
-        UCTNode bestChild = null;
         double bestScore = Game.DRAW_SCORE;
-        int reportCount = REPORT_PROBES;
-        int reportProbes = REPORT_PROBES;
 
-        if (root.parent != null) {
-            root.parent.detachFromTree();
+        watch.reset();
+        watch.start();
+
+        if (root.parent() != null) {
+            root.parent().detachFromTree();
             System.gc();
         }
 
-        while (!aborted() || root.count < MIN_PROBES) {
-            expand(root, maxDepth);
+        offset = game.length();
+
+        while (!aborted() || root.child() == null) {
+            clearMovesQueue();
+            expand(root, game, maxDepth);
             pruneGarbage(root);
 
-            if (reportCount-- > 0) {
-                continue;
-            }
+            // Report search information periodically
 
-            // Create a report for the current search state
+            if (watch.current() >= REPORT_INTERVAL) {
+                watch.reset();
+                UCTNode child = pickBestChild(root);
+                double change = Math.abs(child.score() - bestScore);
 
-            reportProbes = (int) (1.35 * reportProbes);
-            reportCount = reportProbes;
-
-            UCTNode child = pickBestChild(root);
-            double change = Math.abs(child.score - bestScore);
-
-            if (child != bestChild || change > 5.0) {
-                bestChild = child;
-                bestScore = child.score;
-                invokeConsumers(game);
+                if (child != bestChild || change > 5.0) {
+                    bestChild = child;
+                    bestScore = child.score();
+                    invokeConsumers(game);
+                }
             }
         }
 
+        game.unmakeMoves(game.length() - offset);
         bestChild = pickBestChild(root);
         invokeConsumers(game);
-        countDown.cancel();
+        cancelCountDown();
 
-        return bestChild.move;
+        return bestChild.move();
     }
 
 
@@ -234,9 +257,9 @@ public class UCT extends BaseEngine implements HasLeaves {
      *
      * @return           Expansion priority
      */
-    private double computePriority(UCTNode child, double factor) {
-        final double E = Math.sqrt(factor / child.count);
-        final double priority = E * bias + child.score;
+    protected double computePriority(UCTNode child, double factor) {
+        final double E = Math.sqrt(factor / child.count());
+        final double priority = child.score() - E * bias;
 
         return priority;
     }
@@ -248,9 +271,9 @@ public class UCT extends BaseEngine implements HasLeaves {
      * @param node      A node
      * @return          Score of the node
      */
-    private double computeScore(UCTNode node) {
-        final double reward = maxScore / Math.sqrt(node.count);
-        final double score = node.score + reward;
+    protected double computeScore(UCTNode node) {
+        final double bound = maxScore / Math.sqrt(node.count());
+        final double score = node.score() + bound;
 
         return score;
     }
@@ -263,14 +286,14 @@ public class UCT extends BaseEngine implements HasLeaves {
      * @return          Child node
      */
     protected UCTNode pickBestChild(UCTNode node) {
-        UCTNode child = node.child;
-        UCTNode bestChild = node.child;
+        UCTNode child = node.child();
+        UCTNode bestChild = node.child();
         double bestScore = computeScore(bestChild);
 
-        while ((child = child.sibling) != null) {
+        while ((child = child.sibling()) != null) {
             double score = computeScore(child);
 
-            if (score >= bestScore) {
+            if (score < bestScore) {
                 bestScore = score;
                 bestChild = child;
             }
@@ -281,49 +304,49 @@ public class UCT extends BaseEngine implements HasLeaves {
 
 
     /**
-     *
-     *
-     * @param node      Parent node
-     * @return          Child node
-     */
-    private UCTNode pickFutileChild(UCTNode node) {
-        UCTNode child = node.child;
-        UCTNode futileNode = node.child;
-
-        while ((child = child.sibling) != null) {
-            if (child.score <= futileNode.score) {
-                if (child.expanded == true) {
-                    futileNode = child;
-                }
-            }
-        }
-
-        return futileNode;
-    }
-
-
-    /**
      * Pick the child node with the highest expansion priority.
      *
      * @param node      Parent node
      * @return          A child node
      */
-    private UCTNode pickLeadChild(UCTNode parent) {
-        UCTNode child = parent.child;
-        UCTNode bestNode = parent.child;
-        double factor = Math.log(parent.count);
+    protected UCTNode pickLeadChild(UCTNode parent) {
+        UCTNode child = parent.child();
+        UCTNode bestNode = parent.child();
+        double factor = Math.log(parent.count());
         double bestScore = computePriority(child, factor);
 
-        while ((child = child.sibling) != null) {
+        while ((child = child.sibling()) != null) {
             double score = computePriority(child, factor);
 
-            if (score >= bestScore) {
+            if (score < bestScore) {
                 bestScore = score;
                 bestNode = child;
             }
         }
 
         return bestNode;
+    }
+
+
+    /**
+     * Pick the expanded child with the worst score.
+     *
+     * @param node      Parent node
+     * @return          Child node
+     */
+    private UCTNode pickFutileChild(UCTNode node) {
+        UCTNode child = node.child();
+        UCTNode futileNode = node.child();
+
+        while ((child = child.sibling()) != null) {
+            if (child.score() > futileNode.score()) {
+                if (child.expanded() == true) {
+                    futileNode = child;
+                }
+            }
+        }
+
+        return futileNode;
     }
 
 
@@ -338,8 +361,8 @@ public class UCT extends BaseEngine implements HasLeaves {
         UCTNode node = root;
 
         if (node != null) {
-            if (node.parent != null) {
-                node = node.parent;
+            if (node.parent() != null) {
+                node = node.parent();
             }
 
             if ((node = findNode(node, hash, 2)) != null) {
@@ -364,16 +387,16 @@ public class UCT extends BaseEngine implements HasLeaves {
      * @return          Matching node or null
      */
     private UCTNode findNode(UCTNode node, long hash, int depth) {
-        if (node.hash == hash) {
+        if (node.hash() == hash) {
             return node;
         }
 
         UCTNode match = null;
 
-        if (depth > 0 && (node = node.child) != null) {
+        if (depth > 0 && (node = node.child()) != null) {
             match = findNode(node, hash, depth - 1);
 
-            while (match == null && (node = node.sibling) != null) {
+            while (match == null && (node = node.sibling()) != null) {
                 match = findNode(node, hash, depth - 1);
             }
         }
@@ -386,19 +409,20 @@ public class UCT extends BaseEngine implements HasLeaves {
      * Scores the current game position for the given node.
      *
      * @param node      Tree node to evaluate
+     * @param game      Game state for the node
      * @param depth     Maximum search depth
      *
      * @return          Score of the game
      */
-    private int score(UCTNode node, int depth) {
+    private int score(UCTNode node, Game game, int depth) {
         int score;
 
-        if (node.terminal) {
+        if (node.terminal()) {
             score = game.outcome();
         } else if (leaves.find(game)) {
             score = leaves.getScore();
         } else {
-            score = simulateMatch(depth);
+            score = simulateMatch(game, depth);
         }
 
         if (score == Game.DRAW_SCORE) {
@@ -412,10 +436,11 @@ public class UCT extends BaseEngine implements HasLeaves {
     /**
      * Simulates a match and return its final score.
      *
+     * @param game      Initial game state
      * @param depth     Maximum simulation depth
      * @return          Outcome of the simulation
      */
-    protected int simulateMatch(int maxDepth) {
+    protected int simulateMatch(Game game, int maxDepth) {
         return game.score();
     }
 
@@ -424,12 +449,13 @@ public class UCT extends BaseEngine implements HasLeaves {
      * Evaluate a node and return its score.
      *
      * @param node      Node to evaluate
+     * @param game      Game state for the node
      * @param depth     Maximum search depth
      *
      * @return          Score of the node
      */
-    private double evaluate(UCTNode node, int depth) {
-        final double score = -score(node, depth);
+    private double evaluate(UCTNode node, Game game, int depth) {
+        final double score = score(node, game, depth);
         node.initScore(score);
 
         return score;
@@ -440,11 +466,12 @@ public class UCT extends BaseEngine implements HasLeaves {
      * Expands a node with a new child and returns its score.
      *
      * @param node      Node to expand
+     * @param game      Game state
      * @param move      Move to perform
      *
      * @return          New child node
      */
-    private UCTNode appendChild(UCTNode parent, int move) {
+    private UCTNode appendChild(UCTNode parent, Game game, int move) {
         final UCTNode node = new UCTNode(game, move);
         parent.pushChild(node);
 
@@ -455,40 +482,43 @@ public class UCT extends BaseEngine implements HasLeaves {
     /**
      * Expands the most prioritary tree node.
      *
-     * @param game      Game
-     * @param node      Root node
+     * @param node      State node
+     * @param game      Game state
+     * @param depth     Depth limit
      */
-    private double expand(UCTNode node, int depth) {
-        final int move;
+    private double expand(UCTNode node, Game game, int depth) {
         final UCTNode child;
         final double score;
 
-        if (node.terminal || depth == 0) {
-            score = node.score;
+        if (node.terminal() || depth == 0) {
+            score = node.score();
             node.increaseCount();
 
             return score;
         }
 
-        move = node.nextMove(game);
+        int move = Game.NULL_MOVE;
+
+        if (node.expanded() == false) {
+            dequeueMoves(game);
+            move = node.nextMove(game);
+        }
 
         if (move != Game.NULL_MOVE) {
             game.makeMove(move);
-            child = appendChild(node, move);
-            score = -evaluate(child, depth - 1);
-            game.unmakeMove();
+            child = appendChild(node, game, move);
+            score = -evaluate(child, game, depth - 1);
         } else {
             child = pickLeadChild(node);
-            game.makeMove(child.move);
-            score = -expand(child, depth - 1);
-            game.unmakeMove();
+            queueMove(child.move());
+            score = -expand(child, game, depth - 1);
         }
 
-        if (child.terminal == false) {
+        if (child.terminal() == false) {
             node.updateScore(score);
-        } else if (score == -maxScore) {
+        } else if (score == maxScore) {
             node.settleScore(score);
-        } else if (score == maxScore && node.expanded) {
+        } else if (score == -maxScore && node.expanded()) {
             node.proveScore(score);
         } else {
             node.updateScore(score);
@@ -524,8 +554,8 @@ public class UCT extends BaseEngine implements HasLeaves {
             for (int i = 0; i < PRUNE_ITERATIONS; i++) {
                 pruneChilds(root, root);
 
-                if (root.parent != null) {
-                    pruneChilds(root.parent, root);
+                if (root.parent() != null) {
+                    pruneChilds(root.parent(), root);
                 }
             }
 
@@ -541,18 +571,70 @@ public class UCT extends BaseEngine implements HasLeaves {
      * @param ignore    Do not prune this child
      */
     private void pruneChilds(UCTNode parent, UCTNode ignore) {
-        UCTNode node = parent.child;
+        UCTNode node = parent.child();
 
         do {
-            if (node.expanded && node != ignore) {
-                while (node.expanded) {
+            if (node.expanded() && node != ignore) {
+                while (node.expanded()) {
                     node = pickFutileChild(node);
                 }
 
-                if (node.parent != ignore) {
-                    node.parent.detachChildren();
+                if (node.parent() != ignore) {
+                    node.parent().detachChildren();
                 }
             }
-        } while ((node = node.sibling) != null);
+        } while ((node = node.sibling()) != null);
+    }
+
+
+    /**
+     * Perform the queued traveled path on a game object.
+     *
+     * @param game      Game where to perform the moves
+     */
+    private void dequeueMoves(Game game) {
+        int[] moves = game.moves();
+        int floor = floor(moves, queue, offset);
+        int length = offset + index;
+
+        game.unmakeMoves(moves.length - floor);
+
+        for (int i = floor; i < length; i++) {
+            game.makeMove(queue[i - offset]);
+        }
+    }
+
+
+    /**
+     * Obtain the index of the first move that differs between a
+     * list of moves and a traveled path queue.
+     *
+     * @param moves     Game moves
+     * @param queue     Moves queue
+     * @param offset    First moves index to compare
+     */
+    private int floor(int[] moves, int[] queue, int offset) {
+        int i = offset;
+        int ceil = Math.min(moves.length - offset, index);
+        while (i < ceil && moves[i] == queue[i - offset]) i++;
+        return i;
+    }
+
+
+    /**
+     * Adds a move to the traveled path queue.
+     *
+     * @param move      Move to append to the queue
+     */
+    private void queueMove(int move) {
+        queue[index++] = move;
+    }
+
+
+    /**
+     * Remove all nodes from the traveled path queue.
+     */
+    private void clearMovesQueue() {
+        index = 0;
     }
 }

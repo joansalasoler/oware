@@ -108,7 +108,7 @@ public class DOEReport implements Report {
         }
 
         moves.add(0, bestChild.move);
-        score = game.toCentiPawns((int) bestChild.score);
+        score = game.toCentiPawns((int) -bestChild.score);
         variation = toArray(moves);
         depth = moves.size();
     }

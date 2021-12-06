@@ -46,7 +46,27 @@ public class StopWatch {
 
 
     /**
-     * Elapsed time in milliseconds.
+     * Resets the watch without stopping it.
+     */
+    public void reset() {
+        start = System.currentTimeMillis();
+        elapsed = 0;
+    }
+
+
+    /**
+     * Current elapsed time in milliseconds.
+     *
+     * @return      Milliseconds
+     */
+    public long current() {
+        return elapsed + System.currentTimeMillis() - start;
+    }
+
+
+    /**
+     * Elapsed time in milliseconds. If the clock was never stopped
+     * returns zero otherwise the accumulated time between stops.
      *
      * @return      Milliseconds
      */

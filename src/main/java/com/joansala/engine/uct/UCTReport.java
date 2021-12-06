@@ -49,7 +49,7 @@ public class UCTReport implements Report {
      * @param root      Root node
      */
     public UCTReport(UCT engine, Game game, UCTNode root) {
-        if (root != null && root.expanded) {
+        if (root != null && root.child() != null) {
             collectReport(engine, game, root);
         }
     }
@@ -105,11 +105,11 @@ public class UCTReport implements Report {
         UCTNode child = bestChild;
 
         while ((child = nextNode(engine, child, size)) != null) {
-            moves.add(child.move);
+            moves.add(child.move());
         }
 
-        moves.add(0, bestChild.move);
-        score = game.toCentiPawns((int) bestChild.score);
+        moves.add(0, bestChild.move());
+        score = game.toCentiPawns((int) -bestChild.score());
         variation = toArray(moves);
         depth = moves.size();
     }
@@ -125,7 +125,7 @@ public class UCTReport implements Report {
      * @return          Best child or {@code null}
      */
     private UCTNode nextNode(UCT engine, UCTNode node, double size) {
-        if (node.expanded && node.count >= size) {
+        if (node.expanded() && node.count() >= size) {
             return engine.pickBestChild(node);
         }
 
@@ -140,8 +140,8 @@ public class UCTReport implements Report {
      * @return          Sample size
      */
     private int samplingSize(UCTNode root) {
-        double n = 1.6641 * root.count;
-        double e = 1.6641 + 0.0001 * (root.count - 1);
+        double n = 1.6641 * root.count();
+        double e = 1.6641 + 0.0001 * (root.count() - 1);
 
         return (int) (n / e);
     }

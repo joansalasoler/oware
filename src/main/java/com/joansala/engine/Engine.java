@@ -139,6 +139,15 @@ public interface Engine {
 
 
     /**
+     * Best score obtainable for the current game state.
+     *
+     * @param game  Initial game state
+     * @return      Computed score
+     */
+    int computeBestScore(Game game);
+
+
+    /**
      * Computes a best move for the current position of a game.
      *
      * @param game  The game for which a best move must be computed
@@ -155,4 +164,12 @@ public interface Engine {
      * @see Engine#computeBestMove(Game)
      */
     void abortComputation();
+
+
+    /**
+     * Stop the current search after a specified delay.
+     *
+     * @param delay      Delay in milliseconds
+     */
+    void abortComputation(long delay);
 }

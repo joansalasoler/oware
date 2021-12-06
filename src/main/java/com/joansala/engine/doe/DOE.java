@@ -32,6 +32,9 @@ public class DOE extends BaseEngine {
     /** Factors the amount of exploration of the tree */
     public static final double DEFAULT_BIAS = 0.707;
 
+    /** Penalty for each descendant awaiting evaluation */
+    public static int WAIT_PENALTY = 1;
+
     /** Executes evaluations on a thread pool */
     private final DOEExecutor executor;
 
@@ -101,6 +104,22 @@ public class DOE extends BaseEngine {
      * {@inheritDoc}
      */
     @Override
+    public synchronized int computeBestScore(Game game) {
+        DOENode root = rootNode(game);
+
+        if (root.expanded) {
+            DOENode child = pickBestChild(root);
+            return (int) -child.score;
+        }
+
+        return 0;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public synchronized int computeBestMove(Game game) {
         this.game = game;
 
@@ -123,10 +142,11 @@ public class DOE extends BaseEngine {
      * Trains the engine using an evaluation function. This method expands
      * the engine book by using an UCT search algorithm.
      *
+     * @param size      Nodes to expand
      * @param game      Root state
      * @param scorer    Evaluation function
      */
-    public synchronized void trainEngine(Game game, DOEScorer scorer) {
+    public synchronized void train(int size, Game game, DOEScorer scorer) {
         this.game = game;
 
         int counter = 0;
@@ -136,33 +156,42 @@ public class DOE extends BaseEngine {
         // There may be unevaluated nodes if the executor was shutdown
         // before all tasks were completed. Enqueue them now.
 
-        store.values().forEach(node -> {
+        for (DOENode node : store.values()) {
             if (node.evaluated == false) {
-                executor.submit(() -> {
-                    evaluate(node, scorer);
-                });
+                executor.submit(() -> evaluate(node, scorer));
+                counter++;
             }
-        });
+        }
 
         // Expand the UCT tree and enqueue the expanded nodes for
         // its asynchronous evaluation.
 
-        while (aborted() == false) {
-            final DOENode node;
+        while (size > 0 && !aborted()) {
+            final DOENode[] nodes;
 
             synchronized (lock) {
-                node = expand(root, maxDepth);
-                backpropagate(node, node.score);
+                nodes = expand(root, maxDepth);
+
+                for (DOENode node : nodes) {
+                    if (node.evaluated) {
+                        backpropagate(node, node.score);
+                    } else {
+                        updateWaitCount(node, +WAIT_PENALTY);
+                    }
+                }
+
                 store.commit();
+                size--;
             }
 
-            if (node.evaluated == false) {
-                executor.submit(() -> {
-                    evaluate(node, scorer);
-                });
+            for (DOENode node : nodes) {
+                if (!aborted() && !node.evaluated) {
+                    executor.submit(() -> evaluate(node, scorer));
+                    counter++;
+                }
             }
 
-            if (root.expanded && ++counter >= 10) {
+            if (root.expanded && counter >= 10) {
                 invokeConsumers(game);
                 counter = 0;
             }
@@ -173,8 +202,10 @@ public class DOE extends BaseEngine {
 
 
     /**
-     * Computes the expansion priority of an edge. Guides the selection
-     * using Upper Confidence Bounds (UCB1).
+     * Computes the expansion priority of an edge.
+     *
+     * Priority is computed using the UCB1 formula with an additional penalty
+     * for each descendant node waiting to be evaluated (virtual loss).
      *
      * @param child      Child node
      * @param factor     Parent factor
@@ -182,10 +213,32 @@ public class DOE extends BaseEngine {
      * @return           Expansion priority
      */
     private double computePriority(DOENode child, double factor) {
-        final double E = Math.sqrt(factor / child.count);
-        final double priority = E * bias + child.score;
+        long count = child.count;
+        double score = child.score;
+
+        for (int i = 0; i < child.waiting; i++) {
+            int value = -maxScore * child.turn;
+            score += (value - score) / ++count;
+        }
+
+        final double E = Math.sqrt(factor / count);
+        final double priority = score - E * bias;
 
         return priority;
+    }
+
+
+    /**
+     * Compute the selection score of a node.
+     *
+     * @param node      A node
+     * @return          Score of the node
+     */
+    private double computeScore(DOENode node) {
+        final double bound = maxScore / Math.sqrt(node.count);
+        final double score = node.score + bound;
+
+        return score;
     }
 
 
@@ -198,12 +251,12 @@ public class DOE extends BaseEngine {
     protected DOENode pickBestChild(DOENode node) {
         DOENode child = store.read(node.child);
         DOENode bestChild = store.read(node.child);
-        double bestScore = bestChild.score;
+        double bestScore = computeScore(bestChild);
 
         while ((child = store.read(child.sibling)) != null) {
-            double score = child.score;
+            double score = computeScore(child);
 
-            if (score >= bestScore) {
+            if (score < bestScore) {
                 bestScore = score;
                 bestChild = child;
             }
@@ -228,7 +281,7 @@ public class DOE extends BaseEngine {
         while ((child = store.read(child.sibling)) != null) {
             double score = computePriority(child, factor);
 
-            if (score >= bestScore) {
+            if (score < bestScore) {
                 bestScore = score;
                 bestNode = child;
             }
@@ -243,6 +296,8 @@ public class DOE extends BaseEngine {
      *
      * @param game      Game state
      * @return          A root node
+     *
+     * @throws IllegalArgumentException
      */
     private DOENode rootNode(Game game) {
         DOENode root = store.read(1L);
@@ -261,7 +316,7 @@ public class DOE extends BaseEngine {
         // state. Each database must contain exactly one root.
 
         if (root.hash != game.hash()) {
-            throw new RuntimeException(
+            throw new IllegalArgumentException(
                 "Root state is not valid");
         }
 
@@ -280,6 +335,7 @@ public class DOE extends BaseEngine {
 
         synchronized (lock) {
             node.evaluated = true;
+            updateWaitCount(node, -WAIT_PENALTY);
             backpropagate(node, score);
             store.commit();
         }
@@ -287,16 +343,15 @@ public class DOE extends BaseEngine {
 
 
     /**
-     * Scores the current game position for the given node.
+     * Scores the given node as a terminal state.
      *
      * @param node      Tree node to evaluate
      * @param depth     Maximum search depth
      *
      * @return          Score of the game
      */
-    private int score(DOENode node) {
-        int score = (node.terminal) ?
-            game.outcome() : game.score();
+    private int outcome(DOENode node) {
+        int score = game.outcome();
 
         if (score == Game.DRAW_SCORE) {
             score = contempt;
@@ -316,10 +371,12 @@ public class DOE extends BaseEngine {
      */
     private DOENode appendChild(DOENode parent, int move) {
         final DOENode node = new DOENode(game, move);
-        final double score = -score(node);
 
-        node.evaluated = node.terminal;
-        node.updateScore(score);
+        if (node.terminal) {
+            node.evaluated = true;
+            node.updateScore(outcome(node));
+        }
+
         store.write(node);
         parent.pushChild(node);
         store.write(parent);
@@ -329,28 +386,50 @@ public class DOE extends BaseEngine {
 
 
     /**
+     * Expands all the children of a node.
+     *
+     * @param node      Parent node
+     * @param game      Game state
+     *
+     * @return          Expanded nodes
+     */
+    private DOENode[] appendChildren(DOENode node, Game game) {
+        int[] moves = game.legalMoves();
+        DOENode[] childs = new DOENode[moves.length];
+
+        for (int i = 0; i < moves.length; i++) {
+            game.makeMove(moves[i]);
+            childs[i] = appendChild(node, moves[i]);
+            game.unmakeMove();
+        }
+
+        node.expanded = true;
+
+        return childs;
+    }
+
+
+    /**
      * Expands the most prioritary tree node.
      *
      * @param game      Game
      * @param node      Root node
      */
-    private DOENode expand(DOENode node, int depth) {
-        DOENode selected = node;
+    private DOENode[] expand(DOENode node, int depth) {
+        DOENode[] selected = { node };
 
-        if (!node.terminal && depth > 0) {
-            int move = node.nextMove(game);
+        if (node.terminal || depth == 0) {
+            return selected;
+        }
+
+        if (node.expanded) {
+            DOENode child = pickLeadChild(node);
+            game.makeMove(child.move);
+            selected = expand(child, depth - 1);
+            game.unmakeMove();
+        } else {
+            selected = appendChildren(node, game);
             store.write(node);
-
-            if (move != Game.NULL_MOVE) {
-                game.makeMove(move);
-                selected = appendChild(node, move);
-                game.unmakeMove();
-            } else {
-                DOENode child = pickLeadChild(node);
-                game.makeMove(child.move);
-                selected = expand(child, depth - 1);
-                game.unmakeMove();
-            }
         }
 
         return selected;
@@ -370,6 +449,28 @@ public class DOE extends BaseEngine {
 
         while((parent = store.read(node.parent)) != null) {
             parent.updateScore(-node.score);
+            store.write(parent);
+            node = parent;
+        }
+    }
+
+
+    /**
+     * Increase or decrease a node waiting count by the given value.
+     * The value is backpropagated and indicates how many child nodes
+     * are waiting to be evaluated.
+     *
+     * @param node      A node
+     * @param value     Increment value
+     */
+    private void updateWaitCount(DOENode node, int value) {
+        DOENode parent;
+
+        node.waiting += value;
+        store.write(node);
+
+        while((parent = store.read(node.parent)) != null) {
+            parent.waiting += value;
             store.write(parent);
             node = parent;
         }

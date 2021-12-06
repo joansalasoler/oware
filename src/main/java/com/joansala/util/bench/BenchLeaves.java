@@ -62,6 +62,6 @@ public final class BenchLeaves implements Leaves<Game> {
 
     /** {@inheritDoc} */
     @Override public boolean find(Game game) {
-        return stats.leaves.test(leaves.find(game));
+        return stats.leaves.test(leaves.find(game.cast()));
     }
 }

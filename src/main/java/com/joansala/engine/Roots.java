@@ -48,4 +48,13 @@ public interface Roots<G extends Game> {
      * @throws IOException  If an I/O exception occurred
      */
     int pickBestMove(G game) throws IOException;
+
+
+    /**
+     * Chooses a pondering move from the opening book.
+     *
+     * @param game  Game state
+     * @return      Ponder move or {@code Game.NULL_MOVE}
+     */
+    int pickPonderMove(G game) throws IOException;
 }

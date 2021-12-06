@@ -20,8 +20,13 @@ package com.joansala.cli;
 
 import java.util.concurrent.Callable;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import picocli.CommandLine.*;
 
+import com.joansala.cli.util.EngineType;
+import com.joansala.engine.Engine;
+import com.joansala.engine.Game;
+import com.joansala.engine.Roots;
 import com.joansala.uci.UCIService;
 
 
@@ -35,15 +40,22 @@ import com.joansala.uci.UCIService;
 )
 public class ServiceCommand implements Callable<Integer> {
 
-    /** Injected UCI service instance */
-    private UCIService service;
+    /** Dependency injector */
+    private Injector injector;
+
+
+    @Option(
+      names = "--engine",
+      description = "Custom engine (${COMPLETION-CANDIDATES})"
+    )
+    private EngineType engineType = null;
 
 
     /**
      * Creates a new service.
      */
-    @Inject public ServiceCommand(UCIService service) {
-        this.service = service;
+    @Inject public ServiceCommand(Injector injector) {
+        this.injector = injector;
     }
 
 
@@ -51,7 +63,35 @@ public class ServiceCommand implements Callable<Integer> {
      * {@inheritDoc}
      */
     @Override public Integer call() throws Exception {
+        UCIService service = getServiceInstance(injector);
         service.start();
         return 0;
+    }
+
+
+    /**
+     * Obtain an UCI service instance.
+     */
+    private UCIService getServiceInstance(Injector injector) {
+        return (engineType instanceof EngineType == false) ?
+            injector.getInstance(UCIService.class) :
+            createService(injector, engineType);
+    }
+
+
+    /**
+     * Creates a new UCI service for the given engine type.
+     */
+    private UCIService createService(Injector injector, EngineType engineType) {
+        Game game = injector.getInstance(Game.class);
+        Engine engine = injector.getInstance(engineType.getType());
+        UCIService service = new UCIService(game, engine);
+
+        try {
+            Roots<?> roots = injector.getInstance(Roots.class);
+            service.setRoots(roots);
+        } catch (Exception e) {}
+
+        return service;
     }
 }

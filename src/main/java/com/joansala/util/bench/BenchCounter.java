@@ -71,6 +71,14 @@ public final class BenchCounter implements Comparable<BenchCounter> {
 
 
     /**
+     * Adds to the number of successful tests.
+     */
+    public void increment(int count) {
+        this.count += count;
+    }
+
+
+    /**
      * Adds one to the number of successful tests when the given boolean
      * value is true. Otherwise the test is marked as failed.
      */

@@ -39,12 +39,22 @@
   <!-- Project properties =============================================== -->
 
   <properties>
-    <maven.compiler.source>1.8</maven.compiler.source>
-    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.test.skip>true</maven.test.skip>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <project.name>Aalina Abapa</project.name>
   </properties>
+
+  <!-- External repositories ============================================ -->
+
+  <repositories>
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
+    </repository>
+  </repositories>
 
   <!-- Build configuration ============================================== -->
 
@@ -66,7 +76,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>com.joansala.oware.OwareModule</mainClass>
+              <mainClass>com.joansala.game.oware.OwareModule</mainClass>
               <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
             </manifest>
             <manifestEntries>
@@ -76,6 +86,14 @@
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
           </descriptorRefs>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.0.0-M5</version>
+        <configuration>
+          <skipTests>${maven.test.skip}</skipTests>
         </configuration>
       </plugin>
     </plugins>
@@ -112,6 +130,11 @@
 
   <dependencies>
     <dependency>
+      <groupId>com.github.AlexLandau</groupId>
+      <artifactId>ggp-base</artifactId>
+      <version>master</version>
+    </dependency>
+    <dependency>
       <groupId>berkeleydb</groupId>
       <artifactId>je</artifactId>
       <version>3.2.76</version>
@@ -145,6 +168,12 @@
       <groupId>org.jline</groupId>
       <artifactId>jline-terminal-jansi</artifactId>
       <version>3.19.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.7.0-M1</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 

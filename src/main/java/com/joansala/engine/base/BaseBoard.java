@@ -20,6 +20,8 @@ package com.joansala.engine.base;
 
 import java.util.StringJoiner;
 import com.joansala.engine.Board;
+import com.joansala.engine.Game;
+import com.joansala.except.IllegalTurnException;
 
 
 /**
@@ -36,8 +38,11 @@ public abstract class BaseBoard<P> implements Board {
 
     /**
      * Instantiates a new board.
+     *
+     * @throws IllegalTurnException  If turn is not valid
      */
     public BaseBoard(P position, int turn) {
+        validateTurn(turn);
         this.position = position;
         this.turn = turn;
     }
@@ -53,9 +58,10 @@ public abstract class BaseBoard<P> implements Board {
 
 
     /**
-     * {@inheritDoc}
+     * State of the board and its pieces.
+     *
+     * @return      Position instance
      */
-    @Override
     public P position() {
         return position;
     }
@@ -65,11 +71,11 @@ public abstract class BaseBoard<P> implements Board {
      * {@inheritDoc}
      */
     @Override
-    public String toAlgebraic(int[] moves) {
+    public String toNotation(int[] moves) {
         StringJoiner joiner = new StringJoiner(" ");
 
         for (int move : moves) {
-            joiner.add(toAlgebraic(move));
+            joiner.add(toCoordinates(move));
         }
 
         return joiner.toString();
@@ -81,6 +87,10 @@ public abstract class BaseBoard<P> implements Board {
      */
     @Override
     public int[] toMoves(String notation) {
+        if (notation == null || notation.isBlank()) {
+            return new int[0];
+        }
+
         String[] notations = notation.split(" ");
         int[] moves = new int[notations.length];
 
@@ -103,7 +113,7 @@ public abstract class BaseBoard<P> implements Board {
      * {@inheritDoc}
      */
     @Override
-    public abstract String toAlgebraic(int move);
+    public abstract String toCoordinates(int move);
 
 
     /**
@@ -117,5 +127,17 @@ public abstract class BaseBoard<P> implements Board {
      * {@inheritDoc}
      */
     @Override
-    public abstract String toNotation();
+    public abstract String toDiagram();
+
+
+    /**
+     * Asserts a value represents a valid turn for a game.
+     * @throws GameEngineException If not valid
+     */
+    protected static void validateTurn(int turn) {
+        if (turn != Game.SOUTH && turn != Game.NORTH) {
+            throw new IllegalTurnException(
+                "Turn is not valid");
+        }
+    }
 }

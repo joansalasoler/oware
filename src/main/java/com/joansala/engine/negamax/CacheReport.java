@@ -117,12 +117,20 @@ public class CacheReport implements Report {
         // Collect principal variation
 
         List<Integer> moves = new LinkedList<>();
+        List<Long> hashes = new LinkedList<>();
         int move = Game.NULL_MOVE;
 
         while ((move = nextMove(game, cache)) != Game.NULL_MOVE) {
             game.ensureCapacity(1 + game.length());
             game.makeMove(move);
-            moves.add(move);
+
+            if (hashes.contains(game.hash())) {
+                moves.add(move);
+                break;
+            } else {
+                hashes.add(game.hash());
+                moves.add(move);
+            }
         }
 
         moves.add(0, bestMove);

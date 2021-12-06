@@ -26,8 +26,11 @@ import java.util.Random;
  */
 public class ZobristHash implements HashFunction {
 
+    /** Random number generator */
+    private Random random = new Random();
+
     /** Zobrist random numbers */
-    protected final long[][] randoms;
+    protected final long[][] keys;
 
     /** Length of the integer array */
     protected final int length;
@@ -39,13 +42,29 @@ public class ZobristHash implements HashFunction {
     /**
      * Instantiates this object.
      *
-     * @param count     Maximum value on the arrays
+     * @param count     Number of distinct values
      * @param length    Fixed length of the array
      */
     public ZobristHash(int count, int length) {
-        this.randoms = new long[count][length];
+        this.keys = new long[count][length];
         this.length = length;
         this.count = count;
+        initialize();
+    }
+
+
+    /**
+     * Instantiates this object using a random seed number.
+     *
+     * @param seed      Pseudorandom number generator seed
+     * @param count     Number of distinct values
+     * @param length    Fixed length of the array
+     */
+    public ZobristHash(long seed, int count, int length) {
+        this.keys = new long[count][length];
+        this.length = length;
+        this.count = count;
+        random.setSeed(seed);
         initialize();
     }
 
@@ -54,11 +73,9 @@ public class ZobristHash implements HashFunction {
      * Precomputes the binomial coefficients table.
      */
     private void initialize() {
-        Random random = new Random();
-
         for (int c = 0; c < count; c++) {
             for (int i = 0; i < length; i++) {
-                randoms[c][i] = random.nextLong();
+                keys[c][i] = random.nextLong();
             }
         }
     }
@@ -83,9 +100,61 @@ public class ZobristHash implements HashFunction {
 
         for (int i = 0; i < length; i++) {
             final int c = state[i];
-            hash ^= randoms[c][i];
+            hash ^= keys[c][i];
         }
 
         return hash;
+    }
+
+
+    /**
+     * Update a hash by adding a value at the given index.
+     *
+     * @param hash      Hash to update
+     * @param index     Index on the state array
+     * @param value     Value on the state array
+     *
+     * @return          Updated hash
+     */
+    public final long insert(long hash, int index, int value) {
+        return update(hash, index, value);
+    }
+
+
+    /**
+     * Update a hash by removing a value from the given index.
+     *
+     * @param hash      Hash to update
+     * @param index     Index on the state array
+     * @param value     Value on the state array
+     *
+     * @return          Updated hash
+     */
+    public final long remove(long hash, int index, int value) {
+        return update(hash, index, value);
+    }
+
+
+    /**
+     * Update a hash by removing a value from an index and adding.
+     * it to another index.
+     *
+     * @param hash      Hash to update
+     * @param from      Index to remove from
+     * @param to        Index to insert to
+     * @param value     Value on the state array
+     *
+     * @return          Updated hash
+     */
+    public final long toggle(long hash, int from, int to, int value) {
+        return hash ^ keys[value][from] ^ keys[value][to];
+    }
+
+
+    /**
+     * Update a hash by xoring the given value at the given index.
+     */
+    private long update(long hash, int index, int value) {
+        return hash ^ keys[value][index];
     }
 }

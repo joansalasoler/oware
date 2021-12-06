@@ -20,6 +20,8 @@ package com.joansala.cli.util;
 
 import java.nio.file.Paths;
 import picocli.CommandLine.ITypeConverter;
+import com.joansala.cli.MainCommand;
+import com.joansala.engine.base.BaseModule;
 
 
 /**
@@ -28,21 +30,29 @@ import picocli.CommandLine.ITypeConverter;
 public class ProcessConverter implements ITypeConverter<Process> {
 
     /** Default command string */
-    private static String DEFAULT_COMMAND = "<default>";
+    public static final String DEFAULT = "<default>";
 
 
     /**
-     * Builds a command for the default engine service.
+     * Builds a command for the default module service.
      *
      * @return          Command descriptor
      */
     private String[] getDefaultCommand() {
+        BaseModule module = MainCommand.getCurrentModule();
+
         String home = System.getProperty("java.home");
         String path = System.getProperty("java.class.path");
         String bin = Paths.get(home, "/bin", "/java").toString();
-        String[] command = { bin, "-jar", path, "service" };
 
-        return command;
+        String[] command = { bin, "-cp", path };
+        String[] params = module.getServiceParameters();
+
+        String[] result = new String[command.length + params.length];
+        System.arraycopy(command, 0, result, 0, command.length);
+        System.arraycopy(params, 0, result, command.length, params.length);
+
+        return result;
     }
 
 
@@ -52,7 +62,7 @@ public class ProcessConverter implements ITypeConverter<Process> {
      * @return          Command descriptor
      */
     private String[] getCommandFromPath(String path) {
-        return DEFAULT_COMMAND.equals(path) ?
+        return DEFAULT.equals(path) ?
             getDefaultCommand() : path.split("\\s+");
     }
 

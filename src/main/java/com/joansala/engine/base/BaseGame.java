@@ -18,7 +18,8 @@ package com.joansala.engine.base;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.util.Arrays;
+import java.util.List;
+import java.util.LinkedList;
 import com.joansala.engine.Board;
 import com.joansala.engine.Game;
 
@@ -75,8 +76,6 @@ public abstract class BaseGame implements Game {
         this.move = Game.NULL_MOVE;
         this.moves = new int[capacity];
         this.capacity = capacity;
-        this.setStart(rootBoard());
-        this.hash = computeHash();
     }
 
 
@@ -92,21 +91,7 @@ public abstract class BaseGame implements Game {
      * {@inheritDoc}
      */
     @Override
-    public abstract Board board();
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public abstract boolean hasEnded();
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public abstract int winner();
 
 
     /**
@@ -168,14 +153,21 @@ public abstract class BaseGame implements Game {
      * {@inheritDoc}
      */
     @Override
-    public abstract void ensureCapacity(int size);
+    public abstract Board getBoard();
 
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public abstract void setStart(Board board);
+    public abstract void setBoard(Board board);
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public abstract Board toBoard();
 
 
     /**
@@ -236,6 +228,25 @@ public abstract class BaseGame implements Game {
      * {@inheritDoc}
      */
     @Override
+    public int winner() {
+        final int score = outcome();
+
+        if (score == MAX_SCORE) {
+            return SOUTH;
+        }
+
+        if (score == -MAX_SCORE) {
+            return NORTH;
+        }
+
+        return DRAW;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public int[] moves() {
         int[] moves = new int[length()];
 
@@ -268,21 +279,46 @@ public abstract class BaseGame implements Game {
      */
     @Override
     public int[] legalMoves() {
-        int length = 0;
         int move = NULL_MOVE;
-
-        final int cursor = getCursor();
-        final int[] moves = new int[6];
+        int cursor = getCursor();
+        List<Integer> moves = new LinkedList<>();
 
         resetCursor();
 
         while ((move = nextMove()) != NULL_MOVE) {
-            moves[length++] = move;
+            moves.add(move);
         }
 
         setCursor(cursor);
 
-        return Arrays.copyOf(moves, length);
+        int length = moves.size();
+        int[] array = new int[length];
+
+        for (int i = 0; i < length; i++) {
+            array[i] = moves.get(i);
+        }
+
+        return array;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void unmakeMoves(int length) {
+        for (int i = 0; i < length; i++) {
+            unmakeMove();
+        }
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void ensureCapacity(int size) {
+        System.gc();
     }
 
 

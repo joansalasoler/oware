@@ -83,19 +83,9 @@ public interface Game {
 
 
     /**
-     * Board representation of the current game state.
-     *
-     * @return      A board instance
+     * Obtain the start board of this game.
      */
-    Board board();
-
-
-    /**
-     * Start board of a game.
-     *
-     * @return      A board instance
-     */
-    Board rootBoard();
+    Board getBoard();
 
 
     /**
@@ -104,10 +94,10 @@ public interface Game {
      * performed moves.
      *
      * @param board     Start board
-     * @throws IllegalArgumentException  if {@code turn} is not valid or
+     * @throws GameEngineException  if {@code turn} is not valid or
      *      {@code postion} is not a valid position representation
      */
-    void setStart(Board board);
+    void setBoard(Board board);
 
 
     /**
@@ -182,7 +172,7 @@ public interface Game {
 
 
     /**
-     * Maximus ccore to which a position can be evaluated.
+     * Maximum score to which a position can be evaluated.
      *
      * @see     Game#score
      * @return  Infinity evaluation value
@@ -234,6 +224,15 @@ public interface Game {
 
 
     /**
+     * Unmakes a certain number of moves from the game.
+     *
+     * @see Game#unmakeMove()
+     * @param length        Number of moves to undo
+     */
+    void unmakeMoves(int length);
+
+
+    /**
      * Returns the next legal move for the current position and turn.
      *
      * <p>This method is provided for efficiency, so it is not necessary
@@ -270,6 +269,14 @@ public interface Game {
 
 
     /**
+     * Board representation of the current game state.
+     *
+     * @return      A board instance
+     */
+    Board toBoard();
+
+
+    /**
      * Converts an evaluation score to centipawns.
      *
      * @param score     Evaluation score
@@ -285,7 +292,7 @@ public interface Game {
      *
      * @see Game#makeMove
      * @param minCapacity  capacity specified in number of moves
-     * @throws IllegalStateException  if {@code minCapacity} is above
+     * @throws IllegalArgumentException  if {@code minCapacity} is above
      *          the maximum possible capacity for the object
      */
     void ensureCapacity(int minCapacity);

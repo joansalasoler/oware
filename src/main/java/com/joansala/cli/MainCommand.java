@@ -18,10 +18,12 @@ package com.joansala.cli;
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import com.google.inject.Module;
 import picocli.CommandLine;
 import picocli.CommandLine.*;
+import com.joansala.engine.base.BaseModule;
 import com.joansala.cli.util.CommandFactory;
+import com.joansala.cli.book.BookCommand;
+import com.joansala.cli.test.TestCommand;
 
 
 /**
@@ -31,16 +33,26 @@ import com.joansala.cli.util.CommandFactory;
   name = "main",
   mixinStandardHelpOptions = true,
   subcommands = {
-      BattleCommand.class,
-      BenchCommand.class,
+      BookCommand.class,
       MatchCommand.class,
-      PerftCommand.class,
       ServiceCommand.class,
       ShellCommand.class,
-      TrainCommand.class
+      TestCommand.class
   }
 )
 public class MainCommand {
+
+    /** Current module in execution */
+    private static BaseModule module;
+
+
+    /**
+     * Current module in execution.
+     */
+    public static final BaseModule getCurrentModule() {
+        return module;
+    }
+
 
     /**
      * Execute a command line interface for a module.
@@ -49,9 +61,11 @@ public class MainCommand {
      * @param args          Command line arguments
      * @return              Exit code
      */
-    public int execute(Module module, String[] args) {
+    public int execute(BaseModule module, String[] args) {
+        MainCommand.module = module;
         CommandFactory factory = new CommandFactory(module);
         CommandLine main = new CommandLine(this, factory);
+        main.setCaseInsensitiveEnumValuesAllowed(true);
         return main.execute(args);
     }
 }
