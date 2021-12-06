@@ -19,7 +19,6 @@ package com.joansala.game.oware;
  */
 
 
-import java.io.IOException;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import com.google.inject.Provides;
