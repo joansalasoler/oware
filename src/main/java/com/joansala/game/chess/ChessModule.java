@@ -19,12 +19,16 @@ package com.joansala.game.chess;
  */
 
 
+import java.io.IOException;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
+import com.google.inject.Provides;
 
 import com.joansala.cli.*;
 import com.joansala.engine.*;
 import com.joansala.engine.base.BaseModule;
 import com.joansala.engine.negamax.Negamax;
+import com.joansala.book.base.BaseRoots;
 import com.joansala.cache.GameCache;
 
 
@@ -32,6 +36,10 @@ import com.joansala.cache.GameCache;
  * Binds together the components of the Chess engine.
  */
 public class ChessModule extends BaseModule {
+
+    /** Shared openings book instance */
+    private static Roots<Game> roots;
+
 
     /**
      * Command line interface.
@@ -41,7 +49,11 @@ public class ChessModule extends BaseModule {
       version = "1.0.0",
       description = "Chess is an abstract strategy board game"
     )
-    private static class ChessCommand extends MainCommand {}
+    private static class ChessCommand extends MainCommand {
+
+        @Option(names = "--roots", description = "Openings book path")
+        private static String roots = ChessRoots.ROOTS_PATH;
+    }
 
 
     /**
@@ -52,7 +64,26 @@ public class ChessModule extends BaseModule {
         bind(Board.class).to(ChessBoard.class);
         bind(Engine.class).to(Negamax.class);
         bind(Cache.class).to(GameCache.class);
-        bind(Roots.class).to(ChessRoots.class);
+    }
+
+
+    /**
+     * Openings book provider.
+     */
+    @Provides @SuppressWarnings("rawtypes")
+    public static Roots provideRoots() {
+        if (roots instanceof Roots == false) {
+            String path = ChessCommand.roots;
+
+            try {
+                roots = new ChessRoots(path);
+            } catch (Exception e) {
+                logger.warning("Cannot open openings book: " + path);
+                roots = new BaseRoots();
+            }
+        }
+
+        return roots;
     }
 
 

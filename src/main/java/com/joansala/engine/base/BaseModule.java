@@ -19,6 +19,7 @@ package com.joansala.engine.base;
  */
 
 
+import java.util.logging.Logger;
 import com.google.inject.AbstractModule;
 
 
@@ -26,6 +27,10 @@ import com.google.inject.AbstractModule;
  * Base game module.
  */
 public abstract class BaseModule extends AbstractModule {
+
+    /** Module logger instance */
+    protected static Logger logger = Logger.getLogger("com.joansala");
+
 
     /**
      * Module service command line parameters.
