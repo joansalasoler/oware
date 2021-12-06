@@ -25,7 +25,7 @@ import com.joansala.util.bits.Bits;
 /**
  * A bitset with multiple words.
  */
-public final class Bitset implements Cloneable {
+public class Bitset implements Cloneable {
 
     /** Bits on the bitset */
     private final long[] words;
@@ -170,5 +170,22 @@ public final class Bitset implements Cloneable {
     @Override
     public Bitset clone() {
         return new Bitset(words.clone());
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+
+        for (int i = words.length - 1; i >= 0; i--) {
+            String b = Long.toBinaryString(words[i]);
+            String w = String.format("%64s", b);
+            result.append(w.replace(" ", "0"));
+        }
+
+        return result.toString();
     }
 }
