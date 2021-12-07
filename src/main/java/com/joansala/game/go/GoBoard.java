@@ -175,6 +175,11 @@ public class GoBoard extends BaseBoard<Bitset[]> {
      */
     private Bitset[] toPosition(int[][] occupants) {
         Bitset[] position = new Bitset[PIECE_COUNT];
+
+        for (int i = 0; i < position.length; i++) {
+            position[i] = new Bitset(BITSET_SIZE);
+        }
+
         return bitset.toPosition(position, occupants);
     }
 

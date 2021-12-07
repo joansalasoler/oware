@@ -100,6 +100,12 @@ public class BattleCommand implements Callable<Integer> {
     )
     private boolean suite = false;
 
+    @Option(
+      names = "--watch",
+      description = "Print the board after each move"
+    )
+    private boolean watch = false;
+
 
     @Option(
       names = "--debug",
@@ -171,6 +177,8 @@ public class BattleCommand implements Callable<Integer> {
             north.startNewGame();
             game.setBoard(board);
 
+            if (watch) printBoard(game);
+
             while (!game.hasEnded()) {
                 player.startPondering(game);
                 player = (game.turn() == SOUTH) ? south : north;
@@ -178,6 +186,8 @@ public class BattleCommand implements Callable<Integer> {
                 int move = player.startThinking(game);
                 game.ensureCapacity(1 + game.length());
                 game.makeMove(move);
+
+                if (watch) printBoard(game);
             }
 
             // Count and print match results
@@ -255,6 +265,14 @@ public class BattleCommand implements Callable<Integer> {
     private void configureLoggers() {
         Logger logger = Logger.getLogger("com.joansala.uci");
         logger.setLevel(debug ? Level.ALL : Level.OFF);
+    }
+
+
+    /**
+     * Prints the board of the given game.
+     */
+    private void printBoard(Game game) {
+        System.out.println("\n " + game.toBoard());
     }
 
 
