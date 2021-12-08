@@ -24,14 +24,14 @@ Implementation details:
 * Optimized evaluation heuristics
 * Minimal perfect hashing of positions
 * Endgame tablebases (12 seeds or less)
-* Openings book (about 200.000 positions)
+* Openings book (about 300.000 positions)
 * Two-tier transposition table with aging
 
 The Latest Version
 ==================
 
 Information on the latest version of this software and its current
-development can be found on http://www.joansala.com/auale/
+development can be found on https://github.com/joansalasoler/oware
 
 Installation
 ============

@@ -1,4 +1,4 @@
-Installation of Aalina
+Installation of Samurai
 
   Copyright (c) 2014-2021 Joan Sala Soler
 
@@ -9,6 +9,5 @@ Installation of Aalina
 Basic installation
 ======================================================================
 
-You may check Apache Ant's documentation for instructions on how to
-build this software. Installation is done by copying the binary files
-generated on the 'build' directory to the desired location.
+You may check Apache Maven documentation for instructions on how to
+build and intall this software.
