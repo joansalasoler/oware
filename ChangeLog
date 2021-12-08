@@ -1,3 +1,10 @@
+2021-12-08  Joan Sala Soler  <contact@joansala.com>
+
+    * New openings book (UCT).
+    * New toolset (Samurai framework).
+    * New optional search engines (UCT, MonteCarlo).
+    * Modular arquitecture using Guice injections.
+
 2021-03-23  Joan Sala Soler  <contact@joansala.com>
 
     * New endgames book.

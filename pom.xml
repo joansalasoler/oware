@@ -29,7 +29,7 @@
   <groupId>com.joansala.aalina</groupId>
   <artifactId>aalina</artifactId>
   <version>${revision}</version>
-  <name>Aalina Abapa</name>
+  <name>Samurai Oware</name>
 
   <organization>
     <name>Joan Sala Soler</name>
@@ -39,13 +39,13 @@
   <!-- Project properties =============================================== -->
 
   <properties>
-    <revision>1.2.1-SNAPSHOT</revision>
+    <revision>2.0.0-SNAPSHOT</revision>
     <maven.test.skip>true</maven.test.skip>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <project.name>Aalina Abapa</project.name>
+    <project.name>Samurai Oware</project.name>
   </properties>
 
   <!-- Build configuration ============================================== -->

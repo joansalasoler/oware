@@ -6,6 +6,9 @@ News of Aalina
   are permitted in any medium without royalty provided the copyright
   notice and this notice are preserved.
 
+Version 2.0.0 (8 Dec 2021) (Joan Sala Soler)
+  Engine refactoring into a standalone framework.
+
 Version 1.2.1 (7 Apr 2021) (Joan Sala Soler)
   Fixes the command line interface.
 
