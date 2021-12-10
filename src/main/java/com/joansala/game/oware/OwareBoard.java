@@ -22,6 +22,7 @@ import java.util.Arrays;
 import com.joansala.engine.base.BaseBoard;
 import com.joansala.except.IllegalPositionException;
 import com.joansala.util.notation.CoordinateConverter;
+import com.joansala.util.hash.BinomialHash;
 import static com.joansala.game.oware.OwareGame.*;
 import static com.joansala.game.oware.Oware.*;
 
@@ -35,6 +36,9 @@ import static com.joansala.game.oware.Oware.*;
  */
 public class OwareBoard extends BaseBoard<int[]> {
 
+    /** Hash code generator */
+    private static BinomialHash hasher;
+
     /** Algebraic coordinates converter */
     private static CoordinateConverter algebraic;
 
@@ -43,6 +47,7 @@ public class OwareBoard extends BaseBoard<int[]> {
      * Initialize notation converters.
      */
     static {
+        hasher = hashFunction();
         algebraic = new CoordinateConverter(HOUSES);
     }
 
@@ -66,6 +71,14 @@ public class OwareBoard extends BaseBoard<int[]> {
     public OwareBoard(int[] position, int turn) {
         super(position.clone(), turn);
         validatePosition(position);
+    }
+
+
+    /**
+     * Initialize the hash code generator.
+     */
+    public static BinomialHash hashFunction() {
+        return new BinomialHash(SEED_COUNT, POSITION_SIZE);
     }
 
 
@@ -144,6 +157,19 @@ public class OwareBoard extends BaseBoard<int[]> {
             position[i] = Integer.parseInt(parts[i]);
         }
 
+        return new OwareBoard(position, turn);
+    }
+
+
+    /**
+     * Converts a binomial hash code to a board instance.
+     *
+     * @param hash      Unique position hash code
+     * @return          New boardboard instance
+     */
+    public OwareBoard toBoard(long hash) {
+        int[] position = hasher.unhash(hash & ~SOUTH_SIGN);
+        int turn = (SOUTH_SIGN & hash) == 0L ? NORTH : SOUTH;
         return new OwareBoard(position, turn);
     }
 

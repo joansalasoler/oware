@@ -22,7 +22,6 @@ import java.util.Arrays;
 import com.joansala.engine.Board;
 import com.joansala.engine.base.BaseGame;
 import com.joansala.util.hash.HashFunction;
-import com.joansala.util.hash.BinomialHash;
 import static com.joansala.game.oware.Oware.*;
 
 
@@ -120,7 +119,7 @@ public class OwareGame extends BaseGame {
      * Initialize the hash code generator.
      */
     private static HashFunction hashFunction() {
-        return new BinomialHash(SEED_COUNT, POSITION_SIZE);
+        return OwareBoard.hashFunction();
     }
 
 
