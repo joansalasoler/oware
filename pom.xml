@@ -46,7 +46,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <project.name>Samurai Oware</project.name>
-    <samurai.version>1.0.0</samurai.version>
+    <samurai.version>1.0.0-SNAPSHOT</samurai.version>
   </properties>
 
   <!-- Build configuration ============================================== -->
