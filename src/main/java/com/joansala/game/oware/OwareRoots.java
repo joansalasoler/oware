@@ -37,7 +37,7 @@ public class OwareRoots extends UCTRoots {
      * Creates an opening book instance.
      */
     public OwareRoots() throws IOException {
-        this(getResourcePath(ROOTS_PATH));
+        this(ROOTS_PATH);
     }
 
 
@@ -58,6 +58,6 @@ public class OwareRoots extends UCTRoots {
      * Obtain a path to the given resource file.
      */
     private static String getResourcePath(String path) {
-        return UCTRoots.class.getResource(path).getFile();
+        return OwareRoots.class.getResource(path).getFile();
     }
 }
