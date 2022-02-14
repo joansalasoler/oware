@@ -29,7 +29,7 @@ import com.joansala.engine.Game;
 public class OwareCache implements Cache<OwareGame> {
 
     /** Default size of the cache in bytes */
-    public static final long CACHE_SIZE = 32 << 20;
+    public static final long CACHE_SIZE = 256 << 20;
 
     /** Size of a table slot in bytes */
     public static final int SLOT_SIZE = 8;
