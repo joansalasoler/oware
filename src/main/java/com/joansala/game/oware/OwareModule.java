@@ -58,6 +58,12 @@ public class OwareModule extends BaseModule {
 
         @Option(names = "--leaves", description = "Endgames book path")
         private static String leaves = OwareLeaves.LEAVES_PATH;
+
+        @Option(names = "--disturbance", description = "disturbance")
+        private static double disturbance = -13.5D;
+
+        @Option(names = "--threshold", description = "threshold")
+        private static double threshold = -27.0D;
     }
 
 
@@ -81,7 +87,10 @@ public class OwareModule extends BaseModule {
             String path = OwareCommand.roots;
 
             try {
-                roots = new OwareRoots(path);
+                OwareRoots roots = new OwareRoots(path);
+                roots.setDisturbance(OwareCommand.disturbance);
+                roots.setThreshold(OwareCommand.threshold);
+                OwareModule.roots = roots;
             } catch (Exception e) {
                 logger.warning("Cannot open openings book: " + path);
                 roots = new BaseRoots();
