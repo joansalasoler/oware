@@ -29,6 +29,7 @@ import com.joansala.engine.base.BaseModule;
 import com.joansala.engine.base.BaseLeaves;
 import com.joansala.engine.negamax.Negamax;
 import com.joansala.book.base.BaseRoots;
+import static com.joansala.game.oware.Oware.*;
 
 
 /**
@@ -60,10 +61,10 @@ public class OwareModule extends BaseModule {
         private static String leaves = OwareLeaves.LEAVES_PATH;
 
         @Option(names = "--disturbance", description = "disturbance")
-        private static double disturbance = -13.5D;
+        private static double disturbance = ROOT_DISTURBANCE;
 
         @Option(names = "--threshold", description = "threshold")
-        private static double threshold = -27.0D;
+        private static double threshold = ROOT_THRESHOLD;
     }
 
 
