@@ -16,7 +16,7 @@ Its features include:
 * Includes a set of engine optimization tools
 
 Implementation details:
----------------------
+-----------------------
 
 * Negamax search
 * Iterative deepening
@@ -24,8 +24,23 @@ Implementation details:
 * Optimized evaluation heuristics
 * Minimal perfect hashing of positions
 * Endgame tablebases (12 seeds or less)
-* Openings book (about 300.000 positions)
+* Automatically built openings book
 * Two-tier transposition table with aging
+* Simple time management
+* UCT based openings book trainer
+* Complete UCI protocol support
+* Optional UCT/MCTS search
+
+Command line tools:
+-----------------------
+
+* UCI protocol service
+* UCI protocol shell interface
+* Automatic openings book trainer
+* Command line playing interface
+* Engine benchmark, perft and divide
+* Tournament runner
+* Basic tests
 
 The Latest Version
 ==================
