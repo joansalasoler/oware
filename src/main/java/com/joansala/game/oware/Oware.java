@@ -27,106 +27,106 @@ import com.joansala.engine.Game;
  * @author    Joan Sala Soler
  * @version   1.0.0
  */
-final class Oware {
+public final class Oware {
 
     // -------------------------------------------------------------------
     // Game logic constants
     // -------------------------------------------------------------------
 
     /** Number of pits on the board */
-    static final int BOARD_SIZE = 12;
+    public static final int BOARD_SIZE = 12;
 
     /** Number of seeds on the board */
-    static final int SEED_COUNT = 48;
+    public static final int SEED_COUNT = 48;
 
     /** Number of seeds to surpass to win */
-    static final int SEED_GOAL = 24;
+    public static final int SEED_GOAL = 24;
 
     /** Leftmost player house from south's perspective */
-    static final int SOUTH_LEFT = 0;
+    public static final int SOUTH_LEFT = 0;
 
     /** Rightmost player house from south's perspective */
-    static final int SOUTH_RIGHT = 5;
+    public static final int SOUTH_RIGHT = 5;
 
     /** Store house for south */
-    static final int SOUTH_STORE = 12;
+    public static final int SOUTH_STORE = 12;
 
     /** Leftmost player house from north's perspective */
-    static final int NORTH_LEFT = 6;
+    public static final int NORTH_LEFT = 6;
 
     /** Rightmost player house from north's perspective */
-    static final int NORTH_RIGHT = 11;
+    public static final int NORTH_RIGHT = 11;
 
     /** Store house for north */
-    static final int NORTH_STORE = 13;
+    public static final int NORTH_STORE = 13;
 
     /** Length of the position array */
-    static final int POSITION_SIZE = 14;
+    public static final int POSITION_SIZE = 14;
 
     // -------------------------------------------------------------------
     // Board representation
     // -------------------------------------------------------------------
 
     /** South player name */
-    static final String SOUTH_NAME = "South";
+    public static final String SOUTH_NAME = "South";
 
     /** North player name */
-    static final String NORTH_NAME = "North";
+    public static final String NORTH_NAME = "North";
 
     /** South player symbol */
-    static final char SOUTH_SYMBOL = 'S';
+    public static final char SOUTH_SYMBOL = 'S';
 
     /** North player symbol */
-    static final char NORTH_SYMBOL = 'N';
+    public static final char NORTH_SYMBOL = 'N';
 
     // -------------------------------------------------------------------
     // Bitboard masks
     // -------------------------------------------------------------------
 
     /** South houses bitmask */
-    static final int SOUTH_MASK = 0b000000111111;
+    public static final int SOUTH_MASK = 0b000000111111;
 
     /** North houses bitmask */
-    static final int NORTH_MASK = 0b111111000000;
+    public static final int NORTH_MASK = 0b111111000000;
 
     // -------------------------------------------------------------------
     // Binomial hashing
     // -------------------------------------------------------------------
 
     /** Hash sign for positions were south is to move */
-    static final long SOUTH_SIGN = 0x80000000000L;
+    public static final long SOUTH_SIGN = 0x80000000000L;
 
     /** Hash sign for positions were north is to move */
-    static final long NORTH_SIGN = 0x00000000000L;
+    public static final long NORTH_SIGN = 0x00000000000L;
 
     // -------------------------------------------------------------------
     // Heuristic evaluation weights
     // -------------------------------------------------------------------
 
     /** Weight of the captured seeds difference */
-    static final int TALLY_WEIGHT = 25;
+    public static final int TALLY_WEIGHT = 25;
 
     /** Weight of houses that contain more than 12 seeds */
-    static final int ATTACK_WEIGHT = 28;
+    public static final int ATTACK_WEIGHT = 28;
 
     /** Weight of houses that contain 1 or 2 seeds */
-    static final int DEFENSE_WEIGHT = -36;
+    public static final int DEFENSE_WEIGHT = -36;
 
     /** Weight of houses that do not contain any seeds */
-    static final int MOBILITY_WEIGHT = -54;
+    public static final int MOBILITY_WEIGHT = -54;
 
     /** Recommended score to evaluate draws */
-    static final int CONTEMPT_SCORE = -9;
+    public static final int CONTEMPT_SCORE = -9;
 
     // -------------------------------------------------------------------
     // Openings book
     // -------------------------------------------------------------------
 
-    /** Minimum score for an opening move to be choosen */
-    static final double ROOT_THRESHOLD = -27.0D;
+    /** Minimum score for an opening move to be chosen */
+    public static final double ROOT_THRESHOLD = -27.0D;
 
     /** Threshold on the highest opening move reward */
-    static final double ROOT_DISTURBANCE = -13.5D;
+    public static final double ROOT_DISTURBANCE = -13.5D;
 
     // -------------------------------------------------------------------
     // Board definitions

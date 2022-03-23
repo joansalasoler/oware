@@ -1,8 +1,8 @@
-package com.joansala.game.oware;
+package com.joansala.test.game.oware;
 
 import org.junit.jupiter.api.*;
 import com.joansala.engine.Game;
-import com.joansala.engine.GameContract;
+import com.joansala.test.engine.GameContract;
 import com.joansala.game.oware.OwareGame;
 
 

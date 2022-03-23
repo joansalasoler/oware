@@ -29,6 +29,7 @@ import com.joansala.engine.base.BaseModule;
 import com.joansala.engine.base.BaseLeaves;
 import com.joansala.engine.negamax.Negamax;
 import com.joansala.book.base.BaseRoots;
+import static com.joansala.game.oware.Oware.*;
 
 
 /**
@@ -58,6 +59,12 @@ public class OwareModule extends BaseModule {
 
         @Option(names = "--leaves", description = "Endgames book path")
         private static String leaves = OwareLeaves.LEAVES_PATH;
+
+        @Option(names = "--disturbance", description = "disturbance")
+        private static double disturbance = ROOT_DISTURBANCE;
+
+        @Option(names = "--threshold", description = "threshold")
+        private static double threshold = ROOT_THRESHOLD;
     }
 
 
@@ -81,7 +88,10 @@ public class OwareModule extends BaseModule {
             String path = OwareCommand.roots;
 
             try {
-                roots = new OwareRoots(path);
+                OwareRoots roots = new OwareRoots(path);
+                roots.setDisturbance(OwareCommand.disturbance);
+                roots.setThreshold(OwareCommand.threshold);
+                OwareModule.roots = roots;
             } catch (Exception e) {
                 logger.warning("Cannot open openings book: " + path);
                 roots = new BaseRoots();
