@@ -22,6 +22,7 @@ package com.joansala.game.oware;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
 import com.joansala.cli.*;
 import com.joansala.engine.*;
@@ -37,13 +38,6 @@ import static com.joansala.game.oware.Oware.*;
  */
 public class OwareModule extends BaseModule {
 
-    /** Shared endgames book instance */
-    private static Leaves<Game> leaves;
-
-    /** Shared openings book instance */
-    private static Roots<Game> roots;
-
-
     /**
      * Command line interface.
      */
@@ -54,16 +48,28 @@ public class OwareModule extends BaseModule {
     )
     private static class OwareCommand extends MainCommand {
 
-        @Option(names = "--roots", description = "Openings book path")
+        @Option(
+          names = "--roots",
+          description = "Openings book path"
+        )
         private static String roots = OwareRoots.ROOTS_PATH;
 
-        @Option(names = "--leaves", description = "Endgames book path")
+        @Option(
+          names = "--leaves",
+          description = "Endgames book path"
+        )
         private static String leaves = OwareLeaves.LEAVES_PATH;
 
-        @Option(names = "--disturbance", description = "disturbance")
+        @Option(
+          names = "--disturbance",
+          description = "Openings book root disturbance"
+        )
         private static double disturbance = ROOT_DISTURBANCE;
 
-        @Option(names = "--threshold", description = "threshold")
+        @Option(
+          names = "--threshold",
+          description = "Openings book root threshold"
+        )
         private static double threshold = ROOT_THRESHOLD;
     }
 
@@ -82,48 +88,42 @@ public class OwareModule extends BaseModule {
     /**
      * Openings book provider.
      */
-    @Provides @SuppressWarnings("rawtypes")
+    @Provides @Singleton @SuppressWarnings("rawtypes")
     public static Roots provideRoots() {
-        if (roots instanceof Roots == false) {
-            String path = OwareCommand.roots;
+        String path = OwareCommand.roots;
 
-            try {
-                OwareRoots roots = new OwareRoots(path);
-                roots.setDisturbance(OwareCommand.disturbance);
-                roots.setThreshold(OwareCommand.threshold);
-                OwareModule.roots = roots;
-            } catch (Exception e) {
-                logger.warning("Cannot open openings book: " + path);
-                roots = new BaseRoots();
-            }
+        try {
+            OwareRoots roots = new OwareRoots(path);
+            roots.setDisturbance(OwareCommand.disturbance);
+            roots.setThreshold(OwareCommand.threshold);
+            return roots;
+        } catch (Exception e) {
+            logger.warning("Cannot open openings book: " + path);
         }
 
-        return roots;
+        return new BaseRoots();
     }
 
 
     /**
      * Endgames book provider.
      */
-    @Provides @SuppressWarnings("rawtypes")
+    @Provides @Singleton @SuppressWarnings("rawtypes")
     public static Leaves provideLeaves() {
-        if (leaves instanceof Leaves == false) {
-            String path = OwareCommand.leaves;
+        String path = OwareCommand.leaves;
 
-            try {
-                leaves = new OwareLeaves(path);
-            } catch (Exception e) {
-                logger.warning("Cannot open endgames book: " + path);
-                leaves = new BaseLeaves();
-            }
+        try {
+            return new OwareLeaves(path);
+        } catch (Exception e) {
+            logger.warning("Cannot open endgames book: " + path);
         }
 
-        return leaves;
+        return new BaseLeaves();
     }
 
 
     /**
-     * Exectues the command line interface.
+     * Executes the command line interface.
      *
      * @param args      Command line parameters
      */
