@@ -24,6 +24,7 @@ import com.joansala.engine.Flag;
 import com.joansala.engine.Game;
 import com.joansala.engine.Leaves;
 import com.joansala.engine.base.BaseBook;
+
 import static com.joansala.game.oware.Oware.*;
 import static com.joansala.game.oware.OwareGame.*;
 
@@ -287,16 +288,17 @@ public class OwareLeaves extends BaseBook implements Leaves<Game> {
      * @return              Heuristic score value
      */
     private int heuristic(int[] state) {
+        final int offset = 6 * TALLY_WEIGHT;
         final int south = state[SOUTH_STORE];
-        final int north = state[NORTH_STORE];
         final int score = south + captures;
 
         if (score > SEED_GOAL) {
-            return +((south + north) << 4);
+            return +(offset + (score << 4));
         }
 
         if (score < SEED_GOAL) {
-            return -((south + north) << 4);
+            final int value = (SEED_COUNT - score);
+            return -(offset + (value << 4));
         }
 
         return DRAW_SCORE;
