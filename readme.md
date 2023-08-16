@@ -3,9 +3,7 @@ What is it?
 
 An <b>Oware Abapa</b> artificial intelligence game engine.
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/F2F8BR4E0)
-
-Aalina is the strongest mancala playing program out there. It communicates with a Graphical User Interface through an adapted version of the Universal Chess Interface protocol. This mancala engine is thus usually invoked by a GUI, such as [Aualé](https://github.com/joansalasoler/auale), which is the official interface for this engine, but can also be played on the terminal.
+Aalina (a.k.a. Aualé) is a strong Oware playing artificial intelligence engine. It communicates with a Graphical User Interface through an adapted version of the Universal Chess Interface protocol. This mancala engine is thus usually invoked by a GUI, such as [Aualé](https://play.google.com/store/apps/details?id=com.joansala.auale), which is the official interface for this engine, but can also be played on the terminal.
 
 ![Demo](https://raw.githubusercontent.com/joansalasoler/assets/master/demos/aalina-1.1.gif)
 

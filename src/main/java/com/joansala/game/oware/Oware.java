@@ -118,6 +118,9 @@ public final class Oware {
     /** Recommended score to evaluate draws */
     public static final int CONTEMPT_SCORE = -9;
 
+    /** Score to which to evaluate won repetitions */
+    public static final int REPETITION_SCORE = 990;
+
     // -------------------------------------------------------------------
     // Openings book
     // -------------------------------------------------------------------

@@ -25,8 +25,10 @@ import com.joansala.engine.Game;
 import com.joansala.engine.Leaves;
 import com.joansala.engine.base.BaseBook;
 
+import static com.joansala.engine.Game.DRAW_SCORE;
+import static com.joansala.engine.Game.NORTH;
+import static com.joansala.game.oware.OwareGame.MAX_SCORE;
 import static com.joansala.game.oware.Oware.*;
-import static com.joansala.game.oware.OwareGame.*;
 
 
 /**
@@ -190,9 +192,28 @@ public class OwareLeaves extends BaseBook implements Leaves<Game> {
 
         this.flag = flag;
         this.captures = (entry >> 2);
-        this.score = game.turn() * evaluation(state);
 
-        return true;
+        final int south = state[SOUTH_STORE];
+        final int seeds = south + captures;
+
+        if (seeds > SEED_GOAL) {
+            this.flag = Flag.EXACT;
+            this.score = +MAX_SCORE * game.turn();
+            return true;
+        }
+
+        if (seeds < SEED_GOAL) {
+            this.flag = Flag.EXACT;
+            this.score = -MAX_SCORE * game.turn();
+            return true;
+        }
+
+        if (flag == Flag.EXACT) {
+            this.score = DRAW_SCORE;
+            return true;
+        }
+
+        return false;
     }
 
 
@@ -244,64 +265,6 @@ public class OwareLeaves extends BaseBook implements Leaves<Game> {
         mirror[NORTH_STORE] = state[SOUTH_STORE];
 
         return mirror;
-    }
-
-
-    /**
-     *
-     *
-     * @param state         Game position
-     * @return              A score value
-     */
-    private int evaluation(int[] state) {
-        return (flag == Flag.EXACT) ?
-            outcome(state) : heuristic(state);
-    }
-
-
-    /**
-     * Obtain the exact score for a found position.
-     *
-     * @param state         Game position
-     * @return              Exact score value
-     */
-    private int outcome(int[] state) {
-        final int store = state[SOUTH_STORE];
-        final int score = store + captures;
-
-        if (score > SEED_GOAL) {
-            return MAX_SCORE;
-        }
-
-        if (score < SEED_GOAL) {
-            return -MAX_SCORE;
-        }
-
-        return DRAW_SCORE;
-    }
-
-
-    /**
-     * Heuristic score for a position repetition.
-     *
-     * @param state         Game position
-     * @return              Heuristic score value
-     */
-    private int heuristic(int[] state) {
-        final int offset = 6 * TALLY_WEIGHT;
-        final int south = state[SOUTH_STORE];
-        final int score = south + captures;
-
-        if (score > SEED_GOAL) {
-            return +(offset + (score << 4));
-        }
-
-        if (score < SEED_GOAL) {
-            final int value = (SEED_COUNT - score);
-            return -(offset + (value << 4));
-        }
-
-        return DRAW_SCORE;
     }
 
 
