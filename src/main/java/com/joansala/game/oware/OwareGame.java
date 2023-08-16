@@ -21,6 +21,7 @@ package com.joansala.game.oware;
 import java.util.Arrays;
 import com.joansala.engine.Board;
 import com.joansala.engine.base.BaseGame;
+import com.joansala.game.oware.Oware.Player;
 import com.joansala.util.hash.HashFunction;
 import static com.joansala.game.oware.Oware.*;
 
@@ -62,6 +63,9 @@ public class OwareGame extends BaseGame {
 
     /** Player to move opponent */
     private Player rival;
+
+    /** Hash of the last detected repetition */
+    private long repetition;
 
     /** Index of the last capture move */
     private int capture;
@@ -240,7 +244,7 @@ public class OwareGame extends BaseGame {
      */
     @Override
     public int contempt() {
-        return CONTEMPT_SCORE;
+        return Oware.CONTEMPT_SCORE;
     }
 
 
@@ -291,6 +295,37 @@ public class OwareGame extends BaseGame {
 
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int winner() {
+        if (state[SOUTH_STORE] > SEED_GOAL) {
+            return SOUTH;
+        }
+
+        if (state[NORTH_STORE] > SEED_GOAL) {
+            return NORTH;
+        }
+
+        int seeds = state[SOUTH_STORE];
+
+        for (int house = SOUTH_LEFT; house <= SOUTH_RIGHT; house++) {
+            seeds += state[house];
+        }
+
+        if (seeds > SEED_GOAL) {
+            return SOUTH;
+        }
+
+        if (seeds < SEED_GOAL) {
+            return NORTH;
+        }
+
+        return DRAW;
+    }
+
+
+    /**
      * Returns an utility evaluation of the current position.
      *
      * <p>This method evaluates the current position as an endgame,
@@ -322,11 +357,13 @@ public class OwareGame extends BaseGame {
         }
 
         if (seeds > SEED_GOAL) {
-            return MAX_SCORE;
+            return (hash == repetition) ?
+                REPETITION_SCORE : MAX_SCORE;
         }
 
         if (seeds < SEED_GOAL) {
-            return -MAX_SCORE;
+            return (hash == repetition) ?
+                -REPETITION_SCORE : -MAX_SCORE;
         }
 
         return DRAW_SCORE;
@@ -476,6 +513,7 @@ public class OwareGame extends BaseGame {
     public boolean isRepetition() {
         for (int n = index - BOARD_SIZE + 1; n > capture; n -= 2) {
             if (hashes[n] == hash) {
+                repetition = hash;
                 return true;
             }
         }
