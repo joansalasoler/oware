@@ -28,8 +28,9 @@ import picocli.CommandLine.*;
   description = "Endgames book utilities",
   mixinStandardHelpOptions = true,
   subcommands = {
-      SolveCommand.class,
       ExportCommand.class,
+      QueryCommand.class,
+      SolveCommand.class,
   }
 )
 public class EGTBCommand {}
