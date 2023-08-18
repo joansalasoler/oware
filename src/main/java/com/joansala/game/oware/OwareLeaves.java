@@ -103,7 +103,7 @@ public class OwareLeaves extends BaseBook implements Leaves<Game> {
                 "Incorrect number of seeds");
         }
 
-        data = new byte[1 + OFFSETS[seeds]];
+        data = new byte[OFFSETS[seeds]];
         minStoreSeeds = SEED_COUNT - seeds;
         file.readFully(data);
         file.close();
@@ -114,7 +114,7 @@ public class OwareLeaves extends BaseBook implements Leaves<Game> {
      * Obtain a path to the given resource file.
      */
     private static String getResourcePath(String path) {
-        return BaseBook.class.getResource(path).getFile();
+        return OwareLeaves.class.getResource(path).getFile();
     }
 
 
