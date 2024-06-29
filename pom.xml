@@ -1,0 +1,138 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<!--
+ * Aalina Game Engine.
+ * Copyright (c) 2021 Joan Sala Soler <contact@joansala.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ -->
+
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+  http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.joansala.aalina</groupId>
+  <artifactId>aalina</artifactId>
+  <version>${revision}</version>
+  <name>Samurai Oware</name>
+
+  <organization>
+    <name>Joan Sala Soler</name>
+    <url>https://auale.joansala.com</url>
+  </organization>
+
+  <!-- Project properties =============================================== -->
+
+  <properties>
+    <revision>2.1.0-SNAPSHOT</revision>
+    <maven.test.skip>true</maven.test.skip>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <project.name>Samurai Oware</project.name>
+    <samurai.version>1.1.0-SNAPSHOT</samurai.version>
+  </properties>
+
+  <!-- Build configuration ============================================== -->
+
+  <build>
+    <defaultGoal>package</defaultGoal>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.3.0</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>com.joansala.game.oware.OwareModule</mainClass>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+            <manifestEntries>
+              <Class-Path>.</Class-Path>
+            </manifestEntries>
+          </archive>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.0.0-M5</version>
+        <configuration>
+          <skipTests>${maven.test.skip}</skipTests>
+        </configuration>
+      </plugin>
+    </plugins>
+
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <excludes>
+          <exclude>**/*.bin</exclude>
+          <exclude>**/*.suite</exclude>
+        </excludes>
+      </resource>
+    </resources>
+  </build>
+
+  <!-- Project analysis ================================================= -->
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <version>3.14.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jxr-plugin</artifactId>
+        <version>2.3</version>
+      </plugin>
+    </plugins>
+  </reporting>
+
+  <!-- Project dependencies ============================================= -->
+
+  <dependencies>
+    <dependency>
+      <groupId>com.joansala</groupId>
+      <artifactId>samurai</artifactId>
+      <version>${samurai.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.7.0-M1</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+</project>
