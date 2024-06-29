@@ -118,11 +118,12 @@ public class QueryCommand implements Callable<Integer> {
     public void printBookEntry(int move, Board board, OwareLeaves leaves) {
         if (leaves.find(game)) {
             System.out.format(
-                "move = %s, score = %d, captures = %d, flag = %s%n",
+                "move = %s, score = %d, captures = %d, flag = %s, hash = %d%n",
                 board.toCoordinates(move),
                 leaves.getScore(),
                 leaves.getCaptures(),
-                leaves.getFlag()
+                leaves.getFlag(),
+                leaves.computeHash(game)
             );
         } else {
             System.out.format(

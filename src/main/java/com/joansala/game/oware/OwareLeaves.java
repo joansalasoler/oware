@@ -253,6 +253,23 @@ public class OwareLeaves extends BaseBook implements Leaves<Game> {
 
 
     /**
+     * Computes a unique hash code for a game state.
+     *
+     * @param game          Game state
+     */
+    public int computeHash(Game game) {
+        OwareGame g = (OwareGame) game;
+        int[] state = g.state();
+
+        if (game.turn() == NORTH) {
+            state = rotatePosition(state);
+        }
+
+        return computeHash(state);
+    }
+
+
+    /**
      * Rotates the given position and returns the new representation.
      *
      * @param state         Game position
