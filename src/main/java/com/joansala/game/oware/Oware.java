@@ -2,7 +2,7 @@ package com.joansala.game.oware;
 
 /*
  * Aalina oware engine.
- * Copyright (c) 2014-2021 Joan Sala Soler <contact@joansala.com>
+ * Copyright (C) 2014-2024 Joan Sala Soler <contact@joansala.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
