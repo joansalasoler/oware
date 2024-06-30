@@ -42,6 +42,12 @@ Command line tools:
 * Tournament runner
 * Basic tests
 
+Usage and Documentation
+=======================
+
+This engine was implemented with the Samurai Framework. See the repository
+https://github.com/joansalasoler/engines for usage instructions.
+
 The Latest Version
 ==================
 
