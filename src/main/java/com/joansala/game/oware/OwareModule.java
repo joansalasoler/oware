@@ -29,7 +29,6 @@ import com.joansala.engine.*;
 import com.joansala.engine.base.BaseModule;
 import com.joansala.engine.base.BaseLeaves;
 import com.joansala.engine.negamax.Negamax;
-import com.joansala.util.ModuleConfig;
 import com.joansala.book.base.BaseRoots;
 import com.joansala.cli.oware.egtb.EGTBCommand;
 import static com.joansala.game.oware.Oware.*;
@@ -45,7 +44,7 @@ public class OwareModule extends BaseModule {
      */
     @Command(
       name = "oware",
-      version = "2.0.0",
+      version = "2.1.0",
       description = "Oware (Abapa) is a mancala board game",
       subcommands = {
         EGTBCommand.class
