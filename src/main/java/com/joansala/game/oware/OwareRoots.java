@@ -30,7 +30,7 @@ import static com.joansala.game.oware.OwareGame.*;
 public class OwareRoots extends UCTRoots {
 
     /** Default path of the book database */
-    public static final String ROOTS_PATH = "/oware-roots.bin";
+    public static final String ROOTS_PATH = "oware-roots.bin";
 
 
     /**
@@ -47,17 +47,9 @@ public class OwareRoots extends UCTRoots {
      * @param path      Database path
      */
     public OwareRoots(String path) throws IOException {
-        super(getResourcePath(path));
+        super(path);
         setDisturbance(ROOT_DISTURBANCE);
         setThreshold(ROOT_THRESHOLD);
         setInfinity(MAX_SCORE);
-    }
-
-
-    /**
-     * Obtain a path to the given resource file.
-     */
-    private static String getResourcePath(String path) {
-        return OwareRoots.class.getResource(path).getFile();
     }
 }

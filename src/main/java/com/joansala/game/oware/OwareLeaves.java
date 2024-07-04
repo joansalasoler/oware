@@ -19,7 +19,6 @@ package com.joansala.game.oware;
  */
 
 import java.io.IOException;
-
 import com.joansala.engine.Flag;
 import com.joansala.engine.Game;
 import com.joansala.engine.Leaves;
@@ -27,7 +26,7 @@ import com.joansala.engine.base.BaseBook;
 
 import static com.joansala.engine.Game.DRAW_SCORE;
 import static com.joansala.engine.Game.NORTH;
-import static com.joansala.game.oware.OwareGame.MAX_SCORE;
+import static com.joansala.engine.base.BaseGame.MAX_SCORE;
 import static com.joansala.game.oware.Oware.*;
 
 
@@ -41,7 +40,7 @@ import static com.joansala.game.oware.Oware.*;
 public class OwareLeaves extends BaseBook implements Leaves<Game> {
 
     /** Default path to the endgames book binary file */
-    public static final String LEAVES_PATH = "/oware-leaves.bin";
+    public static final String LEAVES_PATH = "oware-leaves.bin";
 
     /** Maximum number of seeds that a position can contain */
     public static final int MAX_SEEDS = 15;
@@ -75,7 +74,7 @@ public class OwareLeaves extends BaseBook implements Leaves<Game> {
      * Create a new endgames book instance.
      */
     public OwareLeaves() throws IOException {
-        this(getResourcePath(LEAVES_PATH), DEFAULT_SEEDS);
+        this(LEAVES_PATH, DEFAULT_SEEDS);
     }
 
 
@@ -85,7 +84,7 @@ public class OwareLeaves extends BaseBook implements Leaves<Game> {
      * @param path      book file path
      */
     public OwareLeaves(String path) throws IOException {
-        this(getResourcePath(path), DEFAULT_SEEDS);
+        this(path, DEFAULT_SEEDS);
     }
 
 
@@ -107,14 +106,6 @@ public class OwareLeaves extends BaseBook implements Leaves<Game> {
         minStoreSeeds = SEED_COUNT - seeds;
         file.readFully(data);
         file.close();
-    }
-
-
-    /**
-     * Obtain a path to the given resource file.
-     */
-    private static String getResourcePath(String path) {
-        return OwareLeaves.class.getResource(path).getFile();
     }
 
 
