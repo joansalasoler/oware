@@ -29,6 +29,7 @@ import com.joansala.engine.*;
 import com.joansala.engine.base.BaseModule;
 import com.joansala.engine.base.BaseLeaves;
 import com.joansala.engine.negamax.Negamax;
+import com.joansala.util.ModuleConfig;
 import com.joansala.book.base.BaseRoots;
 import com.joansala.cli.oware.egtb.EGTBCommand;
 import static com.joansala.game.oware.Oware.*;
@@ -75,6 +76,12 @@ public class OwareModule extends BaseModule {
           description = "Openings book root threshold"
         )
         private static double threshold = ROOT_THRESHOLD;
+
+        @Option(
+          names = "--cache-size",
+          description = "Default hash table size (bytes)"
+        )
+        private static long cacheSize = OwareCache.CACHE_SIZE;
     }
 
 
@@ -85,7 +92,15 @@ public class OwareModule extends BaseModule {
         bind(Game.class).to(OwareGame.class);
         bind(Board.class).to(OwareBoard.class);
         bind(Engine.class).to(Negamax.class);
-        bind(Cache.class).to(OwareCache.class);
+    }
+
+
+    /**
+     * Transpositions table provider.
+     */
+    @Provides @Singleton @SuppressWarnings("rawtypes")
+    public static Cache provideCache() {
+        return new OwareCache(OwareCommand.cacheSize);
     }
 
 
