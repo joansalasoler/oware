@@ -43,6 +43,7 @@
     <maven.test.skip>true</maven.test.skip>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
+    <native.maven.plugin.version>0.10.2</native.maven.plugin.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <project.name>Samurai Oware</project.name>
@@ -94,14 +95,15 @@
             </goals>
             <configuration>
               <filters>
-                <filter>src/main/resources/${artifactId}.properties</filter>
+                <filter>src/main/resources/${project.artifactId}.properties</filter>
               </filters>
               <outputDirectory>${project.build.directory}</outputDirectory>
+              <propertiesEncoding>ISO-8859-1</propertiesEncoding>
               <resources>
                 <resource>
                   <directory>src/main/resources</directory>
                     <includes>
-                      <include>${artifactId}.properties</include>
+                      <include>${project.artifactId}.properties</include>
                     </includes>
                     <filtering>true</filtering>
                 </resource>
@@ -130,6 +132,73 @@
       </resource>
     </resources>
   </build>
+
+  <!-- GraalVM native image builds ====================================== -->
+
+  <profiles>
+    <profile>
+      <id>instrumented</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.graalvm.buildtools</groupId>
+            <artifactId>native-maven-plugin</artifactId>
+            <version>${native.maven.plugin.version}</version>
+            <extensions>true</extensions>
+            <executions>
+              <execution>
+                <id>build-native</id>
+                <goals>
+                  <goal>compile-no-fork</goal>
+                </goals>
+                <phase>package</phase>
+              </execution>
+            </executions>
+            <configuration>
+              <buildArgs>
+                <arg>--gc=G1</arg>
+                <arg>--pgo-instrument</arg>
+              </buildArgs>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>optimized</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.graalvm.buildtools</groupId>
+            <artifactId>native-maven-plugin</artifactId>
+            <version>${native.maven.plugin.version}</version>
+            <extensions>true</extensions>
+            <executions>
+              <execution>
+                <id>build-native</id>
+                <goals>
+                  <goal>compile-no-fork</goal>
+                </goals>
+                <phase>package</phase>
+              </execution>
+            </executions>
+            <configuration>
+              <buildArgs>
+                <arg>--gc=G1</arg>
+                <arg>--pgo=${project.basedir}/pgo/${project.artifactId}.iprof</arg>
+              </buildArgs>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <!-- Project analysis ================================================= -->
 
