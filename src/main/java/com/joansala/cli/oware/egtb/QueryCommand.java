@@ -40,9 +40,6 @@ import com.joansala.util.suites.SuiteReader;
 )
 public class QueryCommand implements Callable<Integer> {
 
-    /** Game board instance */
-    private Board parser;
-
     /** Game instance */
     private Game game;
 
@@ -65,7 +62,6 @@ public class QueryCommand implements Callable<Integer> {
      */
     @Inject public QueryCommand(Game game) {
         this.game = game;
-        this.parser = game.getBoard();
     }
 
 
@@ -78,18 +74,7 @@ public class QueryCommand implements Callable<Integer> {
         try (OwareLeaves leaves = new OwareLeaves(leavesPath)) {
             try (SuiteReader reader = new SuiteReader(input)) {
                 reader.stream().forEach((suite) -> {
-                    Board board = parser.toBoard(suite.diagram());
-                    int[] moves = board.toMoves(suite.notation());
-
-                    game.setBoard(board);
-                    game.ensureCapacity(1 + moves.length);
-
-                    for (int move : moves) {
-                        if (game.hasEnded() == false) {
-                            game.makeMove(move);
-                        }
-                    }
-
+                    suite.setupGame(game);
                     Board state = game.toBoard();
 
                     for (int move : game.legalMoves()) {
