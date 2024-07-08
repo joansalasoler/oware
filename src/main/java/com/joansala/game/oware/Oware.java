@@ -103,18 +103,6 @@ public final class Oware {
     // Heuristic evaluation weights
     // -------------------------------------------------------------------
 
-    /** Weight of the captured seeds difference */
-    public static final int TALLY_WEIGHT = 25;
-
-    /** Weight of houses that contain more than 12 seeds */
-    public static final int ATTACK_WEIGHT = 28;
-
-    /** Weight of houses that contain 1 or 2 seeds */
-    public static final int DEFENSE_WEIGHT = -36;
-
-    /** Weight of houses that do not contain any seeds */
-    public static final int MOBILITY_WEIGHT = -54;
-
     /** Recommended score to evaluate draws */
     public static final int CONTEMPT_SCORE = -9;
 

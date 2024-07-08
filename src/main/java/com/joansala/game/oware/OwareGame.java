@@ -20,8 +20,11 @@ package com.joansala.game.oware;
 
 import java.util.Arrays;
 import com.joansala.engine.Board;
+import com.joansala.engine.Scorer;
 import com.joansala.engine.base.BaseGame;
 import com.joansala.game.oware.Oware.Player;
+import com.joansala.game.oware.scorers.OutcomeScorer;
+import com.joansala.game.oware.scorers.PositionalScorer;
 import com.joansala.util.hash.HashFunction;
 import static com.joansala.game.oware.Oware.*;
 
@@ -51,6 +54,12 @@ public class OwareGame extends BaseGame {
 
     /** Moves that are not attacks, defenses or mandatory */
     private static final int REMAINING_MOVES = 3;
+
+    /** Utility evaluation function (for leaf nodes) */
+    private static final Scorer<OwareGame> outcome = outcomeFunction();
+
+    /** Heuristic evaluation function (for interior nodes) */
+    private static final Scorer<OwareGame> scorer = scoreFunction();
 
     /** Hash code generator */
     private static final HashFunction hasher = hashFunction();
@@ -116,14 +125,6 @@ public class OwareGame extends BaseGame {
         states = new int[capacity << 4];
         setBoard(new OwareBoard());
         setTurn(SOUTH);
-    }
-
-
-    /**
-     * Initialize the hash code generator.
-     */
-    private static HashFunction hashFunction() {
-        return OwareBoard.hashFunction();
     }
 
 
@@ -230,6 +231,16 @@ public class OwareGame extends BaseGame {
 
 
     /**
+     * Obtain the current bitboard value on the given index.
+     *
+     * @return      Bitboard value
+     */
+    public final int state(int index) {
+        return state[index];
+    }
+
+
+    /**
      * Returns the current game state.
      *
      * @return      Current game state reference
@@ -326,85 +337,20 @@ public class OwareGame extends BaseGame {
 
 
     /**
-     * Returns an utility evaluation of the current position.
-     *
-     * <p>This method evaluates the current position as an endgame,
-     * returning {@code ±MAX_SCORE} if a player won or {@code
-     * DRAW_SCORE} if the match hasn't ended or it is drawn.</p>
-     *
-     * @return  Exact score value
+     * {@inheritDoc}
      */
     @Override
     public int outcome() {
-        // The game ended because of captured seeds
-
-        if (state[SOUTH_STORE] > SEED_GOAL) {
-            return MAX_SCORE;
-        }
-
-        if (state[NORTH_STORE] > SEED_GOAL) {
-            return -MAX_SCORE;
-        }
-
-        // The game ended because of a move repetition or because no
-        // legal moves could be performed. Each player captures all
-        // seeds on their side of the board
-
-        int seeds = state[SOUTH_STORE];
-
-        for (int house = SOUTH_LEFT; house <= SOUTH_RIGHT; house++) {
-            seeds += state[house];
-        }
-
-        if (seeds > SEED_GOAL) {
-            return (hash == repetition) ?
-                REPETITION_SCORE : MAX_SCORE;
-        }
-
-        if (seeds < SEED_GOAL) {
-            return (hash == repetition) ?
-                -REPETITION_SCORE : -MAX_SCORE;
-        }
-
-        return DRAW_SCORE;
+        return outcome.evaluate(this);
     }
 
 
     /**
-     * Returns the heuristic evaluation of the current position
-     *
-     * @return  The heuristic evaluation as a value between
-     *          {@code -MAX_SCORE} and {@code MAX_SCORE}
+     * {@inheritDoc}
      */
     @Override
     public int score() {
-        int score = TALLY_WEIGHT * (state[SOUTH_STORE] - state[NORTH_STORE]);
-
-        for (int house = SOUTH_LEFT; house <= SOUTH_RIGHT; house++) {
-            final int seeds = state[house];
-
-            if (seeds > 12) {
-                score += ATTACK_WEIGHT;
-            } else if (seeds == 0) {
-                score += MOBILITY_WEIGHT;
-            } else if (seeds < 3) {
-                score += DEFENSE_WEIGHT;
-            }
-        }
-
-        for (int house = NORTH_LEFT; house <= NORTH_RIGHT; house++) {
-            final int seeds = state[house];
-
-            if (seeds > 12) {
-                score -= ATTACK_WEIGHT;
-            } else if (seeds == 0) {
-                score -= MOBILITY_WEIGHT;
-            } else if (seeds < 3) {
-                score -= DEFENSE_WEIGHT;
-            }
-        }
-
-        return score;
+        return scorer.evaluate(this);
     }
 
 
@@ -519,6 +465,23 @@ public class OwareGame extends BaseGame {
         }
 
         return false;
+    }
+
+
+    /**
+     * Returns if a repetition was found on the current position.
+     *
+     * Provides a fast way to check if the current game situation has
+     * already happened before. If {@link #isRepetition()} was invoked
+     * it is more efficient to call this instead of checking the history
+     * of positions again. This method will only work correctly if
+     * {@link #isRepetition()} has already been called (this happens
+     * automatically when checking {@link #hasEnded()}).
+     *
+     * @return  if the current position is a repetition
+     */
+    public boolean foundRepetition() {
+        return hash == repetition;
     }
 
 
@@ -854,5 +817,29 @@ public class OwareGame extends BaseGame {
         empties = Arrays.copyOf(empties, capacity);
 
         System.gc();
+    }
+
+
+    /**
+     * Initialize the utility evaluation function.
+     */
+    private static Scorer<OwareGame> outcomeFunction() {
+        return new OutcomeScorer();
+    }
+
+
+    /**
+     * Initialize the heuristic evaluation function.
+     */
+    private static Scorer<OwareGame> scoreFunction() {
+        return new PositionalScorer();
+    }
+
+
+    /**
+     * Initialize the hash code generator.
+     */
+    private static HashFunction hashFunction() {
+        return OwareBoard.hashFunction();
     }
 }
