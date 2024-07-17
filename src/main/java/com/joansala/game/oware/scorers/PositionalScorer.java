@@ -41,41 +41,41 @@ import static com.joansala.game.oware.Oware.*;
  * This evaluation heuristic, which turns out to be quite good, was
  * created using a simple linear regression method, by analyzing
  * randomly generated game states to identify key factors that improve
- * the accuracy of the simple {@link MaterialScorer} heuristic.
+ * the accuracy of the {@link MaterialScorer} heuristic.
  *
  * Here's the method that was used to derive this function:
  *
- * 1. Generate a set of random game states.
+ * 1. Generate a set of random game states that are not final.
  * 2. For each position, evaluate it using an engine ({@link Negamax},
- *    {@link UCT}) and the {@link MaterialScorer} heuristic. It should
- *    be possible to simply use {@link Montecarlo} without and heuristic
- *    function, but this is much faster.
- * 3. Instead of a fixed depth or spending a long time thinking, we
- *    evaluate the positions for a short time (200ms or 300ms). We do
- *    this because we're more interested in predicting what will happen
- *    next, rather than the final outcome of the game. Also, we want to
- *    evaluate endgames more deeply than the middle game.
+ *    {@link UCT}) and the {@link MaterialScorer} heuristic (number of
+ *    seeds captured by south minus the number of north captures).
+ * 3. Instead of a fixed depth or spending a long time evaluating each
+ *    position, we evaluate each position for a short time (100ms).
  * 4. For each position, choose a set of features that may be suitable
- *    to finetune the {@link MaterialScorer} heuristic. We want features
- *    that can be computed fast during the search. For Oware Some good
- *    clues are the number of seeds in each house and on the stores.
- * 5. Use linear regression to figure out how much weight each feature
+ *    to finetune the {@link MaterialScorer} heuristic. For Oware Some
+ *    good clues are the number of seeds in each house and on the stores.
+ * 5. Remove from the training set all the positions that were evaluated
+ *    with an exact score ({@code ±MAX_SCORE}). We want to predict the
+ *    material advantage (piece difference) rather than the game outcome.
+ * 6. To create a symmetrical evaluation function, augment the training
+ *    set with the mirrored version of each position, where the features
+ *    are reversed and the scores are negated.
+ * 7. Use linear regression to figure out how much weight each feature
  *    should have to improve the accuracy of the {@link MaterialScorer}
  *    heuristic. Some features might not be helpful at all, while others
- *    might be better combined. The Weka machine learning toolkit can be
- *    used to automate this process (https://ml.cms.waikato.ac.nz/weka).
- * 6. We want to find the smallest group of features that can still
- *    predict the scores calculated earlier with reasonable accuracy,
- *    but we don't want too much accuracy. Remove and combine features
- *    until a minimal set of features is found.
- * 7. Once we find the important features, we'll adjust their influence
+ *    might be better combined.
+ * 8. Once we find the important features, we'll adjust their influence
  *    to make them balanced. Imagine a feature that gets a score of W
  *    (positive) for a player. This same feature should get a score of
  *    -W (negative) for their opponent, to reflect the opposite effect.
- * 8. The final heuristic is the sum of the products of the minimal set
+ * 9. The final heuristic is the sum of the products of the minimal set
  *    of features we found and their respective weights. Ensure the
  *    heuristic scores are always between {@code +MAX_SCORE} and
  *    {@code -MAX_SCORE} (exclusive) by adjusting the weights.
+ *
+ * The provided {@code suite} command line tools can be used to create
+ * the training set. The Weka machine learning toolkit can be used
+ * for the linear regession (https://ml.cms.waikato.ac.nz/weka).
  */
 public final class PositionalScorer implements Scorer<OwareGame> {
 
@@ -85,11 +85,11 @@ public final class PositionalScorer implements Scorer<OwareGame> {
     /** Weight of houses that contain more than 12 seeds */
     public static final int ATTACK_WEIGHT = 28;
 
-    /** Weight of houses that contain 1 or 2 seeds */
-    public static final int DEFENSE_WEIGHT = -36;
-
     /** Weight of houses that do not contain any seeds */
     public static final int MOBILITY_WEIGHT = -54;
+
+    /** Weight of houses that contain 1 or 2 seeds */
+    public static final int DEFENSE_WEIGHT = -36;
 
 
     /**
