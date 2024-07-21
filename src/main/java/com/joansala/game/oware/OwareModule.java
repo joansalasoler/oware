@@ -97,7 +97,7 @@ public class OwareModule extends BaseModule {
     /**
      * Transpositions table provider.
      */
-    @Provides @Singleton @SuppressWarnings("rawtypes")
+    @Provides @SuppressWarnings("rawtypes")
     public static Cache provideCache() {
         return new OwareCache(OwareCommand.cacheSize);
     }
@@ -106,7 +106,7 @@ public class OwareModule extends BaseModule {
     /**
      * Openings book provider.
      */
-    @Provides @Singleton @SuppressWarnings("rawtypes")
+    @Provides @SuppressWarnings("rawtypes")
     public static Roots provideRoots() {
         String path = OwareCommand.roots;
 
@@ -126,7 +126,7 @@ public class OwareModule extends BaseModule {
     /**
      * Endgames book provider.
      */
-    @Provides @Singleton @SuppressWarnings("rawtypes")
+    @Provides @SuppressWarnings("rawtypes")
     public static Leaves provideLeaves() {
         String path = OwareCommand.leaves;
 
