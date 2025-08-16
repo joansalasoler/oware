@@ -50,7 +50,7 @@ public class QueryCommand implements Callable<Integer> {
     private File suiteFile;
 
     @Option(
-      names = "--leaves",
+      names = "--leaves-path",
       description = "Exported leaves book path",
       required = true
     )
