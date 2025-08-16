@@ -19,7 +19,6 @@ package com.joansala.game.oware.scorers;
  */
 
 import com.joansala.engine.Scorer;
-import com.joansala.engine.mcts.Montecarlo;
 import com.joansala.engine.negamax.Negamax;
 import com.joansala.engine.uct.UCT;
 import com.joansala.game.oware.OwareGame;
