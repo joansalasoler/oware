@@ -28,7 +28,7 @@ public interface BoardContract {
     default void ToBoardIsOfSameClassType(Suite suite) {
         Board instance = newInstance();
         String diagram = suite.diagram();
-        Board board = instance.toBoard(diagram);
+        Board board = instance.fromDiagram(diagram);
         assertEquals(instance.getClass(), board.getClass());
     }
 
@@ -39,7 +39,7 @@ public interface BoardContract {
     default void ToBoardConversionIsCommutative(Suite suite) {
         Board instance = newInstance();
         String diagram = suite.diagram();
-        Board board = instance.toBoard(diagram);
+        Board board = instance.fromDiagram(diagram);
         String converted = board.toDiagram();
         assertEquals(diagram, converted);
     }
@@ -51,7 +51,7 @@ public interface BoardContract {
     default void ToMovesIsNotBlank(Suite suite) {
         Board instance = newInstance();
         String notation = suite.notation();
-        int[] moves = instance.toMoves(notation);
+        int[] moves = instance.parseNotation(notation);
         assertNotNull(moves, "moves array is null");
         assertTrue(moves.length > 0, "moves array is empty");
     }
@@ -63,9 +63,9 @@ public interface BoardContract {
     default void ToMovesIsCommutative(Suite suite) {
         Board instance = newInstance();
         String notation = suite.notation();
-        int[] moves = instance.toMoves(notation);
+        int[] moves = instance.parseNotation(notation);
         String converted = instance.toNotation(moves);
-        int[] result = instance.toMoves(converted);
+        int[] result = instance.parseNotation(converted);
         assertArrayEquals(moves, result);
     }
 
@@ -75,7 +75,7 @@ public interface BoardContract {
     @DisplayName("notation to moves returns empty array")
     default void ToMovesReturnsEmptyArray(String notation) {
         Board instance = newInstance();
-        int[] moves = instance.toMoves(notation);
+        int[] moves = instance.parseNotation(notation);
         assertTrue(moves.length == 0, "moves not empty");
     }
 
@@ -86,18 +86,18 @@ public interface BoardContract {
     default void ToBoardThrowsRuntimeException(String notation) {
         Board instance = newInstance();
         assertThrows(RuntimeException.class, () -> {
-            instance.toBoard(notation);
+            instance.fromDiagram(notation);
         });
     }
 
 
     @ParameterizedTest()
     @NullSource @EmptySource @ValueSource(strings = {" ", "  ", "\t", "\n"})
-    @DisplayName("move to notation throws runtime exception")
+    @DisplayName("notation to move throws runtime exception")
     default void ToMoveThrowsRuntimeException(String notation) {
         Board instance = newInstance();
         assertThrows(RuntimeException.class, () -> {
-            instance.toMove(notation);
+            instance.parseCoordinates(notation);
         });
     }
 

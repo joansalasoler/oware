@@ -92,7 +92,7 @@ public class EGTBSolver {
     private void create(long first, long last, int seeds) {
         for (long hash = first; !aborted && hash <= last; hash++) {
             EGTBNode node = new EGTBNode(hash);
-            game.setBoard(toBoard(hash));
+            game.setStartingBoard(toBoard(hash));
 
             if (game.hasEnded()) {
                 game.endMatch();
@@ -142,7 +142,7 @@ public class EGTBSolver {
         int bestScore = -node.seeds;
         boolean known = true;
 
-        game.setBoard(toBoard(node.hash));
+        game.setStartingBoard(toBoard(node.hash));
 
         while ((move = game.nextMove()) != NULL_MOVE) {
             game.makeMove(move);
@@ -184,7 +184,7 @@ public class EGTBSolver {
      * hash code suitable for use as an endgames book entry.
      */
     private long toHash(EGTBGame game) {
-        final OwareBoard board = game.toBoard();
+        final OwareBoard board = game.getCurrentBoard();
         final int[] state = board.position();
         return hasher.hash(rotate(state));
     }

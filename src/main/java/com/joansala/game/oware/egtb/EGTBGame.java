@@ -29,7 +29,7 @@ public class EGTBGame extends OwareGame {
      * {@inheritDoc}
      */
     @Override
-    public OwareBoard toBoard() {
+    public OwareBoard getCurrentBoard() {
         int[] position = Arrays.copyOf(state(), POSITION_SIZE);
         return new EGTBBoard(position);
     }

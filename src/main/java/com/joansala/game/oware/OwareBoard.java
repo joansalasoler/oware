@@ -95,7 +95,7 @@ public class OwareBoard extends BaseBoard<int[]> {
      * {@inheritDoc}
      */
     @Override
-    public int toMove(String notation) {
+    public int parseCoordinates(String notation) {
         return algebraic.toIndex(notation);
     }
 
@@ -128,7 +128,7 @@ public class OwareBoard extends BaseBoard<int[]> {
      * {@inheritDoc}
      */
     @Override
-    public int[] toMoves(String notation) {
+    public int[] parseNotation(String notation) {
         if (notation == null || notation.isBlank()) {
             return new int[0];
         }
@@ -137,7 +137,7 @@ public class OwareBoard extends BaseBoard<int[]> {
         int[] moves = new int[notations.length];
 
         for (int i = 0; i < notations.length; i++) {
-            moves[i] = toMove(notations[i]);
+            moves[i] = parseCoordinates(notations[i]);
         }
 
         return moves;
@@ -148,7 +148,7 @@ public class OwareBoard extends BaseBoard<int[]> {
      * {@inheritDoc}
      */
     @Override
-    public OwareBoard toBoard(String notation) {
+    public OwareBoard fromDiagram(String notation) {
         String[] parts = notation.split("-");
         int[] position = new int[POSITION_SIZE];
         int turn = toTurn(parts[POSITION_SIZE].charAt(0));
@@ -167,7 +167,7 @@ public class OwareBoard extends BaseBoard<int[]> {
      * @param hash      Unique position hash code
      * @return          New boardboard instance
      */
-    public OwareBoard toBoard(long hash) {
+    public OwareBoard fromHash(long hash) {
         int[] position = hasher.unhash(hash & ~SOUTH_SIGN);
         int turn = (SOUTH_SIGN & hash) == 0L ? NORTH : SOUTH;
         return new OwareBoard(position, turn);

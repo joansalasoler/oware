@@ -123,7 +123,7 @@ public class OwareGame extends BaseGame {
         captures = new int[capacity];
         empties = new int[capacity];
         states = new int[capacity << 4];
-        setBoard(new OwareBoard());
+        setStartingBoard(new OwareBoard());
         setTurn(SOUTH);
     }
 
@@ -141,7 +141,7 @@ public class OwareGame extends BaseGame {
      * {@inheritDoc}
      */
     @Override
-    public Board getBoard() {
+    public Board getStartingBoard() {
         return board;
     }
 
@@ -150,15 +150,15 @@ public class OwareGame extends BaseGame {
      * {@inheritDoc}
      */
     @Override
-    public void setBoard(Board board) {
-        setBoard((OwareBoard) board);
+    public void setStartingBoard(Board board) {
+        setStartingBoard((OwareBoard) board);
     }
 
 
     /**
-     * {@see #setBoard(Board)}
+     * {@see #setStartingBoard(Board)}
      */
-    public void setBoard(OwareBoard board) {
+    public void setStartingBoard(OwareBoard board) {
         this.index = -1;
         this.capture = -1;
         this.move = NULL_MOVE;
@@ -263,7 +263,7 @@ public class OwareGame extends BaseGame {
      * {@inheritDoc}
      */
     @Override
-    public OwareBoard toBoard() {
+    public OwareBoard getCurrentBoard() {
         int[] position = Arrays.copyOf(state, POSITION_SIZE);
         return new OwareBoard(position, player.turn);
     }

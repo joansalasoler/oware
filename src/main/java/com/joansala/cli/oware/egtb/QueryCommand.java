@@ -75,7 +75,7 @@ public class QueryCommand implements Callable<Integer> {
             try (SuiteReader reader = new SuiteReader(input)) {
                 reader.stream().forEach((suite) -> {
                     suite.setupGame(game);
-                    Board state = game.toBoard();
+                    Board state = game.getCurrentBoard();
 
                     for (int move : game.legalMoves()) {
                         game.makeMove(move);
