@@ -237,6 +237,13 @@
       <version>5.7.0-M1</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.joansala</groupId>
+      <artifactId>samurai</artifactId>
+      <version>${samurai.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
 </project>

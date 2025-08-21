@@ -365,6 +365,18 @@ public class OwareGame extends BaseGame {
      */
     @Override
     protected long computeHash() {
+        return computeHash(player, state);
+    }
+
+
+    /**
+     * Computes hash code for the given position and turn.
+     *
+     * @param state     Position array
+     * @param player    Player to move
+     * @return          Hash code for the position
+     */
+    protected static long computeHash(Player player, int[] state) {
         return player.sign + hasher.hash(state);
     }
 

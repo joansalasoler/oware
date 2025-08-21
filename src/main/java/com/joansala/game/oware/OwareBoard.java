@@ -23,8 +23,9 @@ import com.joansala.engine.base.BaseBoard;
 import com.joansala.except.IllegalPositionException;
 import com.joansala.util.notation.CoordinateConverter;
 import com.joansala.util.hash.BinomialHash;
-import static com.joansala.game.oware.OwareGame.*;
+
 import static com.joansala.game.oware.Oware.*;
+import static com.joansala.game.oware.OwareGame.*;
 
 
 /**
@@ -262,6 +263,16 @@ public class OwareBoard extends BaseBoard<int[]> {
      */
     private static int toTurn(char symbol) {
         return symbol == SOUTH_SYMBOL ? SOUTH : NORTH;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public long hash() {
+        Player player = (turn == SOUTH) ? Player.SOUTH : Player.NORTH;
+        return OwareGame.computeHash(player, position);
     }
 
 
