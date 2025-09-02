@@ -1,5 +1,7 @@
 package com.joansala.game.oware.scorers;
 
+import java.util.Random;
+
 /*
  * Samurai framework.
  * Copyright (C) 2024 Joan Sala Soler <contact@joansala.com>
@@ -17,6 +19,8 @@ package com.joansala.game.oware.scorers;
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not,  see <http://www.gnu.org/licenses/>.
  */
+
+import java.util.concurrent.ThreadLocalRandom;
 
 import com.joansala.engine.Scorer;
 import com.joansala.engine.negamax.Negamax;
@@ -45,13 +49,13 @@ import static com.joansala.game.oware.Oware.*;
  * Here's the method that was used to derive this function:
  *
  * 1. Generate a set of random game states that are not final.
- * 2. For each position, evaluate it using an engine ({@link Negamax},
+ * 2. For each position, evaluate it using an engine ({@link Negamax}/
  *    {@link UCT}) and the {@link MaterialScorer} heuristic (number of
  *    seeds captured by south minus the number of north captures).
  * 3. Instead of a fixed depth or spending a long time evaluating each
  *    position, we evaluate each position for a short time (100ms).
  * 4. For each position, choose a set of features that may be suitable
- *    to finetune the {@link MaterialScorer} heuristic. For Oware Some
+ *    to finetune the {@link MaterialScorer} heuristic. For Oware some
  *    good clues are the number of seeds in each house and on the stores.
  * 5. Remove from the training set all the positions that were evaluated
  *    with an exact score ({@code ±MAX_SCORE}). We want to predict the
@@ -90,15 +94,32 @@ public final class PositionalScorer implements Scorer<OwareGame> {
     /** Weight of houses that contain 1 or 2 seeds */
     public static final int DEFENSE_WEIGHT = -36;
 
+    /** Random number generator */
+    protected Random random = ThreadLocalRandom.current();
+
+    /** Per-match random value to add evaluation noise */
+    private int salt = 0;
+
+
+    /**
+     * Initialize the random salt value.
+     */
+    @Override
+    public final void newMatch() {
+        salt = random.nextInt(Integer.MAX_VALUE);
+    }
+
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public final int evaluate(OwareGame game) {
         final int south = game.state(SOUTH_STORE);
         final int north = game.state(NORTH_STORE);
 
-        int score = TALLY_WEIGHT * (south - north);
+        final int noise = ((int) (salt ^ game.hash()) & 0x1F) - 16;
+        int score = noise + TALLY_WEIGHT * (south - north);
 
         for (int house = SOUTH_LEFT; house <= SOUTH_RIGHT; house++) {
             final int seeds = game.state(house);

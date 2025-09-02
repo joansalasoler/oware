@@ -132,6 +132,15 @@ public class OwareGame extends BaseGame {
      * {@inheritDoc}
      */
     @Override
+    public void newMatch() {
+        scorer.newMatch();
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public int turn() {
         return player.turn;
     }
