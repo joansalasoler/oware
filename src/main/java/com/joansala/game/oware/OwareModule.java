@@ -67,12 +67,6 @@ public class OwareModule extends BaseModule {
         private static String leaves = OwareLeaves.LEAVES_PATH;
 
         @Option(
-          names = "--roots-disturbance",
-          description = "Openings book root disturbance"
-        )
-        private static int disturbance = ROOT_DISTURBANCE;
-
-        @Option(
           names = "--roots-threshold",
           description = "Openings book root threshold"
         )
@@ -132,7 +126,6 @@ public class OwareModule extends BaseModule {
 
         try {
             OwareRoots roots = new OwareRoots(path);
-            roots.setDisturbance(OwareCommand.disturbance);
             roots.setThreshold(OwareCommand.threshold);
             return roots;
         } catch (Exception e) {

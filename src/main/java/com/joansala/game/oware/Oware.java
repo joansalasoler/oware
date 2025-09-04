@@ -114,10 +114,7 @@ public final class Oware {
     // -------------------------------------------------------------------
 
     /** Never play book moves with a score lower than this */
-    public static final int ROOT_THRESHOLD = -10;
-
-    /** Play book moves within this range of the best move score */
-    public static final int ROOT_DISTURBANCE = 20;
+    public static final int ROOT_THRESHOLD = -12;
 
     // -------------------------------------------------------------------
     // Board definitions

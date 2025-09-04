@@ -48,7 +48,6 @@ public class OwareRoots extends UCTRoots {
      */
     public OwareRoots(String path) throws IOException {
         super(path);
-        setDisturbance(ROOT_DISTURBANCE);
         setThreshold(ROOT_THRESHOLD);
         setInfinity(MAX_SCORE);
     }
